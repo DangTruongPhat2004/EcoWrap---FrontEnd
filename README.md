@@ -1,2 +1,0 @@
-# EcoWrap---FrontEnd
-EcoWrap FE
