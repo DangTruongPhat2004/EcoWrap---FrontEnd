@@ -31,11 +31,63 @@ import { ProductCarousel } from "../components/carousel/ProductCarousel";
 
 import { desc, i } from "framer-motion/client";
 import PackagingCarousel from "../components/carousel/PackagingCarousel";
+import ClientLogoMarquee from "../components/marquee/ClientLogoMarquee";
 
 const Home = () => {
   const [openDropdown, setOpenDropdown] = React.useState(null);
   const [visibleSections, setVisibleSections] = React.useState({});
   const [searchValue, setSearchValue] = React.useState("");
+
+  const logos = [
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/6lR50SiZeNVr2IOgW1rcTo/23c1b3cbed1501e0dfd65fecf4578b3c/Baggu.png?w=384&q=90&fm=avif",
+      alt: "Baggu",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/61oLU7rnzBb2dZAufuJ4lU/1ffdac5c83957b1fe0026af6aedf54d6/PopUp_Grocer_.png?w=384&q=90&fm=avif",
+      alt: "PopUp Grocer",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/1IrCt4lXmWO5DCMlVavZ6x/d8703429900a206d54f7e03c99f1009d/Uniqlo.png?w=384&q=90&fm=avif",
+      alt: "Uniqlo",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/1a3EgcnzmsQsjqfjtD1TJO/43927c12669f9c6b7f19e089ba768a26/Flamingo_Estate.png?w=384&q=90&fm=avif",
+      alt: "Flamingo Estate",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/22twqbPopzZz39NWLdSOu1/85b801d8123e7deac360424e4650d729/Garmentory-L.png?w=384&q=90&fm=avif",
+      alt: "Garmentory",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/ELN0rxG63nKWenFpuF9X2/d201e300f7b87df33e1f18f87373f0c9/Micos_Hot_Chicken.png?w=384&q=90&fm=avif",
+      alt: "Mico's Hot Chicken",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/176lrIAxq2SjYvJcYHeMvR/b3e7e0775b14a31bb550a934c60e6824/Edie_Parker.png?w=384&q=90&fm=avif",
+      alt: "Edie Parker",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/3t2R7AIo7bKxoa1fFi87LR/fc408849fdddce436a6e85fde0f7077e/For_Love_and_Lemons.png?w=384&q=90&fm=avif",
+      alt: "For Love & Lemons",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/TcN4y6BdjTzg9kGhjK2EM/191a3c6aa10f9aca020dcc22005a7b1e/Carhartt.png?w=384&q=90&fm=avif",
+      alt: "Carhartt WIP",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/65kAraxxHSKeljkes7Lox7/0fe531299182f31978b04977e66fd35f/Client_Logo_-_Partners_Coffee.png?w=384&q=90&fm=avif",
+      alt: "Partners Coffee",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/6K0F1J8vLmJmIwZsP0Hbkl/6693cff127b581bb88abe2e5c05dfe3e/Client_Logo_-_Sweetgreen.png?w=384&q=90&fm=avif",
+      alt: "Sweetgreen",
+    },
+    {
+      src: "//images.ctfassets.net/5gvckmvm9289/6esveekv7q2UjeKWA1DWSo/851fa300ff0ebd1ccd6fc81a4650d7ea/airbnb__1_.png?w=384&q=90&fm=avif",
+      alt: "Airbnb",
+    },
+  ];
 
   const slides = [
     {
@@ -327,6 +379,14 @@ const Home = () => {
       </section>
 
       <PackagingCarousel title="Sản phẩm bao bì" slides={slides} />
+
+      {/* Marquee logo ngay bên dưới */}
+      <ClientLogoMarquee
+        logos={logos}
+        speed="normal" // "slow" | "normal" | "fast"
+        reverse={false} // true để chạy ngược chiều
+        className="mt-2"
+      />
 
       {/* Categories Section with HeroUI Cards */}
       <section
