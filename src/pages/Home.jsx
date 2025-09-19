@@ -14,15 +14,171 @@ import {
   Chip,
 } from "@heroui/react";
 import { Search, ShoppingCart } from "lucide-react";
+import bannerImg from "../assets/banner.png";
+import tuigiay from "../assets/tuigiay.png";
+import cocLy from "../assets/cocly.png";
+import hop from "../assets/hop.png";
+import onghut from "../assets/onghut.png";
+import tuigiaycaocap from "../assets/tuigiaycaocap.png";
+import coccaphe from "../assets/coccaphe.png";
+import hopdungthucpham from "../assets/hopdungthucpham.png";
+import slide1 from "../assets/slide1.png";
+import slide2 from "../assets/slide2.png";
+import slide3 from "../assets/slide3.png";
+import slide4 from "../assets/slide4.png";
+import slide5 from "../assets/slide5.png";
+import { ProductCarousel } from "../components/carousel/ProductCarousel";
+
+import { desc, i } from "framer-motion/client";
+import PackagingCarousel from "../components/carousel/PackagingCarousel";
 
 const Home = () => {
   const [openDropdown, setOpenDropdown] = React.useState(null);
   const [visibleSections, setVisibleSections] = React.useState({});
   const [searchValue, setSearchValue] = React.useState("");
 
+  const slides = [
+    {
+      id: "tui-giay",
+      image: slide1,
+      title: "Túi Giấy",
+      categories: ["Túi Giấy", "Túi Giấy đựng đồ", "Túi Giấy Bánh"],
+      ctaLabel: "Mua ngay →",
+      href: "#",
+    },
+    {
+      id: "paper-bowls",
+      image: slide2,
+      title: "Hộp giấy ",
+      categories: ["Hộp Giấy Tròn", "Hộp Giấy Chữ Nhật"],
+      ctaLabel: "Mua ngay →",
+      href: "#",
+    },
+    {
+      id: "coffee-cups",
+      image: slide3,
+      title: "Cốc Giấy",
+      categories: ["Cốc Nóng", "Cốc Lạnh"],
+      ctaLabel: "Mua ngay →",
+      href: "#",
+    },
+    {
+      id: "food-containers",
+      image: slide4,
+      title: "Túi giấy ",
+      categories: ["Túi đựng thực phẩm", "Túi đựng đồ"],
+      ctaLabel: "Mua ngay →",
+      href: "#",
+    },
+    {
+      id: "straws",
+      image: slide5,
+      title: "Giấy lót thực phẩm",
+      categories: ["Giấy nến", "Giấy lót bánh mì", "Giấy lót bánh ngọt"],
+      ctaLabel: "Mua ngay →",
+      href: "#",
+    },
+    // thêm slide khác nếu cần
+  ];
+
   const toggleDropdown = (dropdownName) => {
     setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
   };
+
+  const CategoryCard = ({ img, title }) => (
+    <Card
+      isPressable
+      className={`group overflow-hidden shadow-sm hover:shadow-md transition-shadow`}
+    >
+      <CardBody className="p-0">
+        {/* Khung tỉ lệ & chiều cao đồng nhất */}
+        <div className="relative w-full aspect-[16/10] min-h-[300px]">
+          <img
+            src={img}
+            alt={title}
+            className="absolute inset-0 w-full h-full object-cover
+                     transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+
+          {/* Gradient & tiêu đề bottom-left */}
+          <div
+            className="absolute inset-x-0 bottom-0 p-4
+                        bg-gradient-to-t from-black/60 via-black/20 to-transparent"
+          >
+            <h3 className="text-white font-semibold text-left text-lg drop-shadow">
+              {title}
+            </h3>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
+
+  const ProductCard = ({
+    img,
+    title,
+    minUnits,
+    delivery,
+    priceText, // ví dụ: "2.000đ"
+    unitText = "/chiếc",
+    tags = [],
+    isNew = false,
+  }) => (
+    <Card
+      className={`overflow-hidden rounded-[28px] border border-gray-200 shadow-sm hover:shadow-lg transition-shadow ${
+        visibleSections.products ? "animate-scale-in" : ""
+      }`}
+      isPressable
+    >
+      <CardBody className="p-0">
+        {/* Ảnh bo góc lớn, có margin trong card để tạo viền trắng như mẫu */}
+        <div className="relative m-3 rounded-[24px] overflow-hidden">
+          <div className="aspect-[16/11] w-full">
+            <img
+              src={img}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+            />
+          </div>
+
+          {isNew && (
+            <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium bg-white/90 text-gray-900 shadow">
+              New
+            </span>
+          )}
+        </div>
+
+        {/* Nội dung */}
+        <div className="px-5 pb-5">
+          <p className="text-sm text-gray-500">
+            Min. {minUnits} • Delivery: {delivery}
+          </p>
+
+          <h3 className="mt-2 text-[20px] leading-6 font-semibold text-[#2A1F6F]">
+            {title}
+          </h3>
+
+          <p className="mt-1 text-sm">
+            from{" "}
+            <span className="font-semibold text-pink-600">{priceText}</span>{" "}
+            <span className="text-gray-600">{unitText}</span>
+          </p>
+
+          {/* Tag pills */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tags.map((t) => (
+              <div
+                key={t}
+                className="px-3 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
+              >
+                {t}
+              </div>
+            ))}
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+  );
 
   // Intersection Observer for scroll animations
   React.useEffect(() => {
@@ -66,6 +222,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
+
       <section
         id="hero"
         data-animate
@@ -101,103 +258,67 @@ const Home = () => {
               />
             </svg>
           </div>
-          {/* More floating elements... */}
         </div>
 
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
             <div className="space-y-6">
-              <h1
-                className={`text-5xl font-bold text-gray-800 leading-tight ${
-                  visibleSections.hero ? "animate-slide-in-left" : ""
-                }`}
-              >
+              <h1 className="text-5xl font-bold text-gray-800 leading-tight">
                 Mua và Thiết Kế Thương Hiệu và Bao Bì
               </h1>
-              <p
-                className={`text-lg text-gray-600 leading-relaxed ${
-                  visibleSections.hero ? "animate-slide-in-left" : ""
-                }`}
-              >
+              <p className="text-lg text-gray-600 leading-relaxed">
                 Khám phá các sản phẩm bao bì thân thiện môi trường từ các xưởng
                 uy tín. Tìm kiếm và đặt hàng ngay hôm nay để giảm thiểu rác
                 thải!
               </p>
 
               <Button
-                size="md"
-                className={`font-medium px-8 py-6 text-white bg-green-700 hover:bg-green-800 rounded-md ${
-                  visibleSections.hero ? "animate-slide-in-left" : ""
-                }`}
-                endContent={<ShoppingCart className="w-4 h-4" />}
+                className="bg-green-700 text-white hover:bg-green-800 rounded-md h-12 px-8 leading-none
+             inline-flex items-center whitespace-nowrap" // ⛔ chặn wrap ở root
+                classNames={{
+                  base: "whitespace-nowrap", // ⛔ chặn wrap
+                  content: "flex items-center gap-2",
+                  label: "whitespace-nowrap", // ⛔ chặn wrap cho span chữ
+                }}
+                endContent={<ShoppingCart className="w-5 h-5 shrink-0" />} // icon không co
               >
                 Bắt đầu mua sắm
               </Button>
             </div>
 
-            {/* Right Image - Product showcase */}
-            <div
-              className={`relative ${
-                visibleSections.hero ? "animate-scale-in" : ""
-              }`}
-            >
-              <div className="w-full h-96 bg-gray-100 rounded-3xl p-8 flex items-center justify-center relative overflow-hidden">
-                {/* Background gradient circle */}
-                <div className="absolute inset-0 bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50 rounded-3xl"></div>
+            {/* Right Image - Real Product Image */}
+            <div className="relative">
+              <div className="w-full h-96 bg-white rounded-3xl overflow-hidden shadow-xl">
+                <img
+                  src={bannerImg}
+                  alt="Eco-friendly packaging products - kraft paper bags, coffee cups, and food containers"
+                  className="w-full h-full object-cover"
+                />
 
-                {/* Product arrangement */}
-                <div className="relative z-10 flex items-center justify-center w-full h-full">
-                  {/* Back row - larger bags */}
-                  <div className="absolute">
-                    <div className="w-32 h-40 bg-gradient-to-b from-orange-200 to-orange-300 rounded-lg shadow-lg transform -rotate-12 -translate-x-16 -translate-y-8">
-                      <div className="w-full h-8 bg-orange-300 rounded-t-lg"></div>
-                      <div className="flex justify-center mt-4">
-                        <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center">
-                          <span className="text-orange-600 font-bold text-xs">
-                            ECO
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="w-32 h-40 bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-lg shadow-lg transform rotate-6 translate-x-20 -translate-y-4">
-                      <div className="w-full h-8 bg-yellow-300 rounded-t-lg"></div>
-                      <div className="flex justify-center mt-4">
-                        <div className="w-16 h-16 bg-yellow-100 rounded-lg flex items-center justify-center">
-                          <span className="text-yellow-600 font-bold text-xs">
-                            GREEN
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                {/* Overlay text */}
+                <div className="absolute bottom-6 left-6 bg-white/90 backdrop-blur-sm rounded-lg px-4 py-3 shadow-lg">
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className="w-5 h-5 text-green-600"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-700">
+                      100% Eco-Friendly
+                    </span>
                   </div>
+                </div>
 
-                  {/* Front row - cups and containers */}
-                  <div className="relative z-20 flex items-center justify-center space-x-4">
-                    <div className="flex space-x-2">
-                      <div className="w-12 h-16 bg-gradient-to-b from-green-300 to-green-400 rounded-b-full shadow-md">
-                        <div className="w-full h-4 bg-green-200 rounded-t-lg"></div>
-                      </div>
-                      <div className="w-12 h-16 bg-gradient-to-b from-blue-200 to-blue-300 rounded-b-full shadow-md">
-                        <div className="w-full h-4 bg-blue-100 rounded-t-lg"></div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col space-y-2">
-                      <div className="w-16 h-8 bg-gradient-to-r from-orange-100 to-orange-200 rounded-lg shadow-sm"></div>
-                      <div className="w-20 h-6 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-lg shadow-sm"></div>
-                    </div>
-
-                    <div className="flex space-x-2">
-                      <div className="w-10 h-14 bg-gradient-to-b from-pink-200 to-pink-300 rounded-b-full shadow-md">
-                        <div className="w-full h-3 bg-pink-100 rounded-t-lg"></div>
-                      </div>
-                      <div className="w-10 h-14 bg-gradient-to-b from-purple-200 to-purple-300 rounded-b-full shadow-md">
-                        <div className="w-full h-3 bg-purple-100 rounded-t-lg"></div>
-                      </div>
-                    </div>
-                  </div>
+                {/* Small floating eco badge */}
+                <div className="absolute top-4 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-semibold">
+                  Tái chế
                 </div>
               </div>
             </div>
@@ -205,675 +326,112 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Search Section */}
-      <section className="py-8 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div className="mb-6">
-                <h2 className="text-2xl font-semibold text-gray-600 border-l-4 border-green-600 pl-4 py-2 bg-gradient-to-r from-green-50 to-transparent rounded-r-lg flex items-center gap-3">
-                  <svg
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                    />
-                  </svg>
-                  Sản phẩm bao bì
-                </h2>
-              </div>
-
-              {/* Search Bar with HeroUI Input */}
-              <div className="flex gap-4">
-                <div className="w-[38rem] border border-gray-300 rounded-full flex items-center px-4 focus-within:border-green-500">
-                  <Input
-                    type="text"
-                    placeholder="Tìm kiếm sản phẩm bao bì..."
-                    value={searchValue}
-                    onValueChange={setSearchValue}
-                    size="lg"
-                    radius="full"
-                    variant="flat"
-                    classNames={{
-                      input: "text-base !outline-none",
-                      inputWrapper:
-                        "!border-none !outline-none shadow-none bg-transparent",
-                    }}
-                  />
-                  <Button
-                    isIconOnly
-                    radius="full"
-                    variant="flat"
-                    className="bg-gray-100 !outline-none hover:bg-green-50 text-green-600 hover:text-green-700"
-                  >
-                    <Search className="w-5 h-5 text-gray-600" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Filters with HeroUI Dropdowns */}
-            <div className="flex gap-3 flex-wrap items-center py-4">
-              {/* Filter Button */}
-              <Button
-                variant="bordered"
-                radius="lg"
-                startContent={
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 2v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
-                    />
-                  </svg>
-                }
-                className="h-10 px-4 border-2 border-gray-200 hover:border-green-500 bg-white text-gray-700 font-medium transition-all duration-200 hover:shadow-sm rounded-lg"
-              >
-                Bộ lọc
-              </Button>
-
-              {/* Product Type Dropdown */}
-              <Dropdown placement="bottom-start">
-                <DropdownTrigger>
-                  <Button
-                    variant="bordered"
-                    radius="lg"
-                    endContent={
-                      <svg
-                        className="w-4 h-4 transition-transform duration-200"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    }
-                    className="h-10 px-4 border-2 border-gray-200 hover:border-green-500 bg-white text-gray-700 font-medium transition-all duration-200 hover:shadow-sm min-w-[130px] rounded-lg"
-                  >
-                    Loại sản phẩm
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Product types"
-                  className="min-w-[200px]"
-                  itemClasses={{
-                    base: "rounded-lg data-[hover=true]:bg-green-50 data-[hover=true]:text-green-700",
-                  }}
-                >
-                  <DropdownItem key="all" className="font-medium text-gray-900">
-                    Tất cả sản phẩm
-                  </DropdownItem>
-                  <DropdownItem key="paper-bags" startContent="📄">
-                    Túi giấy
-                  </DropdownItem>
-                  <DropdownItem key="paper-cups" startContent="☕">
-                    Ly giấy
-                  </DropdownItem>
-                  <DropdownItem key="containers" startContent="📦">
-                    Hộp đựng
-                  </DropdownItem>
-                  <DropdownItem key="food-packaging" startContent="🥡">
-                    Bao bì thực phẩm
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-
-              {/* Size Dropdown */}
-              <Dropdown placement="bottom-start">
-                <DropdownTrigger>
-                  <Button
-                    variant="bordered"
-                    radius="lg"
-                    endContent={
-                      <svg
-                        className="w-4 h-4 transition-transform duration-200"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    }
-                    className="h-10 px-4 border-2 border-gray-200 hover:border-green-500 bg-white text-gray-700 font-medium transition-all duration-200 hover:shadow-sm min-w-[110px] rounded-lg"
-                  >
-                    Kích thước
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Sizes"
-                  className="min-w-[160px]"
-                  itemClasses={{
-                    base: "rounded-lg data-[hover=true]:bg-green-50 data-[hover=true]:text-green-700",
-                  }}
-                >
-                  <DropdownItem key="all" className="font-medium text-gray-900">
-                    Tất cả kích thước
-                  </DropdownItem>
-                  <DropdownItem key="small" startContent="S">
-                    Nhỏ (Small)
-                  </DropdownItem>
-                  <DropdownItem key="medium" startContent="M">
-                    Vừa (Medium)
-                  </DropdownItem>
-                  <DropdownItem key="large" startContent="L">
-                    Lớn (Large)
-                  </DropdownItem>
-                  <DropdownItem key="extra-large" startContent="XL">
-                    Rất lớn (XL)
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-
-              {/* Price Dropdown */}
-              <Dropdown placement="bottom-start">
-                <DropdownTrigger>
-                  <Button
-                    variant="bordered"
-                    radius="lg"
-                    endContent={
-                      <svg
-                        className="w-4 h-4 transition-transform duration-200"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    }
-                    className="h-10 px-4 border-2 border-gray-200 hover:border-green-500 bg-white text-gray-700 font-medium transition-all duration-200 hover:shadow-sm min-w-[80px] rounded-lg"
-                  >
-                    Giá
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Price ranges"
-                  className="min-w-[180px]"
-                  itemClasses={{
-                    base: "rounded-lg data-[hover=true]:bg-green-50 data-[hover=true]:text-green-700",
-                  }}
-                >
-                  <DropdownItem key="all" className="font-medium text-gray-900">
-                    Tất cả mức giá
-                  </DropdownItem>
-                  <DropdownItem key="under-50k" startContent="💰">
-                    Dưới 50.000₫
-                  </DropdownItem>
-                  <DropdownItem key="50k-200k" startContent="💰💰">
-                    50.000₫ - 200.000₫
-                  </DropdownItem>
-                  <DropdownItem key="200k-500k" startContent="💰💰💰">
-                    200.000₫ - 500.000₫
-                  </DropdownItem>
-                  <DropdownItem key="over-500k" startContent="💎">
-                    Trên 500.000₫
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-
-              {/* Supplier Dropdown */}
-              <Dropdown placement="bottom-start">
-                <DropdownTrigger>
-                  <Button
-                    variant="bordered"
-                    radius="lg"
-                    endContent={
-                      <svg
-                        className="w-4 h-4 transition-transform duration-200"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    }
-                    className="h-10 px-4 border-2 border-gray-200 hover:border-green-500 bg-white text-gray-700 font-medium transition-all duration-200 hover:shadow-sm min-w-[120px] rounded-lg"
-                  >
-                    Nhà cung cấp
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Suppliers"
-                  className="min-w-[200px]"
-                  itemClasses={{
-                    base: "rounded-lg data-[hover=true]:bg-green-50 data-[hover=true]:text-green-700",
-                  }}
-                >
-                  <DropdownItem key="all" className="font-medium text-gray-900">
-                    Tất cả nhà cung cấp
-                  </DropdownItem>
-                  <DropdownItem key="ecopack" startContent="🌱">
-                    EcoPack Việt Nam
-                  </DropdownItem>
-                  <DropdownItem key="greenwrap" startContent="♻️">
-                    GreenWrap Co.
-                  </DropdownItem>
-                  <DropdownItem key="biopackage" startContent="🌿">
-                    BioPackage Plus
-                  </DropdownItem>
-                  <DropdownItem key="naturebox" startContent="🍃">
-                    NatureBox Việt Nam
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-              <Button
-                variant="light"
-                radius="lg"
-                className="h-10 px-3 text-gray-500 hover:text-red-500 hover:bg-red-50 transition-all duration-200"
-                startContent={
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                }
-              >
-                Xóa bộ lọc
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PackagingCarousel title="Sản phẩm bao bì" slides={slides} />
 
       {/* Categories Section with HeroUI Cards */}
       <section
         id="categories"
         data-animate
-        className="py-12 mx-auto"
-        style={{ backgroundColor: "#F5F9F7", width: "80%" }}
+        className="py-12 bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8]"
       >
         <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-8">
+          <h2 className="text-4xl font-semibold text-gray-800 mb-8">
             Danh mục nổi bật
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Túi giấy */}
-            <Card
-              className={`shadow-sm hover:shadow-md transition-shadow ${
-                visibleSections.categories ? "animate-slide-in-left" : ""
-              }`}
-              isPressable
-            >
-              <CardBody className="p-6">
-                <div className="h-40 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg mb-4 flex items-center justify-center relative overflow-hidden">
-                  <div className="flex">
-                    <div className="w-16 h-24 bg-gradient-to-b from-orange-200 to-orange-300 rounded-lg shadow-md transform -rotate-6 -translate-x-2">
-                      <div className="w-full h-4 bg-orange-300 rounded-t-lg"></div>
-                    </div>
-                    <div className="w-16 h-24 bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-lg shadow-md transform rotate-3">
-                      <div className="w-full h-4 bg-yellow-300 rounded-t-lg"></div>
-                    </div>
-                    <div className="w-16 h-24 bg-gradient-to-b from-orange-300 to-orange-400 rounded-lg shadow-md transform -rotate-3 translate-x-2">
-                      <div className="w-full h-4 bg-orange-400 rounded-t-lg"></div>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-center">Túi giấy</h3>
-              </CardBody>
-            </Card>
-
-            {/* Cốc & Ly */}
-            <Card
-              className={`shadow-sm hover:shadow-md transition-shadow ${
-                visibleSections.categories ? "animate-scale-in" : ""
-              }`}
-              isPressable
-            >
-              <CardBody className="p-6">
-                <div className="h-40 bg-gradient-to-br from-teal-50 to-emerald-100 rounded-lg mb-4 flex items-center justify-center relative">
-                  <div className="flex space-x-3">
-                    <div className="relative">
-                      <div className="w-12 h-20 bg-gradient-to-b from-teal-300 to-teal-400 rounded-b-full shadow-lg">
-                        <div className="w-full h-4 bg-teal-200 rounded-t-lg"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                            <div className="w-4 h-4 bg-teal-600 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="absolute -right-1 top-6 w-3 h-6 bg-teal-300 rounded-full"></div>
-                    </div>
-                    <div className="relative">
-                      <div className="w-12 h-20 bg-gradient-to-b from-emerald-300 to-emerald-400 rounded-b-full shadow-lg">
-                        <div className="w-full h-4 bg-emerald-200 rounded-t-lg"></div>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                            <div className="w-4 h-4 bg-emerald-600 rounded-full"></div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="absolute -right-1 top-6 w-3 h-6 bg-emerald-300 rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-center">Cốc & Ly</h3>
-              </CardBody>
-            </Card>
-
-            {/* Hộp đựng thức ăn */}
-            <Card
-              className={`shadow-sm hover:shadow-md transition-shadow ${
-                visibleSections.categories ? "animate-scale-in" : ""
-              }`}
-              isPressable
-            >
-              <CardBody className="p-6">
-                <div className="h-40 bg-gradient-to-br from-green-50 to-lime-100 rounded-lg mb-4 flex items-center justify-center">
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex space-x-2">
-                      <div className="w-14 h-8 bg-gradient-to-r from-green-200 to-green-300 rounded-lg shadow-sm border border-green-300">
-                        <div className="w-full h-2 bg-green-300 rounded-t-lg"></div>
-                      </div>
-                      <div className="w-14 h-8 bg-gradient-to-r from-lime-200 to-lime-300 rounded-lg shadow-sm border border-lime-300">
-                        <div className="w-full h-2 bg-lime-300 rounded-t-lg"></div>
-                      </div>
-                    </div>
-                    <div className="flex justify-center">
-                      <div className="w-20 h-12 bg-gradient-to-r from-green-300 to-green-400 rounded-lg shadow-md border border-green-400">
-                        <div className="w-full h-3 bg-green-400 rounded-t-lg"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-center">Hộp đựng thức ăn</h3>
-              </CardBody>
-            </Card>
-
-            {/* Ống hút & Đũa */}
-            <Card
-              className={`shadow-sm hover:shadow-md transition-shadow ${
-                visibleSections.categories ? "animate-scale-in" : ""
-              }`}
-              isPressable
-            >
-              <CardBody className="p-6">
-                <div className="h-40 bg-gradient-to-br from-gray-50 to-slate-100 rounded-lg mb-4 flex items-center justify-center relative">
-                  <div className="flex items-center justify-center">
-                    <div className="flex space-x-1">
-                      <div className="w-1 h-24 bg-gradient-to-b from-pink-200 to-pink-300 rounded-full shadow-sm transform rotate-12"></div>
-                      <div className="w-1 h-24 bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-full shadow-sm transform -rotate-6"></div>
-                      <div className="w-1 h-24 bg-gradient-to-b from-green-200 to-green-300 rounded-full shadow-sm transform rotate-3"></div>
-                      <div className="w-1 h-24 bg-gradient-to-b from-blue-200 to-blue-300 rounded-full shadow-sm transform -rotate-12"></div>
-                      <div className="w-1 h-24 bg-gradient-to-b from-purple-200 to-purple-300 rounded-full shadow-sm transform rotate-6"></div>
-                      <div className="w-1 h-24 bg-gradient-to-b from-orange-200 to-orange-300 rounded-full shadow-sm transform -rotate-3"></div>
-                    </div>
-
-                    <div className="ml-4 flex space-x-1">
-                      <div className="w-1 h-20 bg-gradient-to-b from-yellow-600 to-yellow-700 rounded-full shadow-sm transform rotate-15"></div>
-                      <div className="w-1 h-20 bg-gradient-to-b from-amber-600 to-amber-700 rounded-full shadow-sm transform -rotate-10"></div>
-                      <div className="w-1 h-20 bg-gradient-to-b from-yellow-700 to-yellow-800 rounded-full shadow-sm transform rotate-5"></div>
-                    </div>
-                  </div>
-                </div>
-                <h3 className="font-semibold text-center">Ống hút & Đũa</h3>
-              </CardBody>
-            </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-1">
+            <CategoryCard img={tuigiay} title="Túi giấy" />
+            <CategoryCard img={cocLy} title="Cốc & ly" />
+            <CategoryCard img={hop} title="Hộp giấy" />
+            <CategoryCard img={onghut} title="Ống hút" />
           </div>
         </div>
       </section>
 
       {/* Products Section with HeroUI Cards */}
-      <section id="products" data-animate className="py-12 bg-white">
+      <section className="py-12 bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8]">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-600 border-l-4 border-green-600 pl-4 py-2 bg-gradient-to-r from-green-50 to-transparent rounded-r-lg flex items-center gap-3">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              Sản phẩm phổ biến
-            </h2>
-          </div>
+          <h2 className="text-4xl font-semibold text-gray-800 mb-6">
+            Sản phẩm
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Product 1 - Túi giấy kraft */}
-            <Card
-              className={`border border-gray-200 hover:shadow-lg transition-shadow ${
-                visibleSections.products ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-48 bg-gradient-to-br from-orange-50 to-yellow-50 flex items-center justify-center relative">
-                  <div className="w-24 h-32 bg-gradient-to-b from-orange-200 to-orange-300 rounded-lg shadow-lg">
-                    <div className="w-full h-6 bg-orange-300 rounded-t-lg"></div>
-                    <div className="flex justify-center mt-3">
-                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <span className="text-orange-600 font-bold text-xs">
-                          ECO
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium mb-1">Túi giấy kraft</h3>
-                  <p className="text-sm text-gray-600 mb-2">2.000đ/chiếc</p>
-                  <Chip size="sm" variant="flat" className="mb-2">
-                    20×30cm
-                  </Chip>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Nhà cung cấp: Xưởng In Xanh
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="bordered"
-                      size="sm"
-                      className="flex-1 border-2 border-green-600 text-green-600 hover:bg-green-50 bg-white rounded-md"
-                    >
-                      Xem chi tiết
-                    </Button>
-                    <Button
-                      className="flex-1 bg-green-700 text-white hover:bg-green-800 rounded-md"
-                      size="sm"
-                      startContent={<ShoppingCart className="w-4 h-4" />}
-                    >
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
+          <ProductCarousel
+            items={[
+              {
+                img: tuigiay,
+                title: "Túi giấy đựng thực phẩm",
+                topMeta: "Tối thiểu. 500 chiếc • Thời gian giao hàng: 4–5 tuần",
+                provider: "EcoPack Việt Nam",
+                priceLine: (
+                  <>
+                    từ{" "}
+                    <span className="font-semibold text-pink-600">$0.72</span>{" "}
+                    mỗi chiếc
+                  </>
+                ),
+                tags: [
+                  "Tối thiểu thấp",
+                  "Giao hàng nhanh",
+                  "Tái chế",
+                  "Có thể phân hủy",
+                  "Niêm phong nhiệt",
+                  "Tùy chỉnh",
+                ],
+                isNew: true,
+              },
+              {
+                img: cocLy,
+                title: "Cốc giấy in logo tùy chỉnh",
+                provider: "GreenWrap Co.",
+                topMeta: "Tối thiểu. 50 chiếc • Thời gian giao hàng: 3 tuần",
+                priceLine: (
+                  <>
+                    từ{" "}
+                    <span className="font-semibold text-pink-600">$0.13</span>{" "}
+                    mỗi chiếc
+                  </>
+                ),
+                tags: ["Tối thiểu thấp", "Giao hàng nhanh", "Tùy chỉnh"],
+                isNew: true,
+              },
+              {
+                img: hop,
+                title: "Hộp giấy in logo tùy chỉnh  ",
+                provider: "BioPackage Plus",
+                topMeta: "Tối thiểu. 1000 chiếc • Thời gian giao hàng: 3 tuần",
+                priceLine: (
+                  <>
+                    từ{" "}
+                    <span className="font-semibold text-pink-600">$0.03</span>{" "}
+                    mỗi chiếc
+                  </>
+                ),
+                tags: ["Giao hàng nhanh", "Cuộn", "Tùy chỉnh"],
+              },
+              {
+                img: onghut,
+                title: "Ống hút giấy sinh học",
+                provider: "NatureBox Việt Nam",
+                topMeta: "Tối thiểu. 5000 chiếc • Thời gian giao hàng: 6 tuần",
+                priceLine: <>Yêu cầu báo giá</>,
+                tags: ["Giao hàng nhanh", "Cuộn", "Tùy chỉnh"],
+              },
+              {
+                img: onghut,
+                title: "Bát giấy tùy chỉnh",
+                provider: "EcoPack Việt Nam",
+                topMeta: "Tối thiểu. 5000 chiếc • Thời gian giao hàng: 6 tuần",
+                priceLine: <>Yêu cầu báo giá</>,
+                tags: ["Giao hàng nhanh", "Cuộn", "Tùy chỉnh"],
+                isNew: true,
+              },
+              // ...cứ thêm item là kéo được tiếp
+            ]}
+          />
+        </div>
+      </section>
 
-            {/* Product 2 - Cốc cà phê sinh học */}
-            <Card
-              className={`border border-gray-200 hover:shadow-lg transition-shadow ${
-                visibleSections.products ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-48 bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center relative">
-                  <div className="relative">
-                    <div className="w-16 h-24 bg-gradient-to-b from-green-300 to-green-400 rounded-b-full shadow-lg">
-                      <div className="w-full h-5 bg-green-200 rounded-t-lg"></div>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mt-2">
-                          <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-bold">
-                              ★
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="absolute -right-1 top-8 w-4 h-8 bg-green-300 rounded-full"></div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium mb-1">Cốc cà phê sinh học</h3>
-                  <p className="text-sm text-gray-600 mb-2">5.000đ/chiếc</p>
-                  <Chip size="sm" variant="flat" className="mb-2">
-                    300ml
-                  </Chip>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Nhà cung cấp: Xưởng Sài Gòn
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="bordered"
-                      size="sm"
-                      className="flex-1 border-2 border-green-600 text-green-600 hover:bg-green-50 bg-white rounded-md"
-                    >
-                      Xem chi tiết
-                    </Button>
-                    <Button
-                      className="flex-1 bg-green-700 text-white hover:bg-green-800 rounded-md"
-                      size="sm"
-                      startContent={<ShoppingCart className="w-4 h-4" />}
-                    >
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Product 3 - Hộp đựng tre */}
-            <Card
-              className={`border border-gray-200 hover:shadow-lg transition-shadow ${
-                visibleSections.products ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-48 bg-gradient-to-br from-green-50 to-lime-50 flex items-center justify-center relative">
-                  <div className="flex flex-col space-y-1">
-                    <div className="w-20 h-6 bg-gradient-to-r from-green-200 to-green-300 rounded-lg shadow-sm border border-green-300">
-                      <div className="w-full h-2 bg-green-300 rounded-t-lg"></div>
-                    </div>
-                    <div className="w-24 h-8 bg-gradient-to-r from-green-300 to-green-400 rounded-lg shadow-md border border-green-400">
-                      <div className="w-full h-2 bg-green-400 rounded-t-lg"></div>
-                    </div>
-                    <div className="w-18 h-5 bg-gradient-to-r from-lime-200 to-lime-300 rounded-lg shadow-sm border border-lime-300">
-                      <div className="w-full h-1 bg-lime-300 rounded-t-lg"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium mb-1">Hộp đựng tre</h3>
-                  <p className="text-sm text-gray-600 mb-2">8.000đ/chiếc</p>
-                  <Chip size="sm" variant="flat" className="mb-2">
-                    15×15cm
-                  </Chip>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Nhà cung cấp: Eco Packaging
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="bordered"
-                      size="sm"
-                      className="flex-1 border-2 border-green-600 text-green-600 hover:bg-green-50 bg-white rounded-md"
-                    >
-                      Xem chi tiết
-                    </Button>
-                    <Button
-                      className="flex-1 bg-green-700 text-white hover:bg-green-800 rounded-md"
-                      size="sm"
-                      startContent={<ShoppingCart className="w-4 h-4" />}
-                    >
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-
-            {/* Product 4 - Ống hút giấy */}
-            <Card
-              className={`border border-gray-200 hover:shadow-lg transition-shadow ${
-                visibleSections.products ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-48 bg-gradient-to-br from-gray-50 to-slate-50 flex items-center justify-center relative">
-                  <div className="flex items-center justify-center">
-                    <div className="flex space-x-1 transform rotate-12">
-                      <div className="w-2 h-32 bg-gradient-to-b from-pink-200 to-pink-300 rounded-full shadow-sm"></div>
-                      <div className="w-2 h-32 bg-gradient-to-b from-yellow-200 to-yellow-300 rounded-full shadow-sm"></div>
-                      <div className="w-2 h-32 bg-gradient-to-b from-green-200 to-green-300 rounded-full shadow-sm"></div>
-                      <div className="w-2 h-32 bg-gradient-to-b from-blue-200 to-blue-300 rounded-full shadow-sm"></div>
-                      <div className="w-2 h-32 bg-gradient-to-b from-purple-200 to-purple-300 rounded-full shadow-sm"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <h3 className="font-medium mb-1">Ống hút giấy</h3>
-                  <p className="text-sm text-gray-600 mb-2">1.000đ/chiếc</p>
-                  <Chip size="sm" variant="flat" className="mb-2">
-                    20cm
-                  </Chip>
-                  <p className="text-xs text-gray-500 mb-3">
-                    Nhà cung cấp: Xưởng In Xanh
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="bordered"
-                      size="sm"
-                      className="flex-1 border-2 border-green-600 text-green-600 hover:bg-green-50 bg-white rounded-md"
-                    >
-                      Xem chi tiết
-                    </Button>
-                    <Button
-                      className="flex-1 bg-green-700 text-white hover:bg-green-800 rounded-md"
-                      size="sm"
-                      startContent={<ShoppingCart className="w-4 h-4" />}
-                    >
-                      Thêm
-                    </Button>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-
-          <div className="text-center mt-8">
+      {/* <div className="text-center mt-8">
             <Button
               variant="bordered"
               size="lg"
@@ -883,13 +441,10 @@ const Home = () => {
             </Button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Why Choose Us Section */}
-      <section
-        className="py-12 mx-auto"
-        style={{ backgroundColor: "#F5F9F7", width: "80%" }}
-      >
+      <section className="py-12 mx-auto bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8]">
         <div className="max-w-7xl mx-auto px-4">
           <h2 className="text-2xl font-semibold text-center text-gray-800 mb-12">
             Tại sao chọn dịch vụ của chúng tôi?
@@ -969,142 +524,90 @@ const Home = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section id="featured" data-animate className="py-12 bg-white">
+      <section className="py-12 bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8]">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-600 border-l-4 border-green-600 pl-4 py-2 bg-gradient-to-r from-green-50 to-transparent rounded-r-lg flex items-center gap-3">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                />
-              </svg>
-              Sản phẩm nổi bật
-            </h2>
-          </div>
+          <h2 className="text-4xl font-semibold text-gray-800 mb-6">
+            Sản phẩm nổi bật
+          </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Featured Product 1 */}
-            <Card
-              className={`shadow-lg ${
-                visibleSections.featured ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-64 bg-gradient-to-br from-orange-100 to-yellow-100 flex items-center justify-center relative">
-                  <div className="w-32 h-32 bg-orange-200 rounded-lg flex items-center justify-center">
-                    <span className="text-orange-600 font-bold text-sm">
-                      LOGO
-                    </span>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-lg mb-2">
-                    Túi giấy in logo cao cấp
-                  </h3>
-                  <p className="text-xl font-bold text-green-600 mb-2">
-                    3.500đ/chiếc
-                  </p>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Nhà cung cấp: Xưởng In Minh
-                  </p>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Túi giấy kraft chất lượng cao với thiết kế logo tùy chỉnh
-                    theo yêu cầu, phù hợp cho doanh nghiệp
-                  </p>
-                  <Button className="w-full font-medium bg-green-700 text-white hover:bg-green-800 rounded-md">
-                    Mua ngay
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
+          <ProductCarousel
+            items={[
+              {
+                img: tuigiaycaocap,
+                title: "Túi giấy đựng thực phẩm",
 
-            {/* Featured Product 2 */}
-            <Card
-              className={`shadow-lg ${
-                visibleSections.featured ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-64 bg-gradient-to-br from-green-100 to-lime-100 flex items-center justify-center">
-                  <div className="flex space-x-2">
-                    <div className="w-16 h-20 bg-green-200 rounded"></div>
-                    <div className="w-16 h-16 bg-green-300 rounded"></div>
-                    <div className="w-16 h-12 bg-green-200 rounded"></div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-lg mb-2">
-                    Bộ hộp đựng thực phẩm sinh học
-                  </h3>
-                  <p className="text-xl font-bold text-green-600 mb-2">
-                    15.000đ/bộ
-                  </p>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Nhà cung cấp: Eco Packaging
-                  </p>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Bộ hộp đựng thức ăn làm từ vật liệu sinh học, an toàn cho
-                    sức khỏe và môi trường
-                  </p>
-                  <Button className="w-full font-medium bg-green-700 text-white hover:bg-green-800 rounded-md">
-                    Mua ngay
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
+                provider: "EcoPack Việt Nam",
+                priceLine: (
+                  <>
+                    từ{" "}
+                    <span className="font-semibold text-pink-600">$0.72</span>{" "}
+                    mỗi chiếc
+                  </>
+                ),
+                description:
+                  "Túi giấy kraft chất lượng cao, thân thiện với môi trường ",
 
-            {/* Featured Product 3 */}
-            <Card
-              className={`shadow-lg ${
-                visibleSections.featured ? "animate-scale-in" : ""
-              }`}
-            >
-              <CardBody className="p-0">
-                <div className="h-64 bg-gradient-to-br from-green-200 to-green-300 flex items-center justify-center">
-                  <div className="w-24 h-32 bg-green-600 rounded-lg flex items-center justify-center relative">
-                    <div className="w-20 h-28 bg-green-500 rounded-lg flex items-center justify-center">
-                      <div className="w-6 h-6 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-lg mb-2">
-                    Cốc cà phê có thể tái sử dụng
-                  </h3>
-                  <p className="text-xl font-bold text-green-600 mb-2">
-                    4.500đ/chiếc
-                  </p>
-                  <p className="text-sm text-gray-600 mb-1">
-                    Nhà cung cấp: Green Cup
-                  </p>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Cốc cà phê sinh học với thiết kế độc đáo, có thể tái sử dụng
-                    nhiều lần, thân thiện môi trường
-                  </p>
-                  <Button className="w-full font-medium bg-green-700 text-white hover:bg-green-800 rounded-md">
-                    Mua ngay
-                  </Button>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
+                isNew: true,
+              },
+              {
+                img: coccaphe,
+                title: "Cốc cà phê có thể tái sử dụng",
+                provider: "GreenWrap Co.",
+                priceLine: (
+                  <>
+                    từ{" "}
+                    <span className="font-semibold text-pink-600">$0.13</span>{" "}
+                    mỗi chiếc
+                  </>
+                ),
+                description:
+                  "Cốc cà phê giấy in logo tùy chỉnh, giữ nhiệt tốt, thân thiện môi trường",
+                isNew: true,
+              },
+              {
+                img: hopdungthucpham,
+                title: "Hộp đựng thực phẩm đa năng  ",
+                provider: "BioPackage Plus",
+                description:
+                  "Hộp đựng thực phẩm giấy, dễ dàng tùy chỉnh kích thước và in ấn logo.",
+                priceLine: (
+                  <>
+                    từ{" "}
+                    <span className="font-semibold text-pink-600">$0.03</span>{" "}
+                    mỗi chiếc
+                  </>
+                ),
+              },
+              {
+                img: onghut,
+                title: "Ống hút giấy sinh học",
+                provider: "NatureBox Việt Nam",
+                topMeta: "Tối thiểu. 5000 chiếc • Thời gian giao hàng: 6 tuần",
+                description:
+                  "Ống hút giấy sinh học, an toàn cho sức khỏe và môi trường.",
+                priceLine: <>Yêu cầu báo giá</>,
+              },
+              {
+                img: onghut,
+                title: "Bát giấy tùy chỉnh",
+                provider: "EcoPack Việt Nam",
+                topMeta: "Tối thiểu. 5000 chiếc • Thời gian giao hàng: 6 tuần",
+                description:
+                  "Bát giấy sinh học, an toàn cho thực phẩm nóng và lạnh.",
+                priceLine: <>Yêu cầu báo giá</>,
+
+                isNew: true,
+              },
+              // ...cứ thêm item là kéo được tiếp
+            ]}
+          />
         </div>
       </section>
-
       {/* Customer Reviews Section */}
       <section
         id="reviews"
         data-animate
-        className="py-12 mx-auto"
-        style={{ backgroundColor: "#F5F9F7", width: "80%" }}
+        className="py-12 mx-auto bg-gradient-to-br bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8]"
       >
         <div className="max-w-5xl mx-auto px-4">
           <h2 className="text-2xl font-semibold text-center text-gray-800 mb-12">
@@ -1260,54 +763,55 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section
-        id="cta"
-        data-animate
-        className={`py-16 mx-auto`}
-        style={{ backgroundColor: "#8B6F47", width: "80%" }}
-      >
-        <div className="max-w-5xl mx-auto text-center px-4">
-          <h2 className="text-3xl font-bold text-white mb-4">
-            Sẵn sàng bắt đầu với EcoWrap?
-          </h2>
-          <p className="text-lg text-orange-100 mb-8">
-            Hãy tham gia cùng chúng tôi trong hành trình giảm thiểu rác thải
-            nhựa và bảo vệ môi trường với các giải pháp bao bì thân thiện sinh
-            thái.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              className="font-semibold px-8 text-white bg-green-700 hover:bg-green-800 rounded-md"
-              endContent={<ShoppingCart className="w-4 h-4" />}
-            >
-              Bắt đầu mua sắm
-            </Button>
-            <Button
-              variant="solid"
-              size="lg"
-              startContent={
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
-              }
-              className="bg-white text-orange-900 hover:bg-gray-100 font-semibold px-4 rounded-md"
-            >
-              Đăng ký làm nhà cung cấp
-            </Button>
+      <div className="flex justify-center bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8]">
+        <section
+          id="cta"
+          data-animate
+          className={`py-16 mx-auto bg-gradient-to-br from-[#F4F4F4] to-[#E8F5E8] `}
+        >
+          <div className="max-w-5xl mx-auto text-center px-4 bg-[#8B6F47] rounded-lg shadow-lg py-12 ">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Sẵn sàng bắt đầu với EcoWrap?
+            </h2>
+            <p className="text-lg text-orange-100 mb-8">
+              Hãy tham gia cùng chúng tôi trong hành trình giảm thiểu rác thải
+              nhựa và bảo vệ môi trường với các giải pháp bao bì thân thiện sinh
+              thái.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button
+                size="lg"
+                className="font-semibold px-8 text-white bg-green-700 hover:bg-green-800 rounded-md"
+                endContent={<ShoppingCart className="w-4 h-4" />}
+              >
+                Bắt đầu mua sắm
+              </Button>
+              <Button
+                variant="solid"
+                size="lg"
+                startContent={
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                    />
+                  </svg>
+                }
+                className="bg-white text-orange-900 hover:bg-gray-100 font-semibold px-4 rounded-md"
+              >
+                Đăng ký làm nhà cung cấp
+              </Button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   );
 };

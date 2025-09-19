@@ -8,6 +8,7 @@ import {
   NavbarItem,
   Link as NextUILink,
 } from "@heroui/react";
+import logoImg from "../../assets/logo.png";
 
 function Header() {
   return (
@@ -22,8 +23,12 @@ function Header() {
       {/* Logo/Brand */}
       <NavbarBrand>
         <div className="flex items-center cursor-pointer">
-          <div className="w-[124px] h-[66px] bg-gray-200 rounded flex items-center justify-center">
-            <span className="text-green-600 font-bold text-lg">EcoWrap</span>
+          <div className="w-[170px] h-[120px]  rounded flex items-center justify-center">
+            <img
+              src={logoImg}
+              alt="EcoWrap Logo"
+              className="max-w-full max-h-full object-contain"
+            />
           </div>
         </div>
       </NavbarBrand>
@@ -91,7 +96,7 @@ function Header() {
             size="sm"
             classNames={{
               badge:
-                "bg-red-500 text-white font-medium min-w-[18px] h-[18px] text-xs flex items-center justify-center",
+                "bg-green-500 text-white font-medium min-w-[18px] h-[18px] text-xs flex items-center justify-center",
             }}
             placement="top-right"
           >
