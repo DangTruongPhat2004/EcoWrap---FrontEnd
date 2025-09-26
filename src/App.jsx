@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import { Home, About, Login, Unauthorized, Register } from "./pages";
+import { Home, About, Login, Unauthorized, Register, Products, ProductDetail } from "./pages";
 import { ProtectedRoute } from "./routes";
 import TestComponent from "./pages/Test";
 import "./App.css";
@@ -19,6 +19,8 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/test" element={<TestComponent />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
 
             {/* Protected Routes - Examples */}
             <Route
