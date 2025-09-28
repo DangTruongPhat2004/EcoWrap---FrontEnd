@@ -12,7 +12,7 @@ import {
   Badge,
   Avatar,
   Chip,
-} from "@heroui/react";
+} from "@nextui-org/react";
 import { Search, ShoppingCart } from "lucide-react";
 import bannerImg from "../assets/banner.png";
 import tuigiay from "../assets/tuigiay.png";

@@ -1,4 +1,4 @@
-import { Link as NextUILink, Divider, Button } from "@heroui/react";
+import { Link as NextUILink, Divider, Button } from "@nextui-org/react";
 
 function Footer() {
   return (

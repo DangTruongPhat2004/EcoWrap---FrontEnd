@@ -12,7 +12,7 @@ import {
   ModalBody,
   Kbd,
   Link,
-} from "@heroui/react";
+} from "@nextui-org/react";
 import React from "react";
 import logoImg from "../../assets/logo.png";
 

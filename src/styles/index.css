@@ -1,6 +1,6 @@
 @import "tailwindcss";
 /* Custom base styles */
-*,
+/* *,
 *::before,
 *::after {
   box-sizing: border-box;
@@ -19,10 +19,10 @@ body {
   font-weight: 400;
   background-color: #ffffff;
   color: #1a1a1a;
-}
+} */
 
 /* Chỉ ví dụ: heading mặc định; KHÔNG đụng link/button toàn cục */
-h1 {
+/* h1 {
   font-size: 2rem;
   line-height: 1.2;
-}
+} */

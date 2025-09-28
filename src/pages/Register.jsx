@@ -7,7 +7,7 @@ import {
   Checkbox,
   Link,
   Divider,
-} from "@heroui/react";
+} from "@nextui-org/react";
 import logoImg from "../assets/logo.png";
 
 const Register = () => {
