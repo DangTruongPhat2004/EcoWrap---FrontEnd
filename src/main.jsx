@@ -2,16 +2,15 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.jsx";
 
-/* Chỉ cần CSS global của bạn */
 import "./styles/index.css";
 import "./styles/eco-animations.css";
 
-import { HeroUIProvider } from "@heroui/react";
+import { NextUIProvider } from "@nextui-org/react";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <HeroUIProvider locale="vi-VN">
+    <NextUIProvider>
       <App />
-    </HeroUIProvider>
+    </NextUIProvider>
   </StrictMode>
 );

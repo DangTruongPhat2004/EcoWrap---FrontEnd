@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardBody } from "@heroui/react";
+import { Card, CardBody } from "@nextui-org/react";
 
 // Ví dụ card (bạn có thể dùng ProductCard của bạn thay thế)
 const ProductCard = ({

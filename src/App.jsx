@@ -3,8 +3,13 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import { Home, About, Login, Unauthorized, Register } from "./pages";
 import { ProtectedRoute } from "./routes";
-import TestComponent from "./pages/Test";
+import MinimalDebugTest from "./pages/Test";
 import "./App.css";
+import CheckoutPage from "./pages/CheckoutPage";
+import CartPage from "./pages/CartPage";
+import Pagetest from "./pages/Pagetest";
+import BankTransferPage from "./pages/bank-tranfer";
+import OrderSuccessPage from "./pages/order/OrderSuccessPage";
 
 function App() {
   return (
@@ -18,7 +23,12 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route path="/test" element={<TestComponent />} />
+            <Route path="/test" element={<MinimalDebugTest />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/testpage" element={<Pagetest />} />
+            <Route path="/bank-transfer" element={<BankTransferPage />} />
+            <Route path="/order-success" element={<OrderSuccessPage />} />
 
             {/* Protected Routes - Examples */}
             <Route

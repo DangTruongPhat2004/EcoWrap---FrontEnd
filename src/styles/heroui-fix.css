@@ -1,0 +1,61 @@
+/* HeroUI Label Spacing Fix - More Aggressive Override */
+
+/* Force outside label positioning */
+[data-slot="base"]:has([data-placement="outside"]) {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-slot="label"][data-placement="outside"] {
+  position: static !important;
+  transform: none !important;
+  opacity: 1 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: rgb(55, 65, 81) !important;
+  margin-bottom: 0.5rem !important;
+  padding: 0 !important;
+  line-height: 1.25rem !important;
+  order: -1 !important;
+}
+
+/* Reset input wrapper positioning */
+[data-slot="input-wrapper"],
+[data-slot="trigger"] {
+  position: relative !important;
+  transform: none !important;
+  margin-top: 0 !important;
+}
+
+/* Override any floating behavior for outside labels */
+.group[data-filled="true"] [data-slot="label"][data-placement="outside"],
+.group[data-focus="true"] [data-slot="label"][data-placement="outside"],
+.group:focus-within [data-slot="label"][data-placement="outside"] {
+  transform: none !important;
+  font-size: 0.875rem !important;
+  opacity: 1 !important;
+  color: rgb(55, 65, 81) !important;
+}
+
+/* Fix textarea specifically */
+[data-slot="base"][data-component="textarea"] {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+[data-slot="base"][data-component="textarea"]
+  [data-slot="label"][data-placement="outside"] {
+  order: -1 !important;
+  margin-bottom: 0.5rem !important;
+}
+
+/* Override any animation transforms */
+[data-slot="label"][data-placement="outside"] * {
+  transform: none !important;
+}
+
+/* Error message positioning */
+[data-slot="error-message"] {
+  margin-top: 0.25rem !important;
+  order: 999 !important;
+}
