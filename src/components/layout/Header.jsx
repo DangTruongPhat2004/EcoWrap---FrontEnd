@@ -1,3 +1,4 @@
+// src/components/layout/Header.jsx
 import {
   Button,
   Badge,
@@ -12,9 +13,44 @@ import {
   ModalBody,
   Kbd,
   Link,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Avatar,
 } from "@nextui-org/react";
 import React from "react";
 import logoImg from "../../assets/logo.png";
+import apiClient from "../../services/apiClient";
+
+// --- helpers: decode JWT để lấy userId ---
+function b64urlDecode(str) {
+  const pad = "=".repeat((4 - (str.length % 4)) % 4);
+  const base64 = (str + pad).replace(/-/g, "+").replace(/_/g, "/");
+  try {
+    return atob(base64);
+  } catch {
+    return "";
+  }
+}
+function decodeJwt(token) {
+  const parts = token?.split(".") || [];
+  if (parts.length !== 3) return null;
+  try {
+    return JSON.parse(b64urlDecode(parts[1]));
+  } catch {
+    return null;
+  }
+}
+function getUserIdFromToken(token) {
+  const p = decodeJwt(token);
+  if (!p) return null;
+  return (
+    p.id ||
+    p["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ||
+    null
+  );
+}
 
 function Header() {
   // Search state
@@ -23,35 +59,119 @@ function Header() {
   const desktopInputRef = React.useRef(null);
   const mobileInputRef = React.useRef(null);
 
-  // TODO: Dùng next/navigation -> useRouter() và router.push() thay vì window.location.href
-  // import { useRouter } from "next/navigation";
-  // const router = useRouter();
+  // Auth state
+  const [user, setUser] = React.useState(null);
+  const [authLoading, setAuthLoading] = React.useState(true);
+
+  // 0) Hydrate từ localStorage (user) để hiển thị ngay
+  React.useEffect(() => {
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u && typeof u === "object") setUser(u);
+      }
+    } catch {}
+  }, []);
+
+  // 1) Lắng nghe sự kiện custom "auth:updated" để cập nhật ngay sau login/logout
+  React.useEffect(() => {
+    const onAuthUpdated = (e) => {
+      const nextUser = e?.detail?.user || null;
+      if (nextUser) {
+        setUser(nextUser);
+        try {
+          localStorage.setItem("user", JSON.stringify(nextUser));
+        } catch {}
+      } else {
+        setUser(null);
+        localStorage.removeItem("user");
+      }
+    };
+    window.addEventListener("auth:updated", onAuthUpdated);
+    return () => window.removeEventListener("auth:updated", onAuthUpdated);
+  }, []);
+
+  // 2) Đồng bộ đa tab qua "storage" event
+  React.useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "user") {
+        try {
+          const u = e.newValue ? JSON.parse(e.newValue) : null;
+          setUser(u);
+        } catch {
+          setUser(null);
+        }
+      }
+      if (e.key === "token" && !e.newValue) {
+        setUser(null);
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  // 3) mount: nếu có token thì fetch user (fallback khi F5)
+  React.useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          if (alive) setAuthLoading(false);
+          return;
+        }
+        // nếu đã có user từ localStorage thì chỉ cần clear loading
+        if (user) {
+          if (alive) setAuthLoading(false);
+          return;
+        }
+        const id = getUserIdFromToken(token);
+        if (!id) {
+          localStorage.removeItem("token");
+          if (alive) setAuthLoading(false);
+          return;
+        }
+        const res = await apiClient.get(`/api/Users/${id}`);
+        if (alive) {
+          setUser(res.data || null);
+          try {
+            localStorage.setItem("user", JSON.stringify(res.data || null));
+          } catch {}
+        }
+      } catch (e) {
+        console.warn("[header] fetch user error:", e);
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      } finally {
+        if (alive) setAuthLoading(false);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []); // chỉ chạy khi mount
 
   const submitSearch = (q) => {
     const value = (q ?? query).trim();
     if (!value) return;
-
-    // TODO: Chuyển sang: router.push(`/search?q=${encodeURIComponent(value)}`)
-    // TODO: Track analytics: search_submit (q, source: 'header'|'mobile_modal')
     window.location.href = `/search?q=${encodeURIComponent(value)}`;
   };
 
-  // TODO: Phím tắt Ctrl/⌘+K để focus ô search desktop (và mở modal mobile nếu không có desktopInputRef)
-  // React.useEffect(() => {
-  //   const onKey = (e) => {
-  //     const isModK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k";
-  //     if (isModK) {
-  //       e.preventDefault();
-  //       if (desktopInputRef.current) desktopInputRef.current.focus();
-  //       else {
-  //         setOpenSearch(true);
-  //         setTimeout(() => mobileInputRef.current?.focus(), 0);
-  //       }
-  //     }
-  //   };
-  //   window.addEventListener("keydown", onKey);
-  //   return () => window.removeEventListener("keydown", onKey);
-  // }, []);
+  const onLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    setUser(null);
+    // phát sự kiện cho các component khác
+    window.dispatchEvent(
+      new CustomEvent("auth:updated", { detail: { token: null, user: null } })
+    );
+    window.location.href = "/login";
+  };
+
+  const displayName =
+    user?.fullName?.trim() || user?.username?.trim() || "Tài khoản";
+  const avatarChar = (displayName[0] || "U").toUpperCase();
 
   return (
     <Navbar
@@ -62,7 +182,7 @@ function Header() {
         base: "bg-white",
       }}
     >
-      {/* 1) LOGO (trái) */}
+      {/* 1) LOGO */}
       <NavbarBrand>
         <Link href="/" aria-label="Về trang chủ" className="flex items-center">
           <div className="w-[170px] h-[120px] rounded flex items-center justify-center">
@@ -75,9 +195,8 @@ function Header() {
         </Link>
       </NavbarBrand>
 
-      {/* 2) NAV LINKS: Sản phẩm → Bộ sưu tập (bỏ Trang chủ & Thiết kế) */}
+      {/* 2) NAV LINKS */}
       <NavbarContent className="hidden sm:flex gap-8" justify="start">
-        {/* TODO: Bạn bảo bỏ "Trang chủ" -> xoá block này khi sẵn sàng */}
         <NavbarItem>
           <NextUILink
             href="/"
@@ -87,7 +206,6 @@ function Header() {
             Trang chủ
           </NextUILink>
         </NavbarItem>
-
         <NavbarItem>
           <NextUILink
             href="/products"
@@ -97,7 +215,6 @@ function Header() {
             Sản phẩm
           </NextUILink>
         </NavbarItem>
-
         <NavbarItem>
           <NextUILink
             href="/collections"
@@ -109,7 +226,7 @@ function Header() {
         </NavbarItem>
       </NavbarContent>
 
-      {/* 3) THANH TÌM KIẾM (ở giữa, chiếm flex) */}
+      {/* 3) SEARCH */}
       <NavbarContent className="hidden sm:flex flex-1" justify="end">
         <form
           role="search"
@@ -126,11 +243,7 @@ function Header() {
             radius="full"
             placeholder="Tìm sản phẩm, danh mục, bộ sưu tập…"
             value={query}
-            onChange={(e) => {
-              // TODO: debounce 300–400ms để gọi API gợi ý (/api/search/suggest?q=)
-              // TODO: lưu query gần đây (localStorage) khi submit thành công
-              setQuery(e.target.value);
-            }}
+            onChange={(e) => setQuery(e.target.value)}
             startContent={
               <svg
                 className="w-5 h-5 text-gray-500"
@@ -145,23 +258,15 @@ function Header() {
             classNames={{
               inputWrapper:
                 "h-8 border-gray-300 hover:border-gray-400 focus-within:border-[#027534]",
-              // TODO: gọn hơn -> input: 'text-sm', thêm px-2 nếu muốn
             }}
           />
-
-          {/* TODO: Dropdown gợi ý (autocomplete)
-              - Hiển thị khi query.length > 0
-              - Nhóm: Sản phẩm / Danh mục / Từ khoá
-              - Điều hướng bằng phím ↑/↓ + Enter
-              - Ẩn khi blur/Esc
-          */}
         </form>
       </NavbarContent>
 
-      {/* 4) ACTIONS (phải) */}
+      {/* 4) ACTIONS */}
       <NavbarContent justify="end">
         <NavbarItem className="flex items-center space-x-4 sm:space-x-6">
-          {/* Nút mở search trên mobile */}
+          {/* Mobile search */}
           <Button
             isIconOnly
             variant="light"
@@ -252,24 +357,61 @@ function Header() {
             </Button>
           </Badge>
 
-          {/* Auth */}
-          <NextUILink
-            href="/login"
-            color="success"
-            className="text-[#027534] text-[16px] font-normal hover:underline"
-          >
-            Đăng nhập/ Đăng ký
-          </NextUILink>
+          {/* Auth: nếu đã đăng nhập -> Dropdown user, ngược lại -> link login */}
+          {authLoading ? (
+            <div className="w-28 h-8 rounded-full bg-gray-100 animate-pulse" />
+          ) : user ? (
+            <Dropdown placement="bottom-end">
+              <DropdownTrigger>
+                <Button
+                  variant="light"
+                  className="px-2 h-11 gap-2 bg-[rgba(168,213,186,0.18)] hover:bg-[rgba(168,213,186,0.28)]"
+                >
+                  <Avatar
+                    src={user?.profilePicture || undefined}
+                    name={avatarChar}
+                    isBordered
+                    radius="full"
+                    className="w-7 h-7 text-sm bg-[#e8f5e8] text-[#027534]"
+                  />
+                  <span className="hidden sm:inline text-[#027534]">
+                    {displayName}
+                  </span>
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                aria-label="Menu tài khoản"
+                onAction={(key) => {
+                  if (key === "profile") window.location.href = "/account";
+                  if (key === "logout") onLogout();
+                }}
+              >
+                <DropdownItem key="profile">Thông tin cá nhân</DropdownItem>
+                <DropdownItem
+                  key="logout"
+                  color="danger"
+                  className="text-danger"
+                >
+                  Đăng xuất
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          ) : (
+            <NextUILink
+              href="/login"
+              color="success"
+              className="text-[#027534] text-[16px] font-normal hover:underline"
+            >
+              Đăng nhập/ Đăng ký
+            </NextUILink>
+          )}
         </NavbarItem>
       </NavbarContent>
 
       {/* Mobile Search Modal */}
       <Modal
         isOpen={openSearch}
-        onOpenChange={(open) => {
-          // TODO: nếu đóng do Esc -> track 'search_modal_close'
-          setOpenSearch(open);
-        }}
+        onOpenChange={(open) => setOpenSearch(open)}
         placement="top-center"
         backdrop="opaque"
         className="max-w-xl"
@@ -279,7 +421,6 @@ function Header() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                // TODO: Track analytics: search_submit (source: 'mobile_modal')
                 submitSearch();
               }}
             >
@@ -290,10 +431,7 @@ function Header() {
                 radius="full"
                 placeholder="Tìm kiếm EcoWrap…"
                 value={query}
-                onChange={(e) => {
-                  // TODO: debounce + gọi /api/search/suggest
-                  setQuery(e.target.value);
-                }}
+                onChange={(e) => setQuery(e.target.value)}
                 startContent={
                   <svg
                     className="w-5 h-5 text-gray-500"
@@ -314,8 +452,6 @@ function Header() {
             <div className="text-xs text-gray-500">
               Nhấn <Kbd>Enter</Kbd> để tìm.
             </div>
-
-            {/* TODO: Render dropdown gợi ý ở mobile (danh sách tối giản) */}
           </ModalBody>
         </ModalContent>
       </Modal>

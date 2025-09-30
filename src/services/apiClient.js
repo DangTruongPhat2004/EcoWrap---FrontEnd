@@ -1,41 +1,40 @@
+// src/api/apiClient.js
 import axios from "axios";
 
-// Create axios instance with base configuration
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "https://localhost:7077",
   timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json", Accept: "application/json" },
+  withCredentials: true, // TẮT tạm để tránh CORS kiểu credentials
 });
 
-// Request interceptor
-apiClient.interceptors.request.use(
-  (config) => {
-    // Add auth token if it exists
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
+// log base URL khi file được import
+console.log("[API BASE]", apiClient.defaults.baseURL);
 
-// Response interceptor
+// log mọi request gửi đi
+apiClient.interceptors.request.use((config) => {
+  console.log(
+    "[API REQ]",
+    (config.method || "GET").toUpperCase(),
+    (config.baseURL || "") + config.url
+  );
+  // token demo
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    // Handle common errors
-    if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      // Redirect to login or handle unauthorized
-    }
-    return Promise.reject(error);
+  (res) => res,
+  (err) => {
+    console.log(
+      "[API ERR]",
+      err?.message,
+      err?.response?.status,
+      err?.response?.data
+    );
+    if (err?.response?.status === 401) localStorage.removeItem("token");
+    return Promise.reject(err);
   }
 );
 

@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React from "react";
 import {
   Card,
@@ -8,22 +9,59 @@ import {
   Link,
   Divider,
 } from "@nextui-org/react";
+import { useNavigate, useLocation } from "react-router-dom";
 import logoImg from "../assets/logo.png";
+import apiClient from "../services/apiClient";
+
+// helper: decode JWT để lấy id
+function b64urlDecode(str) {
+  const pad = "=".repeat((4 - (str.length % 4)) % 4);
+  const base64 = (str + pad).replace(/-/g, "+").replace(/_/g, "/");
+  try {
+    return atob(base64);
+  } catch {
+    return "";
+  }
+}
+function decodeJwt(token) {
+  const parts = token?.split(".") || [];
+  if (parts.length !== 3) return null;
+  try {
+    return JSON.parse(b64urlDecode(parts[1]));
+  } catch {
+    return null;
+  }
+}
+function getUserIdFromToken(token) {
+  const p = decodeJwt(token);
+  if (!p) return null;
+  return (
+    p.id ||
+    p["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] ||
+    null
+  );
+}
 
 const Login = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ---- state ----
   const [form, setForm] = React.useState({
-    email: "",
+    username: "",
     password: "",
     remember: false,
   });
   const [touched, setTouched] = React.useState({
-    email: false,
+    username: false,
     password: false,
   });
-  const [errors, setErrors] = React.useState({ email: "", password: "" });
+  const [errors, setErrors] = React.useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [status, setStatus] = React.useState({ type: "", msg: "" });
 
+  // ---- styles ----
   const inputStyles = {
     inputWrapper:
       "border border-gray-300 rounded-lg bg-white shadow-none " +
@@ -34,12 +72,12 @@ const Login = () => {
       "text-[15px] placeholder:text-gray-400 outline-none focus:outline-none focus-visible:outline-none appearance-none",
   };
 
-  const isEmail = (v) =>
-    /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(v).toLowerCase());
+  // ---- validate ----
   const validate = (values) => {
-    const next = { email: "", password: "" };
-    if (!values.email) next.email = "Vui lòng nhập email";
-    else if (!isEmail(values.email)) next.email = "Email không hợp lệ";
+    const next = { username: "", password: "" };
+    if (!values.username) next.username = "Vui lòng nhập tên đăng nhập";
+    else if (values.username.length < 3)
+      next.username = "Tên đăng nhập tối thiểu 3 ký tự";
     if (!values.password) next.password = "Vui lòng nhập mật khẩu";
     else if (values.password.length < 6)
       next.password = "Mật khẩu tối thiểu 6 ký tự";
@@ -61,14 +99,77 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setTouched({ email: true, password: true });
+    setTouched({ username: true, password: true });
     const v = validate(form);
     setErrors(v);
     if (Object.values(v).some(Boolean)) return;
+
+    setStatus({ type: "", msg: "" });
     try {
       setSubmitting(true);
-      await new Promise((r) => setTimeout(r, 1200)); // mock API
-      console.log("Login payload:", form);
+
+      // 1) Login -> nhận token
+      const res = await apiClient.post("/api/Authentication/login", {
+        username: form.username,
+        password: form.password,
+      });
+
+      const token = res?.data?.token;
+      if (!token) {
+        // BE trả 200 nhưng không có token => coi như sai thông tin
+        throw Object.assign(new Error("INVALID_CREDENTIALS"), { code: 401 });
+      }
+
+      // 2) Lưu token (interceptor sẽ tự gắn Authorization ở mọi request tiếp theo)
+      localStorage.setItem("token", token);
+
+      // 3) Lấy userId từ token -> fetch hồ sơ
+      const userId = getUserIdFromToken(token);
+      if (!userId) throw new Error("Không tìm thấy ID trong token.");
+
+      const meRes = await apiClient.get(`/api/Users/${userId}`);
+      const me = meRes?.data || null;
+
+      // 3.1) Lưu user để các nơi khác có thể đọc ngay (và giữ sau refresh)
+      localStorage.setItem("user", JSON.stringify(me));
+
+      // 3.2) Phát sự kiện để Header (hoặc component khác) có thể cập nhật ngay lập tức
+      // Header có thể lắng nghe:
+      //   window.addEventListener("auth:updated", (e) => setUser(e.detail.user));
+      window.dispatchEvent(
+        new CustomEvent("auth:updated", { detail: { token, user: me } })
+      );
+
+      setStatus({ type: "success", msg: "Đăng nhập thành công!" });
+
+      // 4) Điều hướng sau login
+      const from = location.state?.from || "/";
+      navigate(from, { replace: true });
+    } catch (err) {
+      // Chuẩn hoá thông điệp lỗi
+      const httpStatus = err?.response?.status || err?.code;
+      let message = "Đăng nhập thất bại. Vui lòng thử lại.";
+
+      if (httpStatus === 401) {
+        message = "Tên đăng nhập hoặc mật khẩu không đúng.";
+        // set lỗi vào trường password để user thấy ngay
+        setErrors((prev) => ({ ...prev, password: message }));
+      } else if (
+        httpStatus === 409 ||
+        err?.response?.data?.code === "EMAIL_NOT_VERIFIED"
+      ) {
+        message =
+          "Email chưa được xác thực. Vui lòng kiểm tra hộp thư để xác thực.";
+      } else if (
+        httpStatus === "ECONNABORTED" ||
+        err?.message?.includes("timeout")
+      ) {
+        message = "Kết nối máy chủ quá thời gian. Vui lòng thử lại.";
+      } else if (err?.response?.data?.message) {
+        message = err.response.data.message;
+      }
+
+      setStatus({ type: "error", msg: message });
     } finally {
       setSubmitting(false);
     }
@@ -100,25 +201,40 @@ const Login = () => {
                 </p>
               </div>
 
+              {/* Banner thông báo */}
+              {status.msg ? (
+                <div
+                  role="alert"
+                  className={
+                    "mb-4 text-sm rounded-lg px-3 py-2 " +
+                    (status.type === "success"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-red-50 text-red-700 border border-red-200")
+                  }
+                >
+                  {status.msg}
+                </div>
+              ) : null}
+
               <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-                <label htmlFor="email" className="sr-only">
-                  Email
+                <label htmlFor="username" className="sr-only">
+                  Tên đăng nhập
                 </label>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Nhập email của bạn"
+                  id="username"
+                  name="username"
+                  type="text"
+                  placeholder="Nhập tên đăng nhập"
                   variant="bordered"
                   color="success"
-                  autoComplete="email"
+                  autoComplete="username"
                   autoCapitalize="off"
                   autoCorrect="off"
-                  value={form.email}
-                  onChange={onChange("email")}
-                  onBlur={onBlur("email")}
-                  isInvalid={touched.email && !!errors.email}
-                  errorMessage={touched.email ? errors.email : ""}
+                  value={form.username}
+                  onChange={onChange("username")}
+                  onBlur={onBlur("username")}
+                  isInvalid={touched.username && !!errors.username}
+                  errorMessage={touched.username ? errors.username : ""}
                   classNames={inputStyles}
                   required
                 />
@@ -149,7 +265,6 @@ const Login = () => {
                       }
                       className="outline-none"
                     >
-                      {/* icon đơn giản, không ảnh hưởng CSS global */}
                       {showPassword ? (
                         <svg width="20" height="20" viewBox="0 0 24 24">
                           <path
@@ -223,7 +338,7 @@ const Login = () => {
                     Chưa có tài khoản?{" "}
                     <Link
                       href="/register"
-                      className="text-green-600 hover:text-emerald-700 transition-colors`"
+                      className="text-green-600 hover:text-emerald-700 transition-colors"
                     >
                       Đăng ký ngay
                     </Link>
