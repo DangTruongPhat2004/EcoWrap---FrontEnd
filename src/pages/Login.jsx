@@ -326,7 +326,7 @@ const Login = () => {
                 <Button
                   type="submit"
                   color="success"
-                  className="w-full font-semibold"
+                  className="w-full font-semibold bg-green-600 hover:bg-emerald-600 focus:bg-emerald-800 disabled:opacity-50 disabled:cursor-not-allowed"
                   isLoading={submitting}
                   disabled={!isFormValid}
                 >

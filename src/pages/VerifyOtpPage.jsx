@@ -209,8 +209,8 @@ export default function VerifyOtpPage() {
   }
 
   return (
-    <div className="min-h-[60vh] flex items-center justify-center">
-      <Card className="max-w-md w-full">
+    <div className="min-h-[60vh] flex items-center justify-center bg-white/50 px-3">
+      <Card className="max-w-md w-full bg-white/50 px-3 py-4 shadow-lg">
         <CardHeader className="text-lg font-semibold">
           Xác thực email
         </CardHeader>
