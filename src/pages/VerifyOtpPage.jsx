@@ -1,18 +1,11 @@
 // src/pages/VerifyOtpPage.jsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Input,
-  Button,
-  Link,
-  Divider,
-} from "@nextui-org/react";
+import { Card, CardBody, CardHeader, Button, Divider } from "@nextui-org/react";
 import { useVerifyEmail, useResendOtp } from "../hooks/useRegister";
 
 const COOLDOWN_SECONDS = 30;
+const OTP_LEN = 6;
 
 export default function VerifyOtpPage() {
   const navigate = useNavigate();
@@ -29,23 +22,21 @@ export default function VerifyOtpPage() {
   const [err, setErr] = React.useState("");
   const [cooldown, setCooldown] = React.useState(COOLDOWN_SECONDS);
 
-  // >>> THÊM state thông báo đúng/sai <<<
+  // Flash banner (ví dụ: "Đã gửi OTP, kiểm tra email")
   const flash = location.state?.flash || "";
   const [status, setStatus] = React.useState(
     flash ? { type: "success", msg: flash } : { type: "", msg: "" }
   );
-  const inputRef = React.useRef(null);
-  const timerRef = React.useRef(null);
 
   const verifyMut = useVerifyEmail();
   const resendMut = useResendOtp();
 
-  const OTP_LEN = 6;
   const cellRefs = React.useRef(
     Array.from({ length: OTP_LEN }, () => React.createRef())
   );
+  const timerRef = React.useRef(null);
 
-  // ----- helpers cho ô vuông OTP -----
+  // Helpers
   const setOtpAt = (idx, digit) => {
     const arr = otp.split("");
     arr[idx] = digit;
@@ -103,23 +94,30 @@ export default function VerifyOtpPage() {
   };
 
   const handleCellsPaste = (e) => {
-    const text = e.clipboardData.getData("text").replace(/[^0-9]/g, "");
-    if (!text) return;
+    const raw = e.clipboardData.getData("text").replace(/[^0-9]/g, "");
+    if (!raw) return;
     e.preventDefault();
-    // rải đều 6 số vào các ô
-    const fill = text.slice(0, OTP_LEN).padEnd(OTP_LEN, "");
-    setOtp(fill);
-    // focus ô cuối có số
-    const lastIdx = Math.min(fill.length, OTP_LEN) - 1;
+
+    const n = Math.min(raw.length, OTP_LEN);
+    const filled = raw.slice(0, OTP_LEN);
+    const next = filled.padEnd(OTP_LEN, "");
+    setOtp(next);
+
+    // Focus đúng ô cuối cùng có số thực sự (n-1), không phải luôn cuối mảng
+    const lastIdx = n - 1;
     if (lastIdx >= 0) cellRefs.current[lastIdx]?.current?.focus();
-    if (err && fill.length === OTP_LEN) setErr("");
+
+    if (err && n === OTP_LEN) setErr("");
   };
 
+  // Lưu email & focus ô đầu (nếu muốn)
   React.useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 0);
     if (email) localStorage.setItem("otpEmail", email);
+    // Focus ô đầu tiên
+    setTimeout(() => cellRefs.current[0]?.current?.focus(), 0);
   }, [email]);
 
+  // Cooldown resend
   React.useEffect(() => {
     if (cooldown <= 0) return;
     timerRef.current = setInterval(() => {
@@ -164,7 +162,7 @@ export default function VerifyOtpPage() {
   const handleResend = async () => {
     if (verifyMut.isPending || resendMut.isPending || cooldown > 0) return;
     try {
-      await resendMut.mutateAsync({ email }); // BE hiện đang re-init để resend
+      await resendMut.mutateAsync({ email }); // BE đang re-init để resend
       setStatus({
         type: "success",
         msg: "Đã gửi lại OTP. Vui lòng kiểm tra email.",
@@ -176,16 +174,6 @@ export default function VerifyOtpPage() {
         msg: e?.message || "Gửi lại OTP thất bại. Vui lòng thử lại.",
       });
     }
-  };
-
-  const handleChange = (e) => {
-    const v = e.target.value.replace(/[^0-9]/g, "").slice(0, 6);
-    setOtp(v);
-    if (v.length === 6 && err) setErr("");
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !verifyMut.isPending && otp.length === 6) submit();
   };
 
   if (!email) {
@@ -235,7 +223,7 @@ export default function VerifyOtpPage() {
             Mã OTP đã gửi tới <b>{email}</b>. Hết hạn sau 15 phút.
           </p>
 
-          {/* ====== Ô vuông OTP (6 số) ====== */}
+          {/* Ô vuông OTP (6 số) */}
           <div
             className="flex items-center justify-between gap-2 select-none"
             onPaste={handleCellsPaste}
@@ -263,6 +251,7 @@ export default function VerifyOtpPage() {
               />
             ))}
           </div>
+
           {err ? (
             <p className="text-xs text-red-500">{err}</p>
           ) : (

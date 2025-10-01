@@ -18,7 +18,21 @@ import {
   DropdownMenu,
   DropdownItem,
   Avatar,
+  Divider,
+  DropdownSection,
 } from "@nextui-org/react";
+import {
+  ChevronDown,
+  ChevronRight,
+  User as UserIcon,
+  Settings,
+  Heart,
+  Package,
+  CreditCard,
+  HeadphonesIcon,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
 import React from "react";
 import logoImg from "../../assets/logo.png";
 import apiClient from "../../services/apiClient";
@@ -357,43 +371,190 @@ function Header() {
             </Button>
           </Badge>
 
-          {/* Auth: nếu đã đăng nhập -> Dropdown user, ngược lại -> link login */}
           {authLoading ? (
-            <div className="w-28 h-8 rounded-full bg-gray-100 animate-pulse" />
+            <div className="h-11 w-[180px] rounded-full bg-gray-100 animate-pulse" />
           ) : user ? (
-            <Dropdown placement="bottom-end">
+            <Dropdown
+              placement="bottom-end"
+              classNames={{
+                content:
+                  "p-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl min-w-[320px]",
+              }}
+            >
               <DropdownTrigger>
                 <Button
-                  variant="light"
-                  className="px-2 h-11 gap-2 bg-[rgba(168,213,186,0.18)] hover:bg-[rgba(168,213,186,0.28)]"
+                  variant="flat"
+                  radius="full"
+                  className="group h-11 pl-1 pr-2 gap-2 bg-gray-50 hover:bg-gray-100"
                 >
                   <Avatar
                     src={user?.profilePicture || undefined}
                     name={avatarChar}
                     isBordered
                     radius="full"
-                    className="w-7 h-7 text-sm bg-[#e8f5e8] text-[#027534]"
+                    className="w-8 h-8 text-sm bg-emerald-50 text-emerald-700"
                   />
-                  <span className="hidden sm:inline text-[#027534]">
-                    {displayName}
-                  </span>
+                  <div className="hidden sm:flex flex-col items-start min-w-0">
+                    <span className="text-[13px] font-semibold leading-4 text-gray-900 max-w-[150px] truncate">
+                      {displayName}
+                    </span>
+                    <span className="text-[11px] text-gray-500 max-w-[180px] truncate">
+                      {user?.email}
+                    </span>
+                  </div>
+                  <ChevronDown className="size-4 text-gray-700 transition-transform group-data-[open=true]:rotate-180" />
                 </Button>
               </DropdownTrigger>
+
               <DropdownMenu
                 aria-label="Menu tài khoản"
                 onAction={(key) => {
-                  if (key === "profile") window.location.href = "/account";
-                  if (key === "logout") onLogout();
+                  switch (key) {
+                    case "profile":
+                      window.location.href = "/account";
+                      break;
+                    case "orders":
+                      window.location.href = "/account/orders";
+                      break;
+                    case "wishlist":
+                      window.location.href = "/account/wishlist";
+                      break;
+                    case "payments":
+                      window.location.href = "/account/payments";
+                      break;
+                    case "admin":
+                      window.location.href = "/admin";
+                      break;
+                    case "logout":
+                      onLogout();
+                      break;
+                  }
+                }}
+                // style chữ & hover thống nhất để dễ đọc
+                itemClasses={{
+                  base:
+                    "px-4 py-3 rounded-lg data-[hover=true]:bg-gray-50 " +
+                    "data-[selectable=true]:focus:bg-gray-50",
+                  title: "text-[14px] font-medium text-gray-900",
+                  description: "text-[12px] text-gray-500",
+                  wrapper: "gap-3",
                 }}
               >
-                <DropdownItem key="profile">Thông tin cá nhân</DropdownItem>
-                <DropdownItem
-                  key="logout"
-                  color="danger"
-                  className="text-danger"
+                {/* Header: rõ ràng, không ảnh */}
+                <DropdownSection
+                  aria-label="Thông tin"
+                  classNames={{
+                    heading:
+                      "px-4 pt-3 pb-1 text-[11px] uppercase tracking-wide text-gray-500",
+                  }}
+                  title="Tài khoản"
                 >
-                  Đăng xuất
-                </DropdownItem>
+                  <DropdownItem
+                    key="header"
+                    isReadOnly
+                    className="!cursor-default"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        src={user?.profilePicture || undefined}
+                        name={avatarChar}
+                        className="w-10 h-10"
+                      />
+                      <div className="min-w-0">
+                        <p className="font-semibold leading-5 truncate">
+                          {displayName}
+                        </p>
+                        <p className="text-xs text-gray-500 truncate max-w-[240px]">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </div>
+                  </DropdownItem>
+                </DropdownSection>
+
+                {/* Nhóm tác vụ chính */}
+                <DropdownSection
+                  aria-label="Điều hướng"
+                  showDivider
+                  classNames={{
+                    heading:
+                      "px-4 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500",
+                  }}
+                  title="Quản lý"
+                >
+                  <DropdownItem
+                    key="profile"
+                    startContent={<UserIcon className="size-4 text-gray-700" />}
+                    endContent={
+                      <ChevronRight className="size-4 text-gray-400" />
+                    }
+                    description="Chỉnh sửa thông tin cá nhân"
+                  >
+                    Hồ sơ
+                  </DropdownItem>
+
+                  <DropdownItem
+                    key="orders"
+                    startContent={<Package className="size-4 text-gray-700" />}
+                    endContent={
+                      <ChevronRight className="size-4 text-gray-400" />
+                    }
+                    description="Theo dõi đơn hàng của bạn"
+                  >
+                    Đơn hàng
+                  </DropdownItem>
+
+                  <DropdownItem
+                    key="wishlist"
+                    startContent={<Heart className="size-4 text-gray-700" />}
+                    endContent={
+                      <ChevronRight className="size-4 text-gray-400" />
+                    }
+                    description="Danh sách yêu thích"
+                  >
+                    Yêu thích
+                  </DropdownItem>
+                </DropdownSection>
+
+                {/* Hỗ trợ + Admin */}
+                <DropdownSection
+                  aria-label="Khác"
+                  showDivider
+                  classNames={{
+                    heading:
+                      "px-4 pt-2 pb-1 text-[11px] uppercase tracking-wide text-gray-500",
+                  }}
+                  title="Khác"
+                >
+                  {(user?.role === "admin" || user?.isAdmin) && (
+                    <DropdownItem
+                      key="admin"
+                      className="text-amber-700"
+                      startContent={
+                        <ShieldCheck className="size-4 text-amber-700" />
+                      }
+                      endContent={
+                        <ChevronRight className="size-4 text-amber-500" />
+                      }
+                      description="Bảng điều khiển quản trị"
+                    >
+                      Trang quản trị
+                    </DropdownItem>
+                  )}
+                </DropdownSection>
+
+                {/* Đăng xuất */}
+                <DropdownSection showDivider>
+                  <DropdownItem
+                    key="logout"
+                    color="danger"
+                    className="text-danger data-[hover=true]:bg-red-50"
+                    startContent={<LogOut className="size-4" />}
+                    description="Thoát tài khoản an toàn"
+                  >
+                    Đăng xuất
+                  </DropdownItem>
+                </DropdownSection>
               </DropdownMenu>
             </Dropdown>
           ) : (
