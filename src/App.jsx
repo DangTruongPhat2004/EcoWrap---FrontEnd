@@ -21,10 +21,13 @@ import CartPage from "./pages/CartPage";
 import Pagetest from "./pages/Pagetest";
 import BankTransferPage from "./pages/bank-tranfer";
 import OrderSuccessPage from "./pages/order/OrderSuccessPage";
+import VerifyOtpPage from "./pages/VerifyOtpPage";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <Routes>
         {/* Vendor Dashboard Routes - No Header/Footer */}
         <Route
@@ -81,10 +84,9 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         {/* Public Routes - With Header/Footer */}
         <Route
-          path="*"
+          path="/*"
           element={
             <div className="min-h-screen flex flex-col">
               <Header />
@@ -103,7 +105,7 @@ function App() {
                   <Route path="/testpage" element={<Pagetest />} />
                   <Route path="/bank-transfer" element={<BankTransferPage />} />
                   <Route path="/order-success" element={<OrderSuccessPage />} />
-
+                  <Route path="/verify-otp" element={<VerifyOtpPage />} />
                   {/* Protected Routes - Examples */}
                   <Route
                     path="/dashboard"
@@ -117,7 +119,6 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-
                   <Route
                     path="/admin"
                     element={
