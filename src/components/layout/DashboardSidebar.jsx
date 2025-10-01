@@ -81,7 +81,7 @@ const DashboardSidebar = () => {
       {/* Logo and Brand */}
       <div className="p-6 border-b border-green-200">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-lg overflow-hidden">
+          <div className="w-14 h-14 rounded-lg overflow-hidden">
             <img
               src={logo}
               alt="EcoWrap Logo"
@@ -89,8 +89,8 @@ const DashboardSidebar = () => {
             />
           </div>
           <div>
-            <h2 className="font-bold text-lg text-green-800">EcoWrap</h2>
-            <p className="text-sm text-green-600">Vendor Dashboard</p>
+            <h2 className="font-bold text-sm text-green-800">EcoWrap</h2>
+            <p className="text-xs text-green-600">Vendor Dashboard</p>
           </div>
         </div>
       </div>
