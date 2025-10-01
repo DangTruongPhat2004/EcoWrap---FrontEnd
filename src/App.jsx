@@ -21,6 +21,7 @@ import CartPage from "./pages/CartPage";
 import Pagetest from "./pages/Pagetest";
 import BankTransferPage from "./pages/bank-tranfer";
 import OrderSuccessPage from "./pages/order/OrderSuccessPage";
+import VerifyOtpPage from "./pages/VerifyOtpPage";
 
 function App() {
   return (
@@ -103,6 +104,7 @@ function App() {
                   <Route path="/testpage" element={<Pagetest />} />
                   <Route path="/bank-transfer" element={<BankTransferPage />} />
                   <Route path="/order-success" element={<OrderSuccessPage />} />
+                  <Route path="/verify-otp" element={<VerifyOtpPage />} />
 
                   {/* Protected Routes - Examples */}
                   <Route
