@@ -22,8 +22,13 @@ import Pagetest from "./pages/Pagetest";
 import BankTransferPage from "./pages/bank-tranfer";
 import OrderSuccessPage from "./pages/order/OrderSuccessPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
+import React from "react";
+import GeminiChatButton from "./components/chat/GeminiChatButton";
+import GeminiChatWidget from "./components/chat/GeminiChatWidget";
 
 function App() {
+  const [open, setOpen] = React.useState(false);
+  const [unread, setUnread] = React.useState(0);
   return (
     <Router>
       <Routes>
@@ -135,6 +140,14 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <GeminiChatButton
+                onOpen={() => {
+                  setOpen(true);
+                  setUnread(0);
+                }}
+                unread={unread}
+              />
+              <GeminiChatWidget open={open} onClose={() => setOpen(false)} />
             </div>
           }
         />
