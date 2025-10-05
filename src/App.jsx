@@ -11,8 +11,10 @@ import {
   Products,
   ProductDetail,
 } from "./pages";
-import VendorDashboard from "./pages/vendor/VendorDashboard";
-import VendorProfile from "./pages/vendor/VendorProfile";
+import VendorDashboard from "./pages/customer/VendorDashboard";
+import VendorProfile from "./pages/customer/VendorProfile";
+import VendorRegistration from "./pages/VendorRegistration";
+import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
 import { ProtectedRoute } from "./routes";
 import MinimalDebugTest from "./pages/Test";
 import "./App.css";
@@ -22,8 +24,13 @@ import Pagetest from "./pages/Pagetest";
 import BankTransferPage from "./pages/bank-tranfer";
 import OrderSuccessPage from "./pages/order/OrderSuccessPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
+import React from "react";
+import GeminiChatButton from "./components/chat/GeminiChatButton";
+import GeminiChatWidget from "./components/chat/GeminiChatWidget";
 
 function App() {
+  const [open, setOpen] = React.useState(false);
+  const [unread, setUnread] = React.useState(0);
   return (
     <Router>
       <Routes>
@@ -105,6 +112,14 @@ function App() {
                   <Route path="/bank-transfer" element={<BankTransferPage />} />
                   <Route path="/order-success" element={<OrderSuccessPage />} />
                   <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                  <Route
+                    path="/vendor-registration"
+                    element={<VendorRegistration />}
+                  />
+                  <Route
+                    path="/vendor-registration-success"
+                    element={<VendorRegistrationSuccess />}
+                  />
 
                   {/* Protected Routes - Examples */}
                   <Route
@@ -135,6 +150,14 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <GeminiChatButton
+                onOpen={() => {
+                  setOpen(true);
+                  setUnread(0);
+                }}
+                unread={unread}
+              />
+              <GeminiChatWidget open={open} onClose={() => setOpen(false)} />
             </div>
           }
         />
