@@ -11,8 +11,10 @@ import {
   Products,
   ProductDetail,
 } from "./pages";
-import VendorDashboard from "./pages/vendor/VendorDashboard";
-import VendorProfile from "./pages/vendor/VendorProfile";
+import VendorDashboard from "./pages/customer/VendorDashboard";
+import VendorProfile from "./pages/customer/VendorProfile";
+import VendorRegistration from "./pages/VendorRegistration";
+import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
 import { ProtectedRoute } from "./routes";
 import MinimalDebugTest from "./pages/Test";
 import "./App.css";
@@ -110,6 +112,14 @@ function App() {
                   <Route path="/bank-transfer" element={<BankTransferPage />} />
                   <Route path="/order-success" element={<OrderSuccessPage />} />
                   <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                  <Route
+                    path="/vendor-registration"
+                    element={<VendorRegistration />}
+                  />
+                  <Route
+                    path="/vendor-registration-success"
+                    element={<VendorRegistrationSuccess />}
+                  />
 
                   {/* Protected Routes - Examples */}
                   <Route

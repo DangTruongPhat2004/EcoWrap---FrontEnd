@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   Input,
@@ -34,6 +35,7 @@ import PackagingCarousel from "../components/carousel/PackagingCarousel";
 import ClientLogoMarquee from "../components/marquee/ClientLogoMarquee";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [openDropdown, setOpenDropdown] = React.useState(null);
   const [visibleSections, setVisibleSections] = React.useState({});
   const [searchValue, setSearchValue] = React.useState("");
@@ -849,6 +851,7 @@ const Home = () => {
               <Button
                 variant="solid"
                 size="lg"
+                onClick={() => navigate("/vendor-registration")}
                 startContent={
                   <svg
                     className="w-5 h-5"
