@@ -34,6 +34,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 import apiClient from "../../services/apiClient";
 
@@ -67,6 +68,8 @@ function getUserIdFromToken(token) {
 }
 
 function Header() {
+  const navigate = useNavigate();
+
   // Search state
   const [query, setQuery] = React.useState("");
   const [openSearch, setOpenSearch] = React.useState(false);
@@ -411,19 +414,19 @@ function Header() {
                 onAction={(key) => {
                   switch (key) {
                     case "profile":
-                      window.location.href = "/account";
+                      navigate("/account");
                       break;
                     case "orders":
-                      window.location.href = "/account/orders";
+                      navigate("/account/orders");
                       break;
                     case "wishlist":
-                      window.location.href = "/account/wishlist";
+                      navigate("/account/wishlist");
                       break;
                     case "payments":
-                      window.location.href = "/account/payments";
+                      navigate("/account/payments");
                       break;
                     case "admin":
-                      window.location.href = "/admin";
+                      navigate("/admin");
                       break;
                     case "logout":
                       onLogout();

@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import DashboardLayout from "./components/layout/DashboardLayout";
+import RoleBasedLayout from "./components/layout/RoleBasedLayout";
 import {
   Home,
   About,
@@ -11,8 +12,8 @@ import {
   Products,
   ProductDetail,
 } from "./pages";
-import VendorDashboard from "./pages/customer/VendorDashboard";
-import VendorProfile from "./pages/customer/VendorProfile";
+import VendorDashboard from "./pages/vendor/VendorDashboard";
+import Profile from "./pages/customer/Profile";
 import VendorRegistration from "./pages/VendorRegistration";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
 import { ProtectedRoute } from "./routes";
@@ -34,6 +35,68 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Customer Dashboard Routes - Role-dependent layout */}
+        <Route
+          path="/customer/*"
+          element={
+            <ProtectedRoute>
+              <RoleBasedLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Profile />} />
+          <Route path="profile" element={<Profile />} />
+          <Route
+            path="orders"
+            element={
+              <div className="p-8 text-center text-gray-500">
+                <h1 className="text-2xl">Lịch Sử Đơn Hàng</h1>
+                <p>Đang phát triển...</p>
+              </div>
+            }
+          />
+        </Route>
+
+        {/* Account Routes - Role-dependent layout */}
+        <Route
+          path="/account/*"
+          element={
+            <ProtectedRoute>
+              <RoleBasedLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Profile />} />
+          <Route path="profile" element={<Profile />} />
+          <Route
+            path="orders"
+            element={
+              <div className="p-8 text-center text-gray-500">
+                <h1 className="text-2xl">Lịch Sử Đơn Hàng</h1>
+                <p>Đang phát triển...</p>
+              </div>
+            }
+          />
+          <Route
+            path="wishlist"
+            element={
+              <div className="p-8 text-center text-gray-500">
+                <h1 className="text-2xl">Danh Sách Yêu Thích</h1>
+                <p>Đang phát triển...</p>
+              </div>
+            }
+          />
+          <Route
+            path="payments"
+            element={
+              <div className="p-8 text-center text-gray-500">
+                <h1 className="text-2xl">Phương Thức Thanh Toán</h1>
+                <p>Đang phát triển...</p>
+              </div>
+            }
+          />
+        </Route>
+
         {/* Vendor Dashboard Routes - No Header/Footer */}
         <Route
           path="/vendor/*"
@@ -42,7 +105,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<DashboardLayout />}>
                   <Route path="dashboard" element={<VendorDashboard />} />
-                  <Route path="profile" element={<VendorProfile />} />
+                  <Route path="profile" element={<Profile />} />
                   <Route
                     path="purchase-history"
                     element={

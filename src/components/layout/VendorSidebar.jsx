@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
-const DashboardSidebar = () => {
+const VendorSidebar = () => {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -169,4 +169,4 @@ const DashboardSidebar = () => {
   );
 };
 
-export default DashboardSidebar;
+export default VendorSidebar;

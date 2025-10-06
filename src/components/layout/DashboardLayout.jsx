@@ -1,12 +1,12 @@
 import { Outlet } from "react-router-dom";
-import DashboardSidebar from "./DashboardSidebar";
+import VendorSidebar from "./VendorSidebar";
 import DashboardFooter from "./DashboardFooter";
 
 const DashboardLayout = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <DashboardSidebar />
+      <VendorSidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col ml-64">
