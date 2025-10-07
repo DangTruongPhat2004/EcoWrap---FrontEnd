@@ -11,6 +11,9 @@ import {
   Register,
   Products,
   ProductDetail,
+  VendorApprovals,
+  VendorApprovalDetail,
+  UserManagement,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import Profile from "./pages/customer/Profile";
@@ -92,6 +95,31 @@ function App() {
             element={
               <div className="p-8 text-center text-gray-500">
                 <h1 className="text-2xl">Phương Thức Thanh Toán</h1>
+                <p>Đang phát triển...</p>
+              </div>
+            }
+          />
+        </Route>
+
+        {/* Admin Dashboard Routes - Role-dependent layout */}
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <RoleBasedLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<VendorApprovals />} />
+          <Route path="dashboard" element={<VendorApprovals />} />
+          <Route path="approvals" element={<VendorApprovals />} />
+          <Route path="approvals/:id" element={<VendorApprovalDetail />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route
+            path="settings"
+            element={
+              <div className="p-8 text-center text-gray-500">
+                <h1 className="text-2xl">Cài Đặt</h1>
                 <p>Đang phát triển...</p>
               </div>
             }
@@ -197,19 +225,6 @@ function App() {
                         <div className="p-8 text-center">
                           <h1 className="text-2xl">
                             Dashboard - Người dùng đã đăng nhập
-                          </h1>
-                        </div>
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute requiredRole="admin">
-                        <div className="p-8 text-center">
-                          <h1 className="text-2xl">
-                            Admin Panel - Chỉ admin mới truy cập được
                           </h1>
                         </div>
                       </ProtectedRoute>

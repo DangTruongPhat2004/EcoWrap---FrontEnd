@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@chakra-ui/react": "^3.27.0",
+    "@heroicons/react": "^2.2.0",
     "@heroui/input": "^2.4.27",
+    "@heroui/react": "^2.8.5",
     "@heroui/theme": "^2.4.22",
     "@hookform/resolvers": "^5.2.2",
     "@nextui-org/react": "^2.6.11",

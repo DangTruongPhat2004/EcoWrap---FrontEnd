@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import DashboardLayout from "./DashboardLayout";
 import VendorSidebar from "./VendorSidebar";
 import CustomerSidebar from "./CustomerSidebar";
+import AdminSidebar from "./AdminSidebar";
 
 const RoleBasedLayout = () => {
   const [userRole, setUserRole] = useState(null);
@@ -19,6 +20,10 @@ const RoleBasedLayout = () => {
   // Return appropriate layout based on user role
   if (userRole === "vendor") {
     return <DashboardLayout sidebar={VendorSidebar} />;
+  }
+
+  if (userRole === "admin") {
+    return <DashboardLayout sidebar={AdminSidebar} />;
   }
 
   // Default to customer layout for customers and any other roles
