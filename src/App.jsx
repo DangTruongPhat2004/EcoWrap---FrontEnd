@@ -25,6 +25,7 @@ import VerifyOtpPage from "./pages/VerifyOtpPage";
 import React from "react";
 import GeminiChatButton from "./components/chat/GeminiChatButton";
 import GeminiChatWidget from "./components/chat/GeminiChatWidget";
+import ResetPasswordWizard from "./components/auth/ResetPasswordWizard";
 
 function App() {
   const [open, setOpen] = React.useState(false);
@@ -110,6 +111,10 @@ function App() {
                   <Route path="/bank-transfer" element={<BankTransferPage />} />
                   <Route path="/order-success" element={<OrderSuccessPage />} />
                   <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                  <Route
+                    path="/forgot-password"
+                    element={<ResetPasswordWizard />}
+                  />
 
                   {/* Protected Routes - Examples */}
                   <Route
