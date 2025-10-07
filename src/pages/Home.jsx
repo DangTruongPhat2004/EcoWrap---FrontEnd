@@ -142,26 +142,27 @@ const Home = () => {
   const CategoryCard = ({ img, title }) => (
     <Card
       isPressable
-      className={`group overflow-hidden shadow-sm hover:shadow-md transition-shadow`}
+      className="group shadow-sm hover:shadow-md transition-shadow min-w-0" // tránh tràn ngang
     >
       <CardBody className="p-0">
-        {/* Khung tỉ lệ & chiều cao đồng nhất */}
-        <div className="relative w-full aspect-[16/10] min-h-[300px]">
+        {/* Khung tỉ lệ, chính nó mới overflow-hidden */}
+        <div className="relative w-full aspect-[16/10] min-h-[300px] overflow-hidden rounded-medium">
+          {/* Ảnh: block + cover, không absolute */}
           <img
             src={img}
             alt={title}
-            className="absolute inset-0 w-full h-full object-cover
-                     transition-transform duration-500 group-hover:scale-[1.03]"
+            className="block w-full h-full object-cover
+                     transition-transform duration-500 will-change-transform
+                     group-hover:scale-105"
           />
 
-          {/* Gradient & tiêu đề bottom-left */}
-          <div
-            className="absolute inset-x-0 bottom-0 p-4
-                        bg-gradient-to-t from-black/60 via-black/20 to-transparent"
-          >
-            <h3 className="text-white font-semibold text-left text-lg drop-shadow">
-              {title}
-            </h3>
+          {/* Overlay & tiêu đề */}
+          <div className="pointer-events-none absolute inset-0 flex items-end">
+            <div className="w-full p-4 bg-gradient-to-t from-black/60 via-black/20 to-transparent">
+              <h3 className="text-white font-semibold text-left text-lg drop-shadow">
+                {title}
+              </h3>
+            </div>
           </div>
         </div>
       </CardBody>
