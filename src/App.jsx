@@ -233,14 +233,19 @@ function App() {
                 </Routes>
               </main>
               <Footer />
-              <GeminiChatButton
-                onOpen={() => {
-                  setOpen(true);
-                  setUnread(0);
-                }}
-                unread={unread}
-              />
-              <GeminiChatWidget open={open} onClose={() => setOpen(false)} />
+              {!open && (
+                <GeminiChatButton
+                  onOpen={() => {
+                    setOpen(true);
+                    setUnread(0);
+                  }}
+                  unread={unread}
+                />
+              )}
+
+              {open && (
+                <GeminiChatWidget open={open} onClose={() => setOpen(false)} />
+              )}
             </div>
           }
         />

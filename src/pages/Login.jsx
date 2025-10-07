@@ -318,7 +318,7 @@ const Login = () => {
                     <span>Ghi nhớ đăng nhập</span>
                   </label>
 
-                  <Link href="/forgot-password" color="success" size="sm">
+                  <Link href="/reset-password" color="success" size="sm">
                     Quên mật khẩu?
                   </Link>
                 </div>
