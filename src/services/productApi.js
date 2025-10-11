@@ -2,13 +2,39 @@
 import apiClient from "./apiClient";
 
 /**
+ * Transform backend product data to frontend-friendly format
+ * @param {Object} product - Backend product object
+ * @returns {Object} Transformed product object
+ */
+const transformProduct = (product) => {
+  if (!product) return null;
+
+  return {
+    // Keep original backend fields
+    ...product,
+    // Add frontend-friendly aliases
+    id: product.productId,
+    name: product.productName,
+    price: product.productPrice,
+    description: product.productDescription,
+    material: product.materialType,
+    images: product.imageFile ? [product.imageFile] : [],
+    inStock: product.productStatus === "In stock",
+    category: product.category?.name || product.categoryId,
+    // Keep original fields too for backward compatibility
+  };
+};
+
+/**
  * Get all products
  * @returns {Promise} List of all products
  */
 export const getAllProducts = async () => {
   try {
     const response = await apiClient.get("/api/Product");
-    return response.data;
+    const products = response.data;
+    // Transform each product
+    return Array.isArray(products) ? products.map(transformProduct) : [];
   } catch (error) {
     console.error("Error fetching all products:", error);
     throw error;
@@ -23,7 +49,7 @@ export const getAllProducts = async () => {
 export const getProductById = async (productId) => {
   try {
     const response = await apiClient.get(`/api/Product/${productId}`);
-    return response.data;
+    return transformProduct(response.data);
   } catch (error) {
     console.error("Error fetching product by ID:", error);
     throw error;
@@ -37,7 +63,8 @@ export const getProductById = async (productId) => {
 export const getMyProducts = async () => {
   try {
     const response = await apiClient.get("/api/Product/my-products");
-    return response.data;
+    const products = response.data;
+    return Array.isArray(products) ? products.map(transformProduct) : [];
   } catch (error) {
     console.error("Error fetching my products:", error);
     throw error;

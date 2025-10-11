@@ -128,14 +128,26 @@ const ProductDetail = () => {
           Sản phẩm
         </Link>
         <span>/</span>
-        <Link
-          to={`/products?category=${product.category.toLowerCase()}`}
-          className="hover:text-green-600"
-        >
-          Bao bì thân thiện môi trường
-        </Link>
-        <span>/</span>
-        <span className="text-gray-800">{product.name}</span>
+        {product.category && (
+          <>
+            <Link
+              to={`/products?category=${
+                typeof product.category === "string"
+                  ? product.category.toLowerCase()
+                  : product.category
+              }`}
+              className="hover:text-green-600"
+            >
+              {typeof product.category === "string"
+                ? product.category
+                : "Bao bì thân thiện môi trường"}
+            </Link>
+            <span>/</span>
+          </>
+        )}
+        <span className="text-gray-800">
+          {product.name || product.productName}
+        </span>
       </nav>
 
       <div className="grid grid-cols-12 gap-8">
@@ -145,8 +157,12 @@ const ProductDetail = () => {
           <div className="mb-4">
             <div className="w-full h-[400px] bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images[selectedImage]}
-                alt={product.name}
+                src={
+                  product.images?.[selectedImage] ||
+                  product.imageFile ||
+                  product.images?.[0]
+                }
+                alt={product.name || product.productName}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.src =
@@ -158,7 +174,7 @@ const ProductDetail = () => {
 
           {/* Thumbnail Images */}
           <div className="grid grid-cols-4 gap-3">
-            {product.images.slice(0, 4).map((image, index) => (
+            {(product.images || []).slice(0, 4).map((image, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -166,7 +182,7 @@ const ProductDetail = () => {
               >
                 <img
                   src={image}
-                  alt={`${product.name} ${index + 1}`}
+                  alt={`${product.name || product.productName} ${index + 1}`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.src =
@@ -201,14 +217,20 @@ const ProductDetail = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              Túi Giấy Kraft 26×32cm
+              {product.name || product.productName}
             </h1>
 
             {/* Rating */}
             <div className="flex items-center mb-4">
-              <div className="flex items-center mr-2">{renderStars(4.5)}</div>
-              <span className="text-sm font-medium mr-1">4.5/5</span>
-              <span className="text-sm text-gray-500">(10 đánh giá)</span>
+              <div className="flex items-center mr-2">
+                {renderStars(product.rating || 0)}
+              </div>
+              <span className="text-sm font-medium mr-1">
+                {product.rating || 0}/5
+              </span>
+              <span className="text-sm text-gray-500">
+                ({product.reviewCount || product.reviews?.length || 0} đánh giá)
+              </span>
             </div>
           </div>
 
@@ -216,8 +238,12 @@ const ProductDetail = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-baseline space-x-1">
-                <span className="text-3xl font-bold text-gray-900">3.000₫</span>
-                <span className="text-sm text-gray-500">/chiếc</span>
+                <span className="text-3xl font-bold text-gray-900">
+                  {formatPrice(product.price || product.productPrice || 0)}
+                </span>
+                <span className="text-sm text-gray-500">
+                  /{product.unit || "chiếc"}
+                </span>
               </div>
               <div className="flex items-center">
                 <svg
@@ -233,7 +259,11 @@ const ProductDetail = () => {
                   />
                 </svg>
 
-                <span className="text-sm text-gray-600 ml-2">Còn hàng</span>
+                <span className="text-sm text-gray-600 ml-2">
+                  {product.inStock || product.productStatus === "In stock"
+                    ? "Còn hàng"
+                    : "Hết hàng"}
+                </span>
               </div>
             </div>
           </div>
@@ -270,7 +300,7 @@ const ProductDetail = () => {
                     </span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    26×32cm
+                    {product.size || "Chưa xác định"}
                   </div>
                 </div>
 
@@ -292,7 +322,7 @@ const ProductDetail = () => {
                     <span className="text-sm text-gray-600 ml-2">Loại mực</span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    Mực nước
+                    {product.inkType || "Chưa xác định"}
                   </div>
                 </div>
               </div>
@@ -319,7 +349,9 @@ const ProductDetail = () => {
                     </span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    Giấy kraft
+                    {product.material ||
+                      product.materialType ||
+                      "Chưa xác định"}
                   </div>
                 </div>
 
@@ -343,7 +375,7 @@ const ProductDetail = () => {
                     </span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    Offset
+                    {product.printProcess || "Chưa xác định"}
                   </div>
                 </div>
               </div>
@@ -381,10 +413,9 @@ const ProductDetail = () => {
               Mô tả
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Túi giấy bánh mì túi kín, làm từ giấy kraft 100% phân hủy sinh
-              học, phù hợp cho các doanh nghiệp F&B muốn giảm thiểu rác thải
-              nhựa. Sản phẩm có khả năng chịu nhiệt phẩm thần tốn, thân thiện
-              với môi trường và mang lại trải nghiệm sang trọng cho khách hàng.
+              {product.description ||
+                product.productDescription ||
+                "Chưa có mô tả cho sản phẩm này."}
             </p>
 
             {/* Feature badges */}
