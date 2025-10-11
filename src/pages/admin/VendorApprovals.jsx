@@ -1,47 +1,73 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
+import {
+  getAllRegistrations,
+  getRegistrationsByStatus,
+} from "../../services/sellerRegistrationApi";
 
 const VendorApprovals = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock data based on the image
-  const vendors = [
-    {
-      id: 1,
-      name: "GreenPack",
-      description: "Bao bì sinh học",
-      email: "greenpack@example.com",
-      phone: "0909 111 222",
-      status: "pending",
-      statusLabel: "Đang chờ",
-      date: "01/10/2025",
-      action: "Chi tiết",
-    },
-    {
-      id: 2,
-      name: "EcoBox Solutions",
-      description: "Hộp carton tái chế",
-      email: "ecobox@example.com",
-      phone: "0909 333 444",
-      status: "approved",
-      statusLabel: "Đã phê duyệt",
-      date: "28/09/2025",
-      action: "Chi tiết",
-    },
-    {
-      id: 3,
-      name: "BioPack Vietnam",
-      description: "Túi sinh học phân hủy",
-      email: "biopack@example.com",
-      phone: "0909 555 666",
-      status: "rejected",
-      statusLabel: "Bị từ chối",
-      date: "25/09/2025",
-      action: "Chi tiết",
-    },
-  ];
+  // Fetch registrations from backend
+  useEffect(() => {
+    const fetchRegistrations = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        let data;
+        if (statusFilter === "all") {
+          data = await getAllRegistrations();
+        } else {
+          // Map frontend status to backend status
+          const statusMap = {
+            pending: "Pending",
+            approved: "Approved",
+            rejected: "Canceled",
+          };
+          data = await getRegistrationsByStatus(statusMap[statusFilter]);
+        }
+
+        // Transform backend data to frontend format
+        const transformedData = data.map((reg) => ({
+          id: reg.registrationId || reg.id,
+          name: reg.companyName,
+          description: reg.companyAddress || "Chưa có mô tả",
+          email: reg.licenseId || "N/A",
+          phone: reg.companyPhone,
+          status:
+            reg.status?.toLowerCase() === "pending"
+              ? "pending"
+              : reg.status?.toLowerCase() === "approved"
+              ? "approved"
+              : "rejected",
+          statusLabel:
+            reg.status === "Pending"
+              ? "Đang chờ"
+              : reg.status === "Approved"
+              ? "Đã phê duyệt"
+              : "Bị từ chối",
+          date: reg.submittedAt
+            ? new Date(reg.submittedAt).toLocaleDateString("vi-VN")
+            : "N/A",
+        }));
+
+        setVendors(transformedData);
+      } catch (err) {
+        console.error("Error fetching registrations:", err);
+        setError("Không thể tải danh sách đăng ký");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRegistrations();
+  }, [statusFilter]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -137,120 +163,144 @@ const VendorApprovals = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
-                  Tên Cửa Hàng
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
-                  Email
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
-                  Số Điện Thoại
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
-                  Trạng Thái
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
-                  Ngày Đăng Ký
-                </th>
-                <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
-                  Hành Động
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredVendors.map((vendor, index) => (
-                <tr
-                  key={vendor.id}
-                  className={`border-b border-gray-200 hover:bg-gray-50 ${
-                    index === filteredVendors.length - 1 ? "border-b-0" : ""
-                  }`}
-                >
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-emerald-100 rounded-md flex items-center justify-center flex-shrink-0">
-                        <svg
-                          className="w-5 h-5 text-emerald-600"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                          />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-900 text-sm">
-                          {vendor.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {vendor.description}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {vendor.email}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {vendor.phone}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        vendor.status
-                      )}`}
-                    >
-                      {vendor.statusLabel}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-700">
-                    {vendor.date}
-                  </td>
-                  <td className="px-6 py-4">
-                    <Link to={`/admin/approvals/${vendor.id}`}>
-                      <button className="px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100">
-                        Chi tiết
-                      </button>
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white border border-gray-200 rounded-md p-8 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            <p className="mt-4 text-gray-600">Đang tải...</p>
+          </div>
+        )}
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white">
-            <span className="text-sm text-gray-600">
-              Hiển thị 1 đến 3 trong tổng số 65 kết quả
-            </span>
-            <div className="flex items-center gap-1">
-              <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
-                ‹
-              </button>
-              <button className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm">
-                1
-              </button>
-              <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
-                2
-              </button>
-              <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
-                3
-              </button>
-              <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
-                ›
-              </button>
+        {/* Error State */}
+        {error && !loading && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 text-center">
+            <p className="text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!loading && !error && (
+          <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
+                    Tên Cửa Hàng
+                  </th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
+                    Email
+                  </th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
+                    Số Điện Thoại
+                  </th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
+                    Trạng Thái
+                  </th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
+                    Ngày Đăng Ký
+                  </th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">
+                    Hành Động
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredVendors.map((vendor, index) => (
+                  <tr
+                    key={vendor.id}
+                    className={`border-b border-gray-200 hover:bg-gray-50 ${
+                      index === filteredVendors.length - 1 ? "border-b-0" : ""
+                    }`}
+                  >
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-md flex items-center justify-center flex-shrink-0">
+                          <svg
+                            className="w-5 h-5 text-emerald-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 text-sm">
+                            {vendor.name}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {vendor.description}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {vendor.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {vendor.phone}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          vendor.status
+                        )}`}
+                      >
+                        {vendor.statusLabel}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700">
+                      {vendor.date}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Link to={`/admin/approvals/${vendor.id}`}>
+                        <button className="px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100">
+                          Chi tiết
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-white">
+              <span className="text-sm text-gray-600">
+                Hiển thị 1 đến 3 trong tổng số 65 kết quả
+              </span>
+              <div className="flex items-center gap-1">
+                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                  ‹
+                </button>
+                <button className="px-3 py-1 bg-emerald-600 text-white rounded-md text-sm">
+                  1
+                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                  2
+                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                  3
+                </button>
+                <button className="px-3 py-1 border border-gray-300 rounded-md text-sm hover:bg-gray-50">
+                  ›
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && filteredVendors.length === 0 && (
+          <div className="bg-white border border-gray-200 rounded-md p-8 text-center">
+            <p className="text-gray-600">Không tìm thấy đơn đăng ký nào</p>
+          </div>
+        )}
       </div>
     </div>
   );

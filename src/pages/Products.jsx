@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getAllProducts } from "../services/productApi";
 import {
-  getProducts,
   categories,
   priceRanges,
   materials,
@@ -29,21 +29,70 @@ const Products = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const result = await getProducts(filters);
-        // Filter by search term if provided
-        const filteredResult = searchTerm
-          ? result.filter(
-              (product) =>
-                product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                product.description
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
-            )
-          : result;
+        // Fetch all products from backend API
+        const result = await getAllProducts();
+
+        // Apply filters
+        let filteredResult = result;
+
+        // Filter by category
+        if (filters.category !== "all") {
+          filteredResult = filteredResult.filter(
+            (product) => product.category === filters.category
+          );
+        }
+
+        // Filter by material
+        if (filters.material !== "all") {
+          filteredResult = filteredResult.filter(
+            (product) => product.material === filters.material
+          );
+        }
+
+        // Filter by price range
+        if (filters.priceRange !== "all") {
+          const [min, max] = filters.priceRange.split("-").map(Number);
+          filteredResult = filteredResult.filter((product) => {
+            const price = product.price || 0;
+            if (max) {
+              return price >= min && price <= max;
+            }
+            return price >= min;
+          });
+        }
+
+        // Filter by tags
+        if (filters.tags.length > 0) {
+          filteredResult = filteredResult.filter((product) =>
+            filters.tags.some((tag) => product.tags?.includes(tag))
+          );
+        }
+
+        // Filter by search term
+        if (searchTerm) {
+          filteredResult = filteredResult.filter(
+            (product) =>
+              product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              product.description
+                ?.toLowerCase()
+                .includes(searchTerm.toLowerCase())
+          );
+        }
+
+        // Sort products
+        if (filters.sortBy === "price-low") {
+          filteredResult.sort((a, b) => (a.price || 0) - (b.price || 0));
+        } else if (filters.sortBy === "price-high") {
+          filteredResult.sort((a, b) => (b.price || 0) - (a.price || 0));
+        } else if (filters.sortBy === "rating") {
+          filteredResult.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        }
+
         setProducts(filteredResult);
         setCurrentPage(1); // Reset to first page when filters change
       } catch (error) {
         console.error("Error fetching products:", error);
+        setProducts([]);
       } finally {
         setLoading(false);
       }

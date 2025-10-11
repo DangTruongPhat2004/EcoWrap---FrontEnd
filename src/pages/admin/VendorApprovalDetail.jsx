@@ -1,54 +1,144 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeftIcon,
   CheckIcon,
   XMarkIcon,
 } from "@heroicons/react/24/outline";
+import {
+  getRegistrationById,
+  approveRegistration,
+  adminRejectRegistration,
+} from "../../services/sellerRegistrationApi";
 
 const VendorApprovalDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [vendor, setVendor] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [showRejectModal, setShowRejectModal] = useState(false);
 
-  // Mock data - in real app, fetch based on id
-  const vendor = {
-    id: id,
-    name: "GreenPack Solutions",
-    email: "greenpack@example.com",
-    phone: "0909 888 777",
-    address: "123 Đường Xanh, Quận 1, TP.HCM",
-    registrationDate: "01/10/2025 14:20 PM",
-    supplier: "GreenSource Materials",
-    businessLicense: {
-      name: "Giấy Phép Kinh Doanh",
-      files: [
-        { id: 1, name: "business-license-1.pdf", url: "#" },
-        { id: 2, name: "business-license-2.pdf", url: "#" },
-      ],
-    },
-    cccd: {
-      name: "CCCD",
-      files: [
-        { id: 1, name: "cccd-front.jpg", url: "#", preview: true },
-        { id: 2, name: "cccd-back.jpg", url: "#", preview: true },
-      ],
-    },
-  };
+  // Fetch registration details
+  useEffect(() => {
+    const fetchRegistration = async () => {
+      setLoading(true);
+      setError(null);
 
-  const handleApprove = () => {
+      try {
+        const data = await getRegistrationById(id);
+
+        // Transform backend data to frontend format
+        const transformedVendor = {
+          id: data.registrationId || data.id,
+          name: data.companyName,
+          email: data.licenseId || "N/A",
+          phone: data.companyPhone,
+          address: data.companyAddress,
+          registrationDate: data.submittedAt
+            ? new Date(data.submittedAt).toLocaleString("vi-VN")
+            : "N/A",
+          status: data.status,
+          businessLicense: {
+            name: "Giấy Phép Kinh Doanh",
+            url: data.businessLicenseFileUrl || "#",
+          },
+          cccd: {
+            name: "CCCD/CMND",
+            url: data.personalIdImageUrl || "#",
+          },
+        };
+
+        setVendor(transformedVendor);
+      } catch (err) {
+        console.error("Error fetching registration:", err);
+        setError("Không thể tải thông tin đăng ký");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchRegistration();
+    }
+  }, [id]);
+
+  const handleApprove = async () => {
     setIsApproving(true);
-    // Add approval logic here
-    setTimeout(() => {
-      setIsApproving(false);
+    setError(null);
+
+    try {
+      await approveRegistration(id);
+      alert("Đã phê duyệt đơn đăng ký thành công!");
       navigate("/admin/approvals");
-    }, 1000);
+    } catch (err) {
+      console.error("Error approving registration:", err);
+      setError(
+        err.response?.data?.message || "Không thể phê duyệt đơn đăng ký"
+      );
+    } finally {
+      setIsApproving(false);
+    }
   };
 
-  const handleReject = () => {
-    // Add rejection logic here
-    navigate("/admin/approvals");
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      alert("Vui lòng nhập lý do từ chối");
+      return;
+    }
+
+    setIsRejecting(true);
+    setError(null);
+
+    try {
+      await adminRejectRegistration(id, rejectReason);
+      alert("Đã từ chối đơn đăng ký");
+      navigate("/admin/approvals");
+    } catch (err) {
+      console.error("Error rejecting registration:", err);
+      setError(err.response?.data?.message || "Không thể từ chối đơn đăng ký");
+    } finally {
+      setIsRejecting(false);
+      setShowRejectModal(false);
+    }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="p-8 bg-white min-h-screen">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="flex justify-center items-center h-64">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            <p className="ml-4 text-gray-600">Đang tải...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !vendor) {
+    return (
+      <div className="p-8 bg-white min-h-screen">
+        <div className="max-w-[1200px] mx-auto">
+          <button
+            onClick={() => navigate("/admin/approvals")}
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+          >
+            <ArrowLeftIcon className="w-5 h-5" />
+            <span className="text-sm">Quay lại</span>
+          </button>
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 text-center">
+            <p className="text-red-800">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 bg-white min-h-screen">
@@ -63,7 +153,7 @@ const VendorApprovalDetail = () => {
         </button>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-1">
-          Chi Tiết Đăng Ký - {vendor.name}
+          Chi Tiết Đăng Ký - {vendor?.name}
         </h1>
         <p className="text-gray-600 text-sm mb-6">
           Xem xét thông tin đăng ký nhà cung cấp bảo bì thân thiện môi trường
@@ -311,21 +401,68 @@ const VendorApprovalDetail = () => {
         {/* Action Buttons */}
         <div className="flex gap-4 justify-end">
           <button
-            onClick={handleReject}
-            className="px-8 py-2.5 border-2 border-amber-600 text-amber-700 rounded-md font-semibold hover:bg-amber-50 flex items-center gap-2"
+            onClick={() => setShowRejectModal(true)}
+            disabled={isRejecting || vendor?.status !== "Pending"}
+            className="px-8 py-2.5 border-2 border-amber-600 text-amber-700 rounded-md font-semibold hover:bg-amber-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <XMarkIcon className="w-5 h-5" />
             Từ Chối
           </button>
           <button
             onClick={handleApprove}
-            disabled={isApproving}
-            className="px-8 py-2.5 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 flex items-center gap-2 disabled:opacity-50"
+            disabled={isApproving || vendor?.status !== "Pending"}
+            className="px-8 py-2.5 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <CheckIcon className="w-5 h-5" />
             {isApproving ? "Đang xử lý..." : "Phê Duyệt"}
           </button>
         </div>
+
+        {/* Reject Modal */}
+        {showRejectModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Từ chối đơn đăng ký
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Vui lòng nhập lý do từ chối đơn đăng ký này:
+              </p>
+              <textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Nhập lý do từ chối..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[100px]"
+              />
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => {
+                    setShowRejectModal(false);
+                    setRejectReason("");
+                  }}
+                  disabled={isRejecting}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleReject}
+                  disabled={isRejecting || !rejectReason.trim()}
+                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-md font-medium hover:bg-amber-700 disabled:opacity-50"
+                >
+                  {isRejecting ? "Đang xử lý..." : "Xác nhận từ chối"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Alert */}
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
       </div>
     </div>
   );

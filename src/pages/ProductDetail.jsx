@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getProductById, getRelatedProducts } from "../services/productService";
+import { getProductById } from "../services/productApi";
+import { getAllProducts } from "../services/productApi";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -18,16 +19,22 @@ const ProductDetail = () => {
       setError(null);
 
       try {
-        const [productData, relatedData] = await Promise.all([
-          getProductById(id),
-          getRelatedProducts(id),
-        ]);
-
+        // Fetch product by ID from backend
+        const productData = await getProductById(id);
         setProduct(productData);
-        setRelatedProducts(relatedData);
+
+        // Fetch related products (products in the same category)
+        const allProducts = await getAllProducts();
+        const related = allProducts
+          .filter((p) => p.id !== id && p.category === productData.category)
+          .slice(0, 4); // Limit to 4 related products
+        setRelatedProducts(related);
+
         setSelectedImage(0);
       } catch (err) {
-        setError(err.message);
+        setError(
+          err.response?.data?.message || err.message || "Không thể tải sản phẩm"
+        );
       } finally {
         setLoading(false);
       }
