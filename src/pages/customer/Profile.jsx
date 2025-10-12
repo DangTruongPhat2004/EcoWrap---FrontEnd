@@ -14,7 +14,7 @@ import {
   Lock,
 } from "lucide-react";
 
-const VendorProfile = () => {
+const Profile = () => {
   const [formData, setFormData] = useState({
     username: "ecoSeller123",
     fullName: "Nguyễn Văn A",
@@ -94,7 +94,7 @@ const VendorProfile = () => {
           Thông Tin Cá Nhân
         </h1>
         <p className="text-gray-600">
-          Quản lý thông tin cá nhân và theo dõi hoạt động bán hàng của bạn
+          Quản lý thông tin cá nhân của bạn
         </p>
       </div>
 
@@ -255,10 +255,10 @@ const VendorProfile = () => {
             <div className="mb-4">
               <p className="font-medium text-gray-900 flex items-center justify-center">
                 <User className="w-4 h-4 mr-2" />
-                Tài Khoản Anh
+                {formData.fullName}
               </p>
               <p className="text-sm text-gray-500 text-center">
-                Nhà Phân bố cấp nhỏ tiêu
+                Thành viên EcoWrap
               </p>
             </div>
 
@@ -272,7 +272,7 @@ const VendorProfile = () => {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <TrendingUp className="w-5 h-5 mr-2 text-emerald-600" />
-              Hoạt Động Bán Vùng
+              Hoạt Động
             </h3>
 
             <div className="space-y-4">
@@ -282,14 +282,14 @@ const VendorProfile = () => {
                     <Package className="w-5 h-5 text-emerald-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Tổng bản chào</p>
-                    <p className="font-semibold text-emerald-600">500kg</p>
+                    <p className="text-sm text-gray-500">Đơn hàng đã mua</p>
+                    <p className="font-semibold text-emerald-600">25</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded-full flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
-                    +5%
+                    +12%
                   </span>
                 </div>
               </div>
@@ -300,13 +300,13 @@ const VendorProfile = () => {
                     <Recycle className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Giảm phát thải</p>
-                    <p className="font-semibold text-emerald-600">200kg</p>
+                    <p className="text-sm text-gray-500">Điểm tích lũy</p>
+                    <p className="font-semibold text-emerald-600">1,250</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <span className="text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded-full">
-                    CO2 tiết kiệm
+                    Điểm thưởng
                   </span>
                 </div>
               </div>
@@ -438,4 +438,4 @@ const VendorProfile = () => {
   );
 };
 
-export default VendorProfile;
+export default Profile;

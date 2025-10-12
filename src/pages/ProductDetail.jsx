@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getProductById, getRelatedProducts } from "../services/productService";
+import { getProductById } from "../services/productApi";
+import { getAllProducts } from "../services/productApi";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -11,6 +12,7 @@ const ProductDetail = () => {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(100);
+  const [showCertificatePreview, setShowCertificatePreview] = useState(false);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -18,16 +20,22 @@ const ProductDetail = () => {
       setError(null);
 
       try {
-        const [productData, relatedData] = await Promise.all([
-          getProductById(id),
-          getRelatedProducts(id),
-        ]);
-
+        // Fetch product by ID from backend
+        const productData = await getProductById(id);
         setProduct(productData);
-        setRelatedProducts(relatedData);
+
+        // Fetch related products (products in the same category)
+        const allProducts = await getAllProducts();
+        const related = allProducts
+          .filter((p) => p.id !== id && p.category === productData.category)
+          .slice(0, 4); // Limit to 4 related products
+        setRelatedProducts(related);
+
         setSelectedImage(0);
       } catch (err) {
-        setError(err.message);
+        setError(
+          err.response?.data?.message || err.message || "Không thể tải sản phẩm"
+        );
       } finally {
         setLoading(false);
       }
@@ -35,6 +43,24 @@ const ProductDetail = () => {
 
     fetchProductData();
   }, [id]);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape" && showCertificatePreview) {
+        setShowCertificatePreview(false);
+      }
+    };
+
+    if (showCertificatePreview) {
+      document.addEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "hidden"; // Prevent background scrolling
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "unset";
+    };
+  }, [showCertificatePreview]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN").format(price) + "₫";
@@ -67,15 +93,6 @@ const ProductDetail = () => {
   const handleQuantityChange = (newQty) => {
     const qty = Math.max(1, parseInt(newQty) || 1);
     setQuantity(qty);
-  };
-
-  // Price tiers based on quantity
-  const getPriceByQuantity = (basePrice, qty) => {
-    if (qty >= 2000) return Math.round(basePrice * 0.9); // 10% discount
-    if (qty >= 1000) return Math.round(basePrice * 0.92); // 8% discount
-    if (qty >= 500) return Math.round(basePrice * 0.95); // 5% discount
-    if (qty >= 200) return Math.round(basePrice * 0.98); // 2% discount
-    return basePrice;
   };
 
   if (loading) {
@@ -121,14 +138,26 @@ const ProductDetail = () => {
           Sản phẩm
         </Link>
         <span>/</span>
-        <Link
-          to={`/products?category=${product.category.toLowerCase()}`}
-          className="hover:text-green-600"
-        >
-          Bao bì thân thiện môi trường
-        </Link>
-        <span>/</span>
-        <span className="text-gray-800">{product.name}</span>
+        {product.category && (
+          <>
+            <Link
+              to={`/products?category=${
+                typeof product.category === "string"
+                  ? product.category.toLowerCase()
+                  : product.category
+              }`}
+              className="hover:text-green-600"
+            >
+              {typeof product.category === "string"
+                ? product.category
+                : "Bao bì thân thiện môi trường"}
+            </Link>
+            <span>/</span>
+          </>
+        )}
+        <span className="text-gray-800">
+          {product.name || product.productName}
+        </span>
       </nav>
 
       <div className="grid grid-cols-12 gap-8">
@@ -138,8 +167,12 @@ const ProductDetail = () => {
           <div className="mb-4">
             <div className="w-full h-[400px] bg-gray-100 rounded-lg overflow-hidden">
               <img
-                src={product.images[selectedImage]}
-                alt={product.name}
+                src={
+                  product.images?.[selectedImage] ||
+                  product.imageFile ||
+                  product.images?.[0]
+                }
+                alt={product.name || product.productName}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.target.src =
@@ -151,7 +184,7 @@ const ProductDetail = () => {
 
           {/* Thumbnail Images */}
           <div className="grid grid-cols-4 gap-3">
-            {product.images.slice(0, 4).map((image, index) => (
+            {(product.images || []).slice(0, 4).map((image, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -159,7 +192,7 @@ const ProductDetail = () => {
               >
                 <img
                   src={image}
-                  alt={`${product.name} ${index + 1}`}
+                  alt={`${product.name || product.productName} ${index + 1}`}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     e.target.src =
@@ -194,14 +227,20 @@ const ProductDetail = () => {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
-              Túi Giấy Kraft 26×32cm
+              {product.name || product.productName}
             </h1>
 
             {/* Rating */}
             <div className="flex items-center mb-4">
-              <div className="flex items-center mr-2">{renderStars(4.5)}</div>
-              <span className="text-sm font-medium mr-1">4.5/5</span>
-              <span className="text-sm text-gray-500">(10 đánh giá)</span>
+              <div className="flex items-center mr-2">
+                {renderStars(product.rating || 0)}
+              </div>
+              <span className="text-sm font-medium mr-1">
+                {product.rating || 0}/5
+              </span>
+              <span className="text-sm text-gray-500">
+                ({product.reviewCount || product.reviews?.length || 0} đánh giá)
+              </span>
             </div>
           </div>
 
@@ -209,8 +248,12 @@ const ProductDetail = () => {
           <div className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-baseline space-x-1">
-                <span className="text-3xl font-bold text-gray-900">3.000₫</span>
-                <span className="text-sm text-gray-500">/chiếc</span>
+                <span className="text-3xl font-bold text-gray-900">
+                  {formatPrice(product.price || product.productPrice || 0)}
+                </span>
+                <span className="text-sm text-gray-500">
+                  /{product.unit || "chiếc"}
+                </span>
               </div>
               <div className="flex items-center">
                 <svg
@@ -226,7 +269,11 @@ const ProductDetail = () => {
                   />
                 </svg>
 
-                <span className="text-sm text-gray-600 ml-2">Còn hàng</span>
+                <span className="text-sm text-gray-600 ml-2">
+                  {product.inStock || product.productStatus === "In stock"
+                    ? "Còn hàng"
+                    : "Hết hàng"}
+                </span>
               </div>
             </div>
           </div>
@@ -263,7 +310,7 @@ const ProductDetail = () => {
                     </span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    26×32cm
+                    {product.size || "Chưa xác định"}
                   </div>
                 </div>
 
@@ -285,7 +332,7 @@ const ProductDetail = () => {
                     <span className="text-sm text-gray-600 ml-2">Loại mực</span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    Mực nước
+                    {product.inkType || "Chưa xác định"}
                   </div>
                 </div>
               </div>
@@ -312,7 +359,9 @@ const ProductDetail = () => {
                     </span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    Giấy kraft
+                    {product.material ||
+                      product.materialType ||
+                      "Chưa xác định"}
                   </div>
                 </div>
 
@@ -336,7 +385,7 @@ const ProductDetail = () => {
                     </span>
                   </div>
                   <div className="text-sm font-medium text-gray-900 ml-6">
-                    Offset
+                    {product.printProcess || "Chưa xác định"}
                   </div>
                 </div>
               </div>
@@ -362,7 +411,9 @@ const ProductDetail = () => {
                   </span>
                 </div>
                 <div className="text-sm font-medium text-gray-900 ml-6">
-                  Xưởng EcoPack
+                  {product.seller?.companyName ||
+                    product.seller?.user?.fullName ||
+                    "Xưởng EcoPack"}
                 </div>
               </div>
             </div>
@@ -374,10 +425,9 @@ const ProductDetail = () => {
               Mô tả
             </h3>
             <p className="text-sm text-gray-600 leading-relaxed mb-4">
-              Túi giấy bánh mì túi kín, làm từ giấy kraft 100% phân hủy sinh
-              học, phù hợp cho các doanh nghiệp F&B muốn giảm thiểu rác thải
-              nhựa. Sản phẩm có khả năng chịu nhiệt phẩm thần tốn, thân thiện
-              với môi trường và mang lại trải nghiệm sang trọng cho khách hàng.
+              {product.description ||
+                product.productDescription ||
+                "Chưa có mô tả cho sản phẩm này."}
             </p>
 
             {/* Feature badges */}
@@ -399,9 +449,42 @@ const ProductDetail = () => {
             className="mb-8 p-4 rounded-lg"
             style={{ backgroundColor: "#F5F1EA" }}
           >
-            <h3 className="text-base font-semibold mb-3 text-gray-900">
-              Chứng nhận
-            </h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900">
+                Chứng nhận
+              </h3>
+              {product?.certificateFile && (
+                <button
+                  onClick={() => setShowCertificatePreview(true)}
+                  className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-green-700 bg-green-100 rounded-md hover:bg-green-200 transition-colors"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="mr-1"
+                  >
+                    <path
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Xem chứng nhận
+                </button>
+              )}
+            </div>
             <div className="flex items-center space-x-6">
               <div className="flex items-center">
                 <svg
@@ -549,45 +632,6 @@ const ProductDetail = () => {
                 Tối thiểu: 100 chiếc
               </span>
             </div>
-
-            {/* Price Table */}
-            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2">
-                <div className="flex justify-between text-sm font-medium text-gray-700">
-                  <span>Số lượng</span>
-                  <span>Giá</span>
-                </div>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {[
-                  { qty: 100, price: "3.000" },
-                  { qty: 500, price: "2.800" },
-                  { qty: 1000, price: "2.500" },
-                  { qty: 3000, price: "2.300" },
-                  { qty: 5000, price: "2.000" },
-                ].map((tier) => (
-                  <div
-                    key={tier.qty}
-                    className={`flex justify-between items-center px-4 py-3 ${
-                      quantity >= tier.qty ? "bg-green-50" : ""
-                    }`}
-                  >
-                    <span className="text-sm font-medium text-gray-700">
-                      {tier.qty}
-                    </span>
-                    <span
-                      className={`text-sm font-semibold ${
-                        quantity >= tier.qty
-                          ? "text-green-600"
-                          : "text-gray-900"
-                      }`}
-                    >
-                      {tier.price}₫ / chiếc
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -654,30 +698,42 @@ const ProductDetail = () => {
           {/* Company Logo and Info - Side by Side */}
           <div className="flex items-center space-x-3">
             <div
-              className="w-12 h-12 rounded-full flex items-center justify-center"
+              className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: "#F5F1EA" }}
             >
-              <svg
-                width="20"
-                height="24"
-                viewBox="0 0 28 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M3.5 4.5C2.67031 4.5 2 5.17031 2 6V17.25V19.5V23.25C2 24.4922 3.00781 25.5 4.25 25.5H23.75C24.9922 25.5 26 24.4922 26 23.25V17.25V10.1344C26 9.28125 25.0906 8.74219 24.3406 9.14531L17 13.0969V10.1344C17 9.28125 16.0906 8.74219 15.3406 9.14531L8 13.0969V6C8 5.17031 7.32969 4.5 6.5 4.5H3.5Z"
-                  fill="#8D6F47"
+              {product.seller?.user?.profilePicture ? (
+                <img
+                  src={product.seller.user.profilePicture}
+                  alt={
+                    product.seller.companyName || product.seller.user.fullName
+                  }
+                  className="w-full h-full object-cover"
                 />
-              </svg>
+              ) : (
+                <svg
+                  width="20"
+                  height="24"
+                  viewBox="0 0 28 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M3.5 4.5C2.67031 4.5 2 5.17031 2 6V17.25V19.5V23.25C2 24.4922 3.00781 25.5 4.25 25.5H23.75C24.9922 25.5 26 24.4922 26 23.25V17.25V10.1344C26 9.28125 25.0906 8.74219 24.3406 9.14531L17 13.0969V10.1344C17 9.28125 16.0906 8.74219 15.3406 9.14531L8 13.0969V6C8 5.17031 7.32969 4.5 6.5 4.5H3.5Z"
+                    fill="#8D6F47"
+                  />
+                </svg>
+              )}
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                Xưởng EcoPack
+                {product.seller?.companyName ||
+                  product.seller?.user?.fullName ||
+                  "Công ty chưa xác định"}
               </h3>
               <div className="flex items-center">
-                {renderStars(4.8)}
+                {renderStars(product.seller?.rating || 0)}
                 <span className="text-sm text-gray-500 ml-1">
-                  (56 đánh giá)
+                  ({product.seller?.reviewCount || 0} đánh giá)
                 </span>
               </div>
             </div>
@@ -755,26 +811,41 @@ const ProductDetail = () => {
         </div>
 
         {/* Stats Section - Full Width */}
-        <div className="grid grid-cols-4 gap-4 ">
-          <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">Sản phẩm</div>
-            <div className="font-semibold text-gray-900">56+</div>
-          </div>
-          <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">Thời gian phản hồi</div>
-            <div className="font-semibold text-gray-900">{"< 24h"}</div>
-          </div>
-          <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">
-              Tỷ lệ giao đúng hẹn
+        {product.seller && (
+          <div className="grid grid-cols-4 gap-4">
+            <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">Sản phẩm</div>
+              <div className="font-semibold text-gray-900">
+                {product.seller.productCount || 0}+
+              </div>
             </div>
-            <div className="font-semibold text-gray-900">98%</div>
+            <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">
+                Đánh giá trung bình
+              </div>
+              <div className="font-semibold text-gray-900">
+                {product.seller.rating
+                  ? `${product.seller.rating.toFixed(1)}/5`
+                  : "Chưa có"}
+              </div>
+            </div>
+            <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
+              <div className="font-semibold text-gray-900">
+                {product.seller.reviewCount || 0}
+              </div>
+            </div>
+            <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-1">Địa chỉ</div>
+              <div
+                className="font-semibold text-gray-900 text-xs truncate"
+                title={product.seller.address}
+              >
+                {product.seller.address || "Chưa cập nhật"}
+              </div>
+            </div>
           </div>
-          <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
-            <div className="text-sm text-gray-600 mb-1">Năm hoạt động</div>
-            <div className="font-semibold text-gray-900">5+ năm</div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Related Products */}
@@ -805,116 +876,233 @@ const ProductDetail = () => {
         </div>
 
         <div className="grid grid-cols-4 gap-6">
-          {/* Product 1 - Hộp đựng thực ăn nắp gắp */}
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow group overflow-hidden">
-            <div className="relative">
-              <div className="w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/api/placeholder/240/192"
-                  alt="Hộp đựng thực ăn nắp gắp"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
+          {relatedProducts.length > 0 ? (
+            relatedProducts.map((relatedProduct) => (
+              <Link
+                key={relatedProduct.id}
+                to={`/products/${relatedProduct.id}`}
+                className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow group overflow-hidden"
+              >
+                <div className="relative">
+                  <div className="w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
+                    {relatedProduct.images?.[0] ? (
+                      <img
+                        src={relatedProduct.images[0]}
+                        alt={relatedProduct.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+                        <svg
+                          className="w-16 h-16 text-green-200"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V5H19V19Z" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
+                    {relatedProduct.name}
+                  </h3>
+                  <div className="flex items-center mb-3">
+                    <div className="flex items-center mr-1">
+                      {renderStars(relatedProduct.rating || 0)}
+                    </div>
+                    <span className="text-xs text-gray-600 font-medium">
+                      (
+                      {relatedProduct.reviewCount ||
+                        relatedProduct.reviews?.length ||
+                        0}
+                      )
+                    </span>
+                  </div>
+                  <div className="text-base font-bold text-green-600 mb-4">
+                    {formatPrice(relatedProduct.price)}/chiếc
+                  </div>
+                </div>
+              </Link>
+            ))
+          ) : (
+            <div className="col-span-4 text-center py-8 text-gray-500">
+              Không có sản phẩm liên quan
             </div>
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
-                Hộp đựng thực ăn nắp gắp
-              </h3>
-              <div className="flex items-center mb-3">
-                <div className="flex items-center mr-1">{renderStars(5)}</div>
-                <span className="text-xs text-gray-600 font-medium">(8)</span>
-              </div>
-              <div className="text-base font-bold text-green-600 mb-4">
-                1.850₫/chiếc
-              </div>
-            </div>
-          </div>
+          )}
+        </div>
+      </div>
 
-          {/* Product 2 - Ly giấy kraft nắp gỗ */}
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow group overflow-hidden relative">
-            <div className="absolute top-3 left-3 z-10">
-              <span className="bg-green-600 text-white text-xs px-2.5 py-1 rounded-full font-medium">
-                Bền vững
-              </span>
-            </div>
-            <div className="relative">
-              <div className="w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/api/placeholder/240/192"
-                  alt="Ly giấy kraft nắp gỗ"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
-                Ly giấy kraft nắp gỗ
-              </h3>
-              <div className="flex items-center mb-3">
-                <div className="flex items-center mr-1">{renderStars(5)}</div>
-                <span className="text-xs text-gray-600 font-medium">(12)</span>
-              </div>
-              <div className="text-base font-bold text-green-600 mb-4">
-                1.550₫/chiếc
-              </div>
-            </div>
-          </div>
-
-          {/* Product 3 - Hộp giấy có cửa sổ */}
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow group overflow-hidden">
-            <div className="relative">
-              <div className="w-full h-48 bg-gray-50 flex items-center justify-center overflow-hidden">
-                <img
-                  src="/api/placeholder/240/192"
-                  alt="Hộp giấy có cửa sổ"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-            </div>
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
-                Hộp giấy có cửa sổ
-              </h3>
-              <div className="flex items-center mb-3">
-                <div className="flex items-center mr-1">{renderStars(5)}</div>
-                <span className="text-xs text-gray-600 font-medium">(3)</span>
-              </div>
-              <div className="text-base font-bold text-green-600 mb-4">
-                2.250₫/chiếc
-              </div>
-            </div>
-          </div>
-
-          {/* Product 4 - Khăn giấy tái chế cao cấp */}
-          <div className="bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow group overflow-hidden">
-            <div className="relative">
-              <div className="w-full h-48 bg-teal-600 flex items-center justify-center overflow-hidden">
-                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center">
+      {/* Certificate Preview Modal */}
+      {showCertificatePreview && product?.certificateFile && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in"
+          onClick={() => setShowCertificatePreview(false)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-5xl max-h-[90vh] w-full overflow-hidden shadow-2xl animate-scale-in border border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "linear-gradient(135deg, #ffffff 0%, #fefefe 100%)",
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-green-50 to-emerald-50">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                   <svg
-                    className="w-10 h-10 text-teal-600"
-                    fill="currentColor"
+                    width="20"
+                    height="20"
                     viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-green-600"
                   >
-                    <path d="M9 3H15L17 5V19C17 20.1 16.1 21 15 21H9C7.9 21 7 20.1 7 19V5C7 3.9 7.9 3 9 3ZM15 19V7H9V19H15Z" />
+                    <path
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Chứng nhận sản phẩm
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-0.5">
+                    Xác minh chất lượng và tính bền vững
+                  </p>
+                </div>
               </div>
+              <button
+                onClick={() => setShowCertificatePreview(false)}
+                className="w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="text-gray-600"
+                >
+                  <path
+                    d="M18 6L6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 6L18 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
-                Khăn giấy tái chế cao cấp
-              </h3>
-              <div className="flex items-center mb-3">
-                <div className="flex items-center mr-1">{renderStars(5)}</div>
-                <span className="text-xs text-gray-600 font-medium">(4)</span>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="flex justify-center mb-6">
+                <div className="relative max-w-full max-h-[65vh] overflow-auto bg-gray-50 rounded-lg p-4">
+                  {/* Loading placeholder */}
+                  <div className="absolute inset-0 bg-gray-100 animate-pulse rounded-lg flex items-center justify-center opacity-0 transition-opacity duration-300">
+                    <div className="text-gray-500 text-sm">
+                      Đang tải chứng nhận...
+                    </div>
+                  </div>
+
+                  <img
+                    src={product.certificateFile}
+                    alt="Chứng nhận sản phẩm"
+                    className="max-w-full h-auto rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextElementSibling.style.display = "flex";
+                    }}
+                  />
+
+                  {/* Error fallback */}
+                  <div className="hidden items-center justify-center p-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                    <div className="text-center">
+                      <svg
+                        width="48"
+                        height="48"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="mx-auto text-gray-400 mb-3"
+                      >
+                        <path
+                          d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <p className="text-gray-600 font-medium">
+                        Không thể tải chứng nhận
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Vui lòng thử lại sau
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-base font-bold text-green-600 mb-4">
-                950₫/10 chiếc
+
+              {/* Action buttons */}
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setShowCertificatePreview(false)}
+                  className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-semibold rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  Đóng
+                </button>
+              </div>
+
+              {/* Certificate info */}
+              <div className="mt-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                <div className="flex items-start space-x-3">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="text-amber-600 mt-0.5 flex-shrink-0"
+                  >
+                    <path
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">
+                      Thông tin chứng nhận
+                    </p>
+                    <p className="text-xs text-amber-700 mt-1">
+                      Chứng nhận này xác nhận sản phẩm đạt tiêu chuẩn chất lượng
+                      và thân thiện với môi trường. Bạn có thể xem chi tiết để
+                      xác minh tính xác thực của sản phẩm.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

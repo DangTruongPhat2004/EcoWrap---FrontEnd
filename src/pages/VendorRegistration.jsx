@@ -9,6 +9,7 @@ import {
   HelpCircle,
   MessageCircle,
 } from "lucide-react";
+import { submitSellerRegistration } from "../services/sellerRegistrationApi";
 
 const VendorRegistration = () => {
   const navigate = useNavigate();
@@ -31,6 +32,7 @@ const VendorRegistration = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -145,19 +147,62 @@ const VendorRegistration = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (validateStep3()) {
-      // Submit the form
-      console.log("Form submitted:", formData);
+  const handleSubmit = async () => {
+    if (!validateStep3()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    try {
+      // Create FormData to send to backend
+      const apiFormData = new FormData();
+      apiFormData.append("CompanyName", formData.shopName);
+      apiFormData.append("CompanyAddress", formData.businessAddress);
+      apiFormData.append("CompanyPhone", formData.phone);
+      apiFormData.append("LicenseId", formData.email); // Using email as license ID temporarily
+
+      if (formData.cccdFile) {
+        apiFormData.append("PersonalIdImage", formData.cccdFile);
+      }
+
+      if (formData.businessLicenseFile) {
+        apiFormData.append("BusinessLicenseFile", formData.businessLicenseFile);
+      }
+
+      // Submit the registration
+      const response = await submitSellerRegistration(apiFormData);
+
       // Navigate to success page
       navigate("/vendor-registration-success", {
         state: {
           shopName: formData.shopName,
           email: formData.email,
           phone: formData.phone,
-          vendorId: "ECW-2023-0015", // This would come from API
+          message: response.message,
         },
       });
+    } catch (error) {
+      console.error("Error submitting registration:", error);
+
+      // Handle different error types
+      let errorMessage = "Đã xảy ra lỗi khi gửi đơn đăng ký. Vui lòng thử lại.";
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          errorMessage = "Bạn cần đăng nhập để đăng ký làm người bán.";
+        } else if (error.response.status === 409) {
+          errorMessage =
+            error.response.data?.message || "Bạn đã có đơn đăng ký trước đó.";
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+      }
+
+      setErrors({ submit: errorMessage });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -565,13 +610,25 @@ const VendorRegistration = () => {
             ) : (
               <button
                 onClick={handleSubmit}
-                className="flex items-center gap-2 px-8 py-3.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all ml-auto font-semibold"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 px-8 py-3.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all ml-auto font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Hoàn tất đăng ký
+                {isSubmitting ? "Đang gửi..." : "Hoàn tất đăng ký"}
                 <ChevronRight className="w-5 h-5" />
               </button>
             )}
           </div>
+
+          {/* Error Message */}
+          {errors.submit && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm text-red-800 font-medium">Lỗi</p>
+                <p className="text-sm text-red-600 mt-1">{errors.submit}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer Info */}

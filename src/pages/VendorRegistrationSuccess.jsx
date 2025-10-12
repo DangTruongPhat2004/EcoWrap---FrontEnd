@@ -13,11 +13,12 @@ const VendorRegistrationSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { shopName, email, phone, vendorId } = location.state || {
+  const { shopName, email, phone, vendorId, message } = location.state || {
     shopName: "Cửa hàng Xanh Sạch",
     email: "cuahangxanh@example.com",
     phone: "0909 123 456",
     vendorId: "ECW-2023-0015",
+    message: "Đơn đăng ký đã được gửi thành công.",
   };
 
   const nextSteps = [
