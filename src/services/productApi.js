@@ -21,6 +21,43 @@ const transformProduct = (product) => {
     images: product.imageFile ? [product.imageFile] : [],
     inStock: product.productStatus === "In stock",
     category: product.category?.name || product.categoryId,
+    // Add seller information
+    seller: product.seller
+      ? {
+          id: product.seller.sellerId,
+          companyName: product.seller.companyName,
+          address: product.seller.address,
+          productCount: product.seller.products?.length || 0,
+          // Aggregate rating and reviews from all seller's products
+          rating:
+            product.seller.products?.length > 0
+              ? product.seller.products.reduce((sum, p) => {
+                  // Calculate average rating from product reviews
+                  const productRating =
+                    p.reviews?.length > 0
+                      ? p.reviews.reduce((s, r) => s + r.rating, 0) /
+                        p.reviews.length
+                      : 0;
+                  return sum + productRating;
+                }, 0) / product.seller.products.length
+              : 0,
+          reviewCount:
+            product.seller.products?.reduce(
+              (total, p) => total + (p.reviews?.length || 0),
+              0
+            ) || 0,
+          user: product.seller.user
+            ? {
+                id: product.seller.user.userId,
+                username: product.seller.user.username,
+                fullName: product.seller.user.fullName,
+                phoneNumber: product.seller.user.phoneNumber,
+                profilePicture: product.seller.user.profilePicture,
+                isVerified: product.seller.user.isVerified,
+              }
+            : null,
+        }
+      : null,
     // Keep original fields too for backward compatibility
   };
 };
