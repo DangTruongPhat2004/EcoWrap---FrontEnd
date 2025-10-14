@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { getProductById } from "../services/productApi";
-import { getAllProducts } from "../services/productApi";
+import {
+  getProductById,
+  getAllProducts,
+  calculateSellerStats,
+} from "../services/productApi";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [sellerStats, setSellerStats] = useState({
+    rating: 0,
+    reviewCount: 0,
+    productCount: 0,
+  });
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,16 +28,37 @@ const ProductDetail = () => {
       setError(null);
 
       try {
-        // Fetch product by ID from backend
+        // Fetch product by ID from backend first (critical)
         const productData = await getProductById(id);
         setProduct(productData);
 
-        // Fetch related products (products in the same category)
-        const allProducts = await getAllProducts();
-        const related = allProducts
-          .filter((p) => p.id !== id && p.category === productData.category)
-          .slice(0, 4); // Limit to 4 related products
-        setRelatedProducts(related);
+        // Try to fetch all products for seller stats and related products
+        // If this fails, we still show the product detail
+        try {
+          const allProducts = await getAllProducts();
+
+          // Calculate seller-wide stats from all products if available
+          if (productData?.seller?.id && allProducts.length > 0) {
+            const stats = calculateSellerStats(
+              productData.seller.id,
+              allProducts
+            );
+            setSellerStats(stats);
+          }
+
+          // Fetch related products (products in the same category)
+          const related = allProducts
+            .filter((p) => p.id !== id && p.category === productData.category)
+            .slice(0, 4); // Limit to 4 related products
+          setRelatedProducts(related);
+        } catch (relatedErr) {
+          console.warn(
+            "Could not fetch related products or seller stats:",
+            relatedErr
+          );
+          // Continue without related products and use basic seller stats
+          setRelatedProducts([]);
+        }
 
         setSelectedImage(0);
       } catch (err) {
@@ -731,9 +760,9 @@ const ProductDetail = () => {
                   "Công ty chưa xác định"}
               </h3>
               <div className="flex items-center">
-                {renderStars(product.seller?.rating || 0)}
+                {renderStars(sellerStats.rating || 0)}
                 <span className="text-sm text-gray-500 ml-1">
-                  ({product.seller?.reviewCount || 0} đánh giá)
+                  ({sellerStats.reviewCount || 0} đánh giá)
                 </span>
               </div>
             </div>
@@ -816,7 +845,7 @@ const ProductDetail = () => {
             <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Sản phẩm</div>
               <div className="font-semibold text-gray-900">
-                {product.seller.productCount || 0}+
+                {sellerStats.productCount || 0}+
               </div>
             </div>
             <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
@@ -824,15 +853,15 @@ const ProductDetail = () => {
                 Đánh giá trung bình
               </div>
               <div className="font-semibold text-gray-900">
-                {product.seller.rating
-                  ? `${product.seller.rating.toFixed(1)}/5`
+                {sellerStats.rating > 0
+                  ? `${sellerStats.rating.toFixed(1)}/5`
                   : "Chưa có"}
               </div>
             </div>
             <div className="text-center bg-[#F5F1EA] rounded-lg p-4">
               <div className="text-sm text-gray-600 mb-1">Tổng đánh giá</div>
               <div className="font-semibold text-gray-900">
-                {product.seller.reviewCount || 0}
+                {sellerStats.reviewCount || 0}
               </div>
             </div>
             <div className="text-center bg-[#F5F1EA] rounded-lg p-4">

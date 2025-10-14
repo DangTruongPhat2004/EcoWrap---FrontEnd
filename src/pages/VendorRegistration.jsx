@@ -158,10 +158,10 @@ const VendorRegistration = () => {
     try {
       // Create FormData to send to backend
       const apiFormData = new FormData();
-      apiFormData.append("CompanyName", formData.shopName);
-      apiFormData.append("CompanyAddress", formData.businessAddress);
-      apiFormData.append("CompanyPhone", formData.phone);
-      apiFormData.append("LicenseId", formData.email); // Using email as license ID temporarily
+      apiFormData.append("CompanyName", formData.shopName || "");
+      apiFormData.append("CompanyAddress", formData.businessAddress || "");
+      apiFormData.append("CompanyPhone", formData.phone || "");
+      apiFormData.append("LicenseId", formData.email || ""); // Using email as license ID temporarily
 
       if (formData.cccdFile) {
         apiFormData.append("PersonalIdImage", formData.cccdFile);
@@ -180,7 +180,7 @@ const VendorRegistration = () => {
           shopName: formData.shopName,
           email: formData.email,
           phone: formData.phone,
-          message: response.message,
+          message: response?.message || "Đơn đăng ký đã được gửi thành công!",
         },
       });
     } catch (error) {
@@ -192,9 +192,14 @@ const VendorRegistration = () => {
       if (error.response) {
         if (error.response.status === 401) {
           errorMessage = "Bạn cần đăng nhập để đăng ký làm người bán.";
+          // Optionally redirect to login
+          setTimeout(() => navigate("/login"), 2000);
         } else if (error.response.status === 409) {
           errorMessage =
             error.response.data?.message || "Bạn đã có đơn đăng ký trước đó.";
+        } else if (error.response.status === 400) {
+          errorMessage =
+            error.response.data?.message || "Thông tin đăng ký không hợp lệ.";
         } else if (error.response.data?.message) {
           errorMessage = error.response.data.message;
         }
