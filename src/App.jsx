@@ -163,7 +163,7 @@ function App() {
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="Admin">
               <RoleBasedLayout />
             </ProtectedRoute>
           }
@@ -178,7 +178,7 @@ function App() {
         <Route
           path="/vendor/*"
           element={
-            <ProtectedRoute requiredRole="vendor">
+            <ProtectedRoute requiredRole="Seller">
               <DashboardLayout />
             </ProtectedRoute>
           }

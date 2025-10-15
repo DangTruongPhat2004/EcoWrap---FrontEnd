@@ -18,11 +18,11 @@ const RoleBasedLayout = () => {
   }
 
   // Return appropriate layout based on user role
-  if (userRole === "vendor") {
+  if (userRole === "Seller") {
     return <DashboardLayout sidebar={VendorSidebar} />;
   }
 
-  if (userRole === "admin") {
+  if (userRole === "Admin") {
     return <DashboardLayout sidebar={AdminSidebar} />;
   }
 

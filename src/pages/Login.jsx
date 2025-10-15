@@ -142,9 +142,24 @@ const Login = () => {
 
       setStatus({ type: "success", msg: "Đăng nhập thành công!" });
 
-      // 4) Điều hướng sau login
+      // 4) Điều hướng sau login dựa trên role
       const from = location.state?.from || "/";
-      navigate(from, { replace: true });
+      let redirectTo = from;
+
+      // Nếu không có from cụ thể hoặc from là "/", chuyển hướng theo role
+      if (from === "/" || !from) {
+        if (me.role === "Admin") {
+          redirectTo = "/admin";
+        } else if (me.role === "Seller") {
+          redirectTo = "/vendor";
+        } else if (me.role === "User") {
+          redirectTo = "/customer";
+        } else {
+          redirectTo = "/"; // fallback
+        }
+      }
+
+      navigate(redirectTo, { replace: true });
     } catch (err) {
       // Chuẩn hoá thông điệp lỗi
       const httpStatus = err?.response?.status || err?.code;

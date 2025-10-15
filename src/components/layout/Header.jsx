@@ -529,7 +529,7 @@ function Header() {
                   }}
                   title="Khác"
                 >
-                  {(user?.role === "admin" || user?.isAdmin) && (
+                  {(user?.role === "Admin" || user?.isAdmin) && (
                     <DropdownItem
                       key="admin"
                       className="text-amber-700"
