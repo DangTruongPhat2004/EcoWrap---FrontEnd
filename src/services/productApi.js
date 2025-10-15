@@ -27,25 +27,12 @@ const transformProduct = (product) => {
           id: product.seller.sellerId,
           companyName: product.seller.companyName,
           address: product.seller.address,
+          // Use product count from seller's products array if available
           productCount: product.seller.products?.length || 0,
-          // Aggregate rating and reviews from all seller's products
-          rating:
-            product.seller.products?.length > 0
-              ? product.seller.products.reduce((sum, p) => {
-                  // Calculate average rating from product reviews
-                  const productRating =
-                    p.reviews?.length > 0
-                      ? p.reviews.reduce((s, r) => s + r.rating, 0) /
-                        p.reviews.length
-                      : 0;
-                  return sum + productRating;
-                }, 0) / product.seller.products.length
-              : 0,
-          reviewCount:
-            product.seller.products?.reduce(
-              (total, p) => total + (p.reviews?.length || 0),
-              0
-            ) || 0,
+          // For now, we'll need to calculate ratings per-seller by fetching all products
+          // This is a temporary solution - ideally backend should provide aggregated stats
+          rating: 0, // Will be calculated when displaying seller info
+          reviewCount: 0, // Will be calculated when displaying seller info
           user: product.seller.user
             ? {
                 id: product.seller.user.userId,
@@ -58,7 +45,60 @@ const transformProduct = (product) => {
             : null,
         }
       : null,
+    // Product-specific rating and reviews (not seller-wide)
+    rating:
+      product.reviews?.length > 0
+        ? product.reviews.reduce((sum, r) => sum + r.rating, 0) /
+          product.reviews.length
+        : 0,
+    reviewCount: product.reviews?.length || 0,
     // Keep original fields too for backward compatibility
+  };
+};
+
+/**
+ * Calculate seller-wide stats from all products
+ * @param {number} sellerId - The seller ID
+ * @param {Array} allProducts - All products in the system
+ * @returns {Object} Seller stats (rating, reviewCount, productCount)
+ */
+export const calculateSellerStats = (sellerId, allProducts) => {
+  if (!sellerId || !Array.isArray(allProducts)) {
+    return { rating: 0, reviewCount: 0, productCount: 0 };
+  }
+
+  // Filter products by seller
+  const sellerProducts = allProducts.filter(
+    (p) => p.seller?.id === sellerId || p.sellerId === sellerId
+  );
+
+  if (sellerProducts.length === 0) {
+    return { rating: 0, reviewCount: 0, productCount: 0 };
+  }
+
+  // Calculate total reviews and average rating
+  let totalReviews = 0;
+  let totalRating = 0;
+  let productsWithReviews = 0;
+
+  sellerProducts.forEach((product) => {
+    const reviews = product.reviews || [];
+    if (reviews.length > 0) {
+      totalReviews += reviews.length;
+      const productRating =
+        reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      totalRating += productRating;
+      productsWithReviews++;
+    }
+  });
+
+  const averageRating =
+    productsWithReviews > 0 ? totalRating / productsWithReviews : 0;
+
+  return {
+    rating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+    reviewCount: totalReviews,
+    productCount: sellerProducts.length,
   };
 };
 

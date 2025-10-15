@@ -12,6 +12,7 @@ export { default as VendorRegistration } from "./VendorRegistration";
 export { default as VendorRegistrationSuccess } from "./VendorRegistrationSuccess";
 
 // Admin pages
+export { default as AdminDashboard } from "./admin/AdminDashboard";
 export { default as VendorApprovals } from "./admin/VendorApprovals";
 export { default as VendorApprovalDetail } from "./admin/VendorApprovalDetail";
 export { default as UserManagement } from "./admin/UserManagement";

@@ -41,6 +41,7 @@ import ResetPasswordWizard from "./components/auth/ResetPasswordWizard";
 import ConversationsPage from "./pages/ConversationsPage";
 import ChatPage from "./pages/ChatPage";
 import MessagesLayout from "./pages/MessagesLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 // This component now acts as the main layout wrapper.
 // It uses the location to decide which layout to render.
@@ -120,66 +121,7 @@ function AppRoutes() {
       <Route path="/chat/:id" element={<ChatPage />} />
 
       {/* Note: The /messages routes are handled separately now */}
-
-      {/* === PROTECTED ROUTES ARE GROUPED HERE === */}
-
-      {/* Account & Customer Routes */}
-      <Route
-        path="/account/*"
-        element={
-          <ProtectedRoute>
-            <RoleBasedLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Profile />} />
-        <Route path="profile" element={<Profile />} />
-        {/* Add other nested account routes here */}
-      </Route>
-      <Route
-        path="/customer/*"
-        element={
-          <ProtectedRoute>
-            <RoleBasedLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<Profile />} />
-        <Route path="profile" element={<Profile />} />
-        {/* Add other nested customer routes here */}
-      </Route>
-
-      {/* Admin Routes */}
-      <Route
-        path="/admin/*"
-        element={
-          <ProtectedRoute requiredRole="admin">
-            <RoleBasedLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<VendorApprovals />} />
-        <Route path="dashboard" element={<VendorApprovals />} />
-        <Route path="approvals" element={<VendorApprovals />} />
-        <Route path="approvals/:id" element={<VendorApprovalDetail />} />
-        <Route path="users" element={<UserManagement />} />
-        {/* Add other nested admin routes here */}
-      </Route>
-
-      {/* Vendor Routes */}
-      <Route
-        path="/vendor/*"
-        element={
-          <ProtectedRoute requiredRole="vendor">
-            <DashboardLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<VendorDashboard />} />
-        <Route path="dashboard" element={<VendorDashboard />} />
-        <Route path="profile" element={<Profile />} />
-        {/* Add other nested vendor routes here */}
-      </Route>
+      {/* Note: Dashboard routes are now handled separately in main Router */}
     </Routes>
   );
 }
@@ -192,6 +134,60 @@ function App() {
         {/* The new messages route uses the special full-screen layout directly */}
         <Route path="/messages" element={<AppLayout />} />
         <Route path="/messages/:id" element={<AppLayout />} />
+
+        {/* Dashboard routes with their own layout - no Header/Footer */}
+        <Route
+          path="/account/*"
+          element={
+            <ProtectedRoute>
+              <RoleBasedLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Profile />} />
+          <Route path="profile" element={<Profile />} />
+          {/* Add other nested account routes here */}
+        </Route>
+        <Route
+          path="/customer/*"
+          element={
+            <ProtectedRoute>
+              <RoleBasedLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Profile />} />
+          <Route path="profile" element={<Profile />} />
+          {/* Add other nested customer routes here */}
+        </Route>
+        <Route
+          path="/admin/*"
+          element={
+            <ProtectedRoute requiredRole="admin">
+              <RoleBasedLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="approvals" element={<VendorApprovals />} />
+          <Route path="approvals/:id" element={<VendorApprovalDetail />} />
+          <Route path="users" element={<UserManagement />} />
+          {/* Add other nested admin routes here */}
+        </Route>
+        <Route
+          path="/vendor/*"
+          element={
+            <ProtectedRoute requiredRole="vendor">
+              <DashboardLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<VendorDashboard />} />
+          <Route path="dashboard" element={<VendorDashboard />} />
+          <Route path="profile" element={<Profile />} />
+          {/* Add other nested vendor routes here */}
+        </Route>
 
         {/* All other routes use the standard layout */}
         <Route path="*" element={<AppLayout />} />
