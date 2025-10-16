@@ -30,26 +30,33 @@ const VendorApprovalDetail = () => {
 
       try {
         const data = await getRegistrationById(id);
+        console.log("Registration data:", data); // Debug log
 
         // Transform backend data to frontend format
         const transformedVendor = {
           id: data.registrationId || data.id,
-          name: data.companyName,
-          email: data.licenseId || "N/A",
-          phone: data.companyPhone,
-          address: data.companyAddress,
-          registrationDate: data.submittedAt
-            ? new Date(data.submittedAt).toLocaleString("vi-VN")
-            : "N/A",
-          status: data.status,
+          name: data.companyName || "N/A",
+          email: data.user?.email || data.licenseId || "N/A",
+          phone: data.companyPhone || "N/A",
+          address: data.companyAddress || "Chưa có địa chỉ",
+          registrationDate:
+            data.requestedDate || data.submittedAt
+              ? new Date(data.requestedDate || data.submittedAt).toLocaleString(
+                  "vi-VN"
+                )
+              : "N/A",
+          status: data.approvalStatus || "Pending",
+          userId: data.user?.userId || data.userId,
+          userName: data.user?.fullName || data.user?.username || "N/A",
           businessLicense: {
             name: "Giấy Phép Kinh Doanh",
-            url: data.businessLicenseFileUrl || "#",
+            url: data.documentPath || null,
           },
           cccd: {
             name: "CCCD/CMND",
-            url: data.personalIdImageUrl || "#",
+            url: data.personalIdImage || null,
           },
+          licenseId: data.licenseId || "N/A",
         };
 
         setVendor(transformedVendor);
@@ -107,7 +114,7 @@ const VendorApprovalDetail = () => {
   };
 
   // Loading state
-  if (loading) {
+  if (loading || !vendor) {
     return (
       <div className="p-8 bg-white min-h-screen">
         <div className="max-w-[1200px] mx-auto">
@@ -153,7 +160,7 @@ const VendorApprovalDetail = () => {
         </button>
 
         <h1 className="text-2xl font-bold text-gray-900 mb-1">
-          Chi Tiết Đăng Ký - {vendor?.name}
+          Chi Tiết Đăng Ký - {vendor.name}
         </h1>
         <p className="text-gray-600 text-sm mb-6">
           Xem xét thông tin đăng ký nhà cung cấp bảo bì thân thiện môi trường
@@ -175,8 +182,8 @@ const VendorApprovalDetail = () => {
             </svg>
           </div>
           <p className="text-blue-700 text-sm">
-            Vui lòng kiểm tra trạng kỳ thông tin và tài liệu để đảm bảo tính
-            minh bạch và eco-friendly.
+            Vui lòng kiểm tra kỹ thông tin và tài liệu để đảm bảo tính minh bạch
+            và eco-friendly.
           </p>
         </div>
 
@@ -266,24 +273,14 @@ const VendorApprovalDetail = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nhà Cung Cấp
+                Mã giấy phép
               </label>
-              <div className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
-                <svg
-                  className="w-4 h-4 text-emerald-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"
-                  />
-                </svg>
-                <span className="text-sm text-gray-900">{vendor.supplier}</span>
-              </div>
+              <input
+                type="text"
+                value={vendor.licenseId}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+              />
             </div>
           </div>
         </div>
@@ -317,27 +314,39 @@ const VendorApprovalDetail = () => {
               {vendor.businessLicense.name}
             </h3>
             <div className="grid grid-cols-2 gap-4">
-              {vendor.businessLicense.files.map((file) => (
-                <div
-                  key={file.id}
-                  className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                >
+              {vendor.businessLicense.url ? (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="bg-white rounded-md p-8 border border-gray-200 mb-3 flex items-center justify-center h-32">
-                    <svg
-                      className="w-12 h-12 text-gray-300"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    {vendor.businessLicense.url.match(
+                      /\.(jpg|jpeg|png|gif)$/i
+                    ) ? (
+                      <img
+                        src={vendor.businessLicense.url}
+                        alt="Business License"
+                        className="max-h-full max-w-full object-contain"
                       />
-                    </svg>
+                    ) : (
+                      <svg
+                        className="w-12 h-12 text-gray-300"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    )}
                   </div>
-                  <button className="w-full py-2 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100 flex items-center justify-center gap-2">
+                  <a
+                    href={vendor.businessLicense.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100 flex items-center justify-center gap-2"
+                  >
                     <svg
                       className="w-4 h-4"
                       fill="none"
@@ -352,9 +361,13 @@ const VendorApprovalDetail = () => {
                       />
                     </svg>
                     Tải xuống
-                  </button>
+                  </a>
                 </div>
-              ))}
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 col-span-2 text-center text-gray-500">
+                  Chưa có tài liệu
+                </div>
+              )}
             </div>
           </div>
 
@@ -364,19 +377,39 @@ const VendorApprovalDetail = () => {
               {vendor.cccd.name}
             </h3>
             <div className="grid grid-cols-2 gap-4">
-              {vendor.cccd.files.map((file) => (
-                <div
-                  key={file.id}
-                  className="bg-gray-50 rounded-lg p-4 border border-gray-200"
-                >
+              {vendor.cccd.url ? (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                   <div className="bg-white rounded-md overflow-hidden border border-gray-200 mb-3">
-                    <img
-                      src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&h=300&fit=crop"
-                      alt="CCCD Preview"
-                      className="w-full h-48 object-cover"
-                    />
+                    {vendor.cccd.url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                      <img
+                        src={vendor.cccd.url}
+                        alt="CCCD"
+                        className="w-full h-48 object-contain"
+                      />
+                    ) : (
+                      <div className="w-full h-48 flex items-center justify-center">
+                        <svg
+                          className="w-12 h-12 text-gray-300"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                  <button className="w-full py-2 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100 flex items-center justify-center gap-2">
+                  <a
+                    href={vendor.cccd.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2 bg-emerald-50 text-emerald-700 rounded-md text-sm font-medium hover:bg-emerald-100 flex items-center justify-center gap-2"
+                  >
                     <svg
                       className="w-4 h-4"
                       fill="none"
@@ -391,79 +424,109 @@ const VendorApprovalDetail = () => {
                       />
                     </svg>
                     Tải xuống
-                  </button>
+                  </a>
                 </div>
-              ))}
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200 col-span-2 text-center text-gray-500">
+                  Chưa có tài liệu
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-4 justify-end">
-          <button
-            onClick={() => setShowRejectModal(true)}
-            disabled={isRejecting || vendor?.status !== "Pending"}
-            className="px-8 py-2.5 border-2 border-amber-600 text-amber-700 rounded-md font-semibold hover:bg-amber-50 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <XMarkIcon className="w-5 h-5" />
-            Từ Chối
-          </button>
-          <button
-            onClick={handleApprove}
-            disabled={isApproving || vendor?.status !== "Pending"}
-            className="px-8 py-2.5 bg-emerald-600 text-white rounded-md font-semibold hover:bg-emerald-700 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <CheckIcon className="w-5 h-5" />
-            {isApproving ? "Đang xử lý..." : "Phê Duyệt"}
-          </button>
-        </div>
-
-        {/* Reject Modal */}
-        {showRejectModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Từ chối đơn đăng ký
+        <div className="bg-white border border-gray-200 rounded-md p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-1">
+                Trạng thái:{" "}
+                <span
+                  className={`${
+                    vendor.status === "Pending"
+                      ? "text-yellow-600"
+                      : vendor.status === "Approved"
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {vendor.status}
+                </span>
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Vui lòng nhập lý do từ chối đơn đăng ký này:
+              <p className="text-sm text-gray-600">
+                Xem xét và quyết định phê duyệt nhà cung cấp
               </p>
-              <textarea
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Nhập lý do từ chối..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 min-h-[100px]"
-              />
-              <div className="flex gap-3 mt-4">
-                <button
-                  onClick={() => {
-                    setShowRejectModal(false);
-                    setRejectReason("");
-                  }}
-                  disabled={isRejecting}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleReject}
-                  disabled={isRejecting || !rejectReason.trim()}
-                  className="flex-1 px-4 py-2 bg-amber-600 text-white rounded-md font-medium hover:bg-amber-700 disabled:opacity-50"
-                >
-                  {isRejecting ? "Đang xử lý..." : "Xác nhận từ chối"}
-                </button>
-              </div>
+            </div>
+            <div className="flex gap-3">
+              {vendor.status === "Pending" && (
+                <>
+                  <button
+                    onClick={() => setShowRejectModal(true)}
+                    disabled={isRejecting}
+                    className="px-6 py-2 bg-white border-2 border-red-600 text-red-600 rounded-md font-medium hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                    {isRejecting ? "Đang xử lý..." : "Từ chối"}
+                  </button>
+
+                  <button
+                    onClick={handleApprove}
+                    disabled={isApproving}
+                    className="px-6 py-2 bg-emerald-600 text-white rounded-md font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    <CheckIcon className="w-5 h-5" />
+                    {isApproving ? "Đang xử lý..." : "Phê duyệt"}
+                  </button>
+                </>
+              )}
+              {vendor.status !== "Pending" && (
+                <p className="text-sm text-gray-500">
+                  Đơn đăng ký đã được xử lý
+                </p>
+              )}
             </div>
           </div>
-        )}
-
-        {/* Error Alert */}
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">{error}</p>
-          </div>
-        )}
+        </div>
       </div>
+
+      {/* Reject Modal */}
+      {showRejectModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              Xác nhận từ chối
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Vui lòng nhập lý do từ chối đơn đăng ký:
+            </p>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[100px]"
+              placeholder="Nhập lý do từ chối..."
+            />
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectReason("");
+                }}
+                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleReject}
+                disabled={isRejecting || !rejectReason.trim()}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isRejecting ? "Đang xử lý..." : "Xác nhận từ chối"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
