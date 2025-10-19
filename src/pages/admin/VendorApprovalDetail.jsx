@@ -48,6 +48,8 @@ const VendorApprovalDetail = () => {
           status: data.approvalStatus || "Pending",
           userId: data.user?.userId || data.userId,
           userName: data.user?.fullName || data.user?.username || "N/A",
+          fullName: data.user?.fullName || "N/A",
+          profileImage: data.user?.profileImage || null,
           businessLicense: {
             name: "Giấy Phép Kinh Doanh",
             url: data.documentPath || null,
@@ -190,20 +192,28 @@ const VendorApprovalDetail = () => {
         {/* Basic Information */}
         <div className="bg-white border border-gray-200 rounded-md p-6 mb-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-6 h-6 text-emerald-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center overflow-hidden">
+              {vendor.profileImage ? (
+                <img
+                  src={vendor.profileImage}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
                 />
-              </svg>
+              ) : (
+                <svg
+                  className="w-6 h-6 text-emerald-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              )}
             </div>
             <h2 className="text-lg font-bold text-gray-900">
               Thông Tin Cơ Bản
@@ -211,6 +221,18 @@ const VendorApprovalDetail = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Họ và Tên
+              </label>
+              <input
+                type="text"
+                value={vendor.fullName}
+                readOnly
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+              />
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Tên Cửa Hàng

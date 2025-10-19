@@ -146,13 +146,22 @@ const Login = () => {
       const from = location.state?.from || "/";
       let redirectTo = from;
 
+      // Lấy role từ token (ưu tiên) hoặc từ user object
+      const tokenPayload = decodeJwt(token);
+      const userRole =
+        tokenPayload?.[
+          "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
+        ] || me.roleId;
+
       // Nếu không có from cụ thể hoặc from là "/", chuyển hướng theo role
+      // Role IDs từ DB: 1=Admin, 2=Customer, 3=Seller
+      // Role names từ JWT: 'Admin', 'User', 'Seller'
       if (from === "/" || !from) {
-        if (me.role === "Admin") {
+        if (userRole === "Admin" || userRole === 1) {
           redirectTo = "/admin";
-        } else if (me.role === "Seller") {
+        } else if (userRole === "Seller" || userRole === 3) {
           redirectTo = "/vendor";
-        } else if (me.role === "User") {
+        } else if (userRole === "User" || userRole === 2) {
           redirectTo = "/customer";
         } else {
           redirectTo = "/"; // fallback

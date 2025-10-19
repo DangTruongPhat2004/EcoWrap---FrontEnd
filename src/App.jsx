@@ -22,6 +22,7 @@ import {
   UserManagement,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorProfile from "./pages/vendor/VendorProfile";
 import Profile from "./pages/customer/Profile";
 import VendorRegistration from "./pages/VendorRegistration";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
@@ -185,7 +186,7 @@ function App() {
         >
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<VendorProfile />} />
           {/* Add other nested vendor routes here */}
         </Route>
 
