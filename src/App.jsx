@@ -22,6 +22,7 @@ import {
   UserManagement,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
+import VendorProfile from "./pages/vendor/VendorProfile";
 import Profile from "./pages/customer/Profile";
 import VendorRegistration from "./pages/VendorRegistration";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
@@ -163,7 +164,7 @@ function App() {
         <Route
           path="/admin/*"
           element={
-            <ProtectedRoute requiredRole="admin">
+            <ProtectedRoute requiredRole="Admin">
               <RoleBasedLayout />
             </ProtectedRoute>
           }
@@ -178,14 +179,14 @@ function App() {
         <Route
           path="/vendor/*"
           element={
-            <ProtectedRoute requiredRole="vendor">
+            <ProtectedRoute requiredRole="Seller">
               <DashboardLayout />
             </ProtectedRoute>
           }
         >
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="profile" element={<VendorProfile />} />
           {/* Add other nested vendor routes here */}
         </Route>
 

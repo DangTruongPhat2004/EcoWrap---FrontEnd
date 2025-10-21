@@ -1,36 +1,87 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardBody, Divider, Link as NextUILink } from "@nextui-org/react";
 import CartItemRow from "../components/cart/CartItemRow";
 import ImpactCard from "../components/cart/ImpactCard";
 import SummaryCard from "../components/cart/SummaryCard";
 import Perks from "../components/cart/Perks";
-import tuigiay from "../assets/tuigiay.png";
 import { useNavigate } from "react-router-dom";
+import {
+  getAllCarts,
+  deleteCartItem,
+  updateCartItem,
+} from "../services/cartApi";
 
 export default function CartPage() {
   const navigate = useNavigate();
-  const [items, setItems] = React.useState([
-    {
-      id: "bag-26x32",
-      name: "Túi Giấy Kraft 26×32cm",
-      variant: "Túi đựng bánh mì túi kín",
-      price: 2000,
-      qty: 100,
-      image: tuigiay,
-    },
-    {
-      id: "bag-30x40",
-      name: "Túi Giấy Kraft 30×40cm",
-      variant: "Túi đựng bánh mì túi kín",
-      price: 2500,
-      qty: 100,
-      image: tuigiay,
-    },
-  ]);
-  const updateQty = (id, qty) =>
-    setItems((arr) => arr.map((it) => (it.id === id ? { ...it, qty } : it)));
-  const removeItem = (id) =>
-    setItems((arr) => arr.filter((it) => it.id !== id));
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch cart data from API
+  useEffect(() => {
+    fetchCartData();
+  }, []);
+
+  const fetchCartData = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllCarts();
+      console.log("Cart response:", response);
+
+      // Find active cart
+      const activeCart = response.data?.find((cart) => cart.isActive);
+
+      if (activeCart && activeCart.items) {
+        // Transform API data to component format
+        const transformedItems = activeCart.items.map((item) => ({
+          id: item.cartItemId,
+          cartItemId: item.cartItemId,
+          productId: item.productId,
+          name: item.productName || "Sản phẩm",
+          variant: item.product?.productDescription || "",
+          price: item.cartItemPrice / item.quantity, // Unit price
+          qty: item.quantity,
+          image: item.product?.productImages?.[0] || null,
+          designFile: item.designFile,
+        }));
+        setItems(transformedItems);
+      } else {
+        setItems([]);
+      }
+    } catch (err) {
+      console.error("Error fetching cart:", err);
+      setError("Không thể tải giỏ hàng");
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateQty = async (id, qty) => {
+    try {
+      // Update in backend
+      await updateCartItem(id, { quantity: qty });
+
+      // Update local state
+      setItems((arr) => arr.map((it) => (it.id === id ? { ...it, qty } : it)));
+    } catch (err) {
+      console.error("Error updating quantity:", err);
+      alert("Không thể cập nhật số lượng");
+    }
+  };
+
+  const removeItem = async (id) => {
+    try {
+      // Delete from backend
+      await deleteCartItem(id);
+
+      // Remove from local state
+      setItems((arr) => arr.filter((it) => it.id !== id));
+    } catch (err) {
+      console.error("Error removing item:", err);
+      alert("Không thể xóa sản phẩm");
+    }
+  };
 
   const cols = (
     <div className="hidden md:grid grid-cols-12 text-sm text-gray-500 pb-2 border-b">
@@ -40,6 +91,39 @@ export default function CartPage() {
       <div className="col-span-2">Thành tiền</div>
     </div>
   );
+
+  // Loading state
+  if (loading) {
+    return (
+      <main className="bg-[#F6F7F3] min-h-[70vh]">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex justify-center items-center h-64">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+            <p className="ml-4 text-gray-600">Đang tải giỏ hàng...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <main className="bg-[#F6F7F3] min-h-[70vh]">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 text-center">
+            <p className="text-red-800">{error}</p>
+            <button
+              onClick={fetchCartData}
+              className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700"
+            >
+              Thử lại
+            </button>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="bg-[#F6F7F3] min-h-[70vh]">
@@ -52,49 +136,79 @@ export default function CartPage() {
           giỏ hàng
         </p>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-8 ">
-          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow ">
-            <Card>
-              <CardBody>
-                {cols}
-                <div>
-                  {items.map((it) => (
-                    <React.Fragment key={it.id}>
-                      <CartItemRow
-                        item={it}
-                        onQty={updateQty}
-                        onRemove={removeItem}
-                      />
-                      <Divider />
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div className="pt-3">
-                  <NextUILink
-                    href="#"
-                    className="text-sm text-[#8B6F47] font-medium"
-                  >
-                    ← Tiếp tục thiết kế
-                  </NextUILink>
-                </div>
-              </CardBody>
-            </Card>
+        {items.length === 0 ? (
+          <div className="mt-6 bg-white p-12 rounded-lg shadow text-center">
+            <svg
+              className="w-24 h-24 text-gray-300 mx-auto mb-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+              Giỏ hàng trống
+            </h3>
+            <p className="text-gray-500 mb-6">
+              Bạn chưa có sản phẩm nào trong giỏ hàng
+            </p>
+            <button
+              onClick={() => navigate("/products")}
+              className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+            >
+              Tiếp tục mua sắm
+            </button>
           </div>
+        ) : (
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-8 ">
+            <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow ">
+              <Card>
+                <CardBody>
+                  {cols}
+                  <div>
+                    {items.map((it) => (
+                      <React.Fragment key={it.id}>
+                        <CartItemRow
+                          item={it}
+                          onQty={updateQty}
+                          onRemove={removeItem}
+                        />
+                        <Divider />
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="pt-3">
+                    <NextUILink
+                      href="/products"
+                      className="text-sm text-[#8B6F47] font-medium"
+                    >
+                      ← Tiếp tục mua sắm
+                    </NextUILink>
+                  </div>
+                </CardBody>
+              </Card>
+            </div>
 
-          <div className="space-y-4">
-            <ImpactCard />
-            <SummaryCard
-              items={items}
-              shippingText="Tính khi nhập địa chỉ"
-              showCoupon={false} // ẩn mã giảm giá ở cart
-              ctaLabel="Tiến hành thanh toán" // đổi chữ nút
-              onPlaceOrder={() => navigate("/checkout")} // ⟵ sang Checkout
-            />
+            <div className="space-y-4">
+              <ImpactCard />
+              <SummaryCard
+                items={items}
+                shippingText="Tính khi nhập địa chỉ"
+                showCoupon={false} // ẩn mã giảm giá ở cart
+                ctaLabel="Tiến hành thanh toán" // đổi chữ nút
+                onPlaceOrder={() => navigate("/checkout")} // ⟵ sang Checkout
+              />
+            </div>
+            <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow mt-6">
+              <Perks />
+            </div>
           </div>
-          <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow mt-6">
-            <Perks />
-          </div>
-        </div>
+        )}
       </div>
     </main>
   );

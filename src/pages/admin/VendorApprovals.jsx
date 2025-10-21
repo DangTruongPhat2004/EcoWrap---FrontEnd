@@ -34,28 +34,40 @@ const VendorApprovals = () => {
         }
 
         // Transform backend data to frontend format
-        const transformedData = data.map((reg) => ({
-          id: reg.registrationId || reg.id,
-          name: reg.companyName,
-          description: reg.companyAddress || "Chưa có mô tả",
-          email: reg.licenseId || "N/A",
-          phone: reg.companyPhone,
-          status:
-            reg.status?.toLowerCase() === "pending"
-              ? "pending"
-              : reg.status?.toLowerCase() === "approved"
-              ? "approved"
-              : "rejected",
-          statusLabel:
-            reg.status === "Pending"
-              ? "Đang chờ"
-              : reg.status === "Approved"
-              ? "Đã phê duyệt"
-              : "Bị từ chối",
-          date: reg.submittedAt
-            ? new Date(reg.submittedAt).toLocaleDateString("vi-VN")
-            : "N/A",
-        }));
+        const transformedData = data.map((reg) => {
+          // Handle the actual status value from API (approvalStatus field)
+          // Backend statuses: Pending, Approved, Canceled
+          const actualStatus = reg.approvalStatus || "Pending";
+          const statusLower = actualStatus.toLowerCase();
+
+          return {
+            id: reg.registrationId || reg.id,
+            name: reg.companyName || "N/A",
+            description: reg.companyAddress || "Chưa có mô tả",
+            email: reg.user?.email || reg.licenseId || "N/A",
+            phone: reg.companyPhone || "N/A",
+            // Map backend status to frontend status
+            status:
+              statusLower === "pending"
+                ? "pending"
+                : statusLower === "approved"
+                ? "approved"
+                : statusLower === "canceled"
+                ? "rejected"
+                : "rejected", // fallback
+            statusLabel:
+              statusLower === "pending"
+                ? "Đang chờ"
+                : statusLower === "approved"
+                ? "Đã phê duyệt"
+                : statusLower === "canceled"
+                ? "Bị từ chối"
+                : "Bị từ chối", // fallback
+            date: reg.requestedDate
+              ? new Date(reg.requestedDate).toLocaleDateString("vi-VN")
+              : "N/A",
+          };
+        });
 
         setVendors(transformedData);
       } catch (err) {
