@@ -37,6 +37,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import logoImg from "../../assets/logo.png";
 import apiClient from "../../services/apiClient";
+import { getAllCarts } from "../../services/cartApi";
 
 // --- helpers: decode JWT để lấy userId ---
 function b64urlDecode(str) {
@@ -79,6 +80,9 @@ function Header() {
   // Auth state
   const [user, setUser] = React.useState(null);
   const [authLoading, setAuthLoading] = React.useState(true);
+
+  // Cart state
+  const [cartItemCount, setCartItemCount] = React.useState(0);
 
   // 0) Hydrate từ localStorage (user) để hiển thị ngay
   React.useEffect(() => {
@@ -168,6 +172,65 @@ function Header() {
       alive = false;
     };
   }, []); // chỉ chạy khi mount
+
+  // 4) Fetch cart count when user is logged in
+  React.useEffect(() => {
+    const fetchCartCount = async () => {
+      if (!user) {
+        setCartItemCount(0);
+        return;
+      }
+
+      try {
+        const cartData = await getAllCarts();
+        // Cart API returns { data: [{ cartId, items: [...] }] }
+        if (cartData?.data && Array.isArray(cartData.data)) {
+          // Get active cart (first one or the one with IsActive = true)
+          const activeCart =
+            cartData.data.find((cart) => cart.isActive) || cartData.data[0];
+          if (activeCart?.items) {
+            setCartItemCount(activeCart.items.length);
+          } else {
+            setCartItemCount(0);
+          }
+        } else {
+          setCartItemCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching cart count:", error);
+        setCartItemCount(0);
+      }
+    };
+
+    fetchCartCount();
+  }, [user]);
+
+  // 5) Listen for cart updates (e.g., when items are added)
+  React.useEffect(() => {
+    const handleCartUpdate = () => {
+      // Re-fetch cart count when cart is updated
+      if (user) {
+        getAllCarts()
+          .then((cartData) => {
+            if (cartData?.data && Array.isArray(cartData.data)) {
+              const activeCart =
+                cartData.data.find((cart) => cart.isActive) || cartData.data[0];
+              if (activeCart?.items) {
+                setCartItemCount(activeCart.items.length);
+              } else {
+                setCartItemCount(0);
+              }
+            }
+          })
+          .catch((error) => {
+            console.error("Error updating cart count:", error);
+          });
+      }
+    };
+
+    window.addEventListener("cart:updated", handleCartUpdate);
+    return () => window.removeEventListener("cart:updated", handleCartUpdate);
+  }, [user]);
 
   const submitSearch = (q) => {
     const value = (q ?? query).trim();
@@ -348,7 +411,7 @@ function Header() {
 
           {/* Cart */}
           <Badge
-            content="0"
+            content={cartItemCount > 0 ? cartItemCount : "0"}
             color="default"
             size="sm"
             classNames={{
@@ -361,8 +424,9 @@ function Header() {
               isIconOnly
               variant="light"
               radius="full"
-              className="w-11 h-11 bg-[rgba(168,213,186,0.2)]"
+              className="w-11 h-11 bg-[rgba(168,213,186,0.2)] cursor-pointer"
               aria-label="Giỏ hàng"
+              onClick={() => navigate("/cart")}
             >
               <svg
                 className="w-5 h-5 text-[#8B6F47]"

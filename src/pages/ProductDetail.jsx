@@ -5,6 +5,7 @@ import {
   getAllProducts,
   calculateSellerStats,
 } from "../services/productApi";
+import { addCartItem } from "../services/cartApi";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -21,6 +22,7 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(100);
   const [showCertificatePreview, setShowCertificatePreview] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -122,6 +124,37 @@ const ProductDetail = () => {
   const handleQuantityChange = (newQty) => {
     const qty = Math.max(1, parseInt(newQty) || 1);
     setQuantity(qty);
+  };
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    setAddingToCart(true);
+    try {
+      const formData = new FormData();
+      formData.append("ProductId", product.id);
+      formData.append("Quantity", quantity.toString());
+
+      await addCartItem(formData);
+
+      // Dispatch cart updated event to refresh cart count in header
+      window.dispatchEvent(new CustomEvent("cart:updated"));
+
+      // Show success notification
+      alert(`Đã thêm ${quantity} ${product.name} vào giỏ hàng!`);
+
+      // Optionally redirect to cart page
+      // navigate("/cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      const errorMsg =
+        error.response?.data?.Message ||
+        error.response?.data?.message ||
+        "Không thể thêm vào giỏ hàng";
+      alert(errorMsg);
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   if (loading) {
@@ -690,8 +723,10 @@ const ProductDetail = () => {
               Thiết Kế Ngay
             </button>
             <button
-              className="flex-1 text-white py-3 px-6 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center"
+              className="flex-1 text-white py-3 px-6 rounded-lg font-medium hover:bg-orange-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: "#8D6F47" }}
+              onClick={handleAddToCart}
+              disabled={addingToCart}
             >
               <svg
                 width="18"
@@ -714,7 +749,7 @@ const ProductDetail = () => {
                   </clipPath>
                 </defs>
               </svg>
-              Thêm Vào Giỏ Hàng
+              {addingToCart ? "Đang thêm..." : "Thêm Vào Giỏ Hàng"}
             </button>
           </div>
         </div>
