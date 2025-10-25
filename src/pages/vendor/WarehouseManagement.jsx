@@ -41,6 +41,11 @@ const WarehouseManagement = () => {
     onOpen: onUpdateConfirmOpen,
     onOpenChange: onUpdateConfirmOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isDeleteConfirmOpen,
+    onOpen: onDeleteConfirmOpen,
+    onOpenChange: onDeleteConfirmOpenChange,
+  } = useDisclosure();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -327,6 +332,39 @@ const WarehouseManagement = () => {
       alert("Có lỗi xảy ra khi cập nhật kho hàng. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteClick = () => {
+    // Đóng modal chính và mở modal xác nhận xóa
+    onOpenChange();
+    onDeleteConfirmOpen();
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!editingWarehouse) return;
+    setIsLoading(true);
+    try {
+      await warehouseApi.deleteWarehouse(editingWarehouse.warehouseId);
+
+      // Refresh the warehouses list
+      await fetchWarehouses();
+
+      // Close modals and reset form
+      onDeleteConfirmOpenChange();
+      resetForm();
+
+      // Show success message
+      alert("Xóa kho hàng thành công!");
+    } catch (error) {
+      console.error("Error deleting warehouse:", error);
+      alert(
+        "Có lỗi xảy ra khi xóa kho hàng. Kho hàng có thể đang được sử dụng."
+      );
+    } finally {
+      setIsLoading(false);
+      // Đảm bảo editingWarehouse được reset
+      setEditingWarehouse(null);
     }
   };
 
@@ -736,22 +774,31 @@ const WarehouseManagement = () => {
                   </div>
                 </div>
               </ModalBody>
-              <ModalFooter className="flex justify-end gap-3 pt-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                <Button
-                  color="danger"
-                  variant="light"
-                  onPress={onClose}
-                  className="px-6 hover:bg-red-50"
-                >
-                  Hủy
-                </Button>
-                <Button
-                  color="success"
-                  onPress={handleSubmitForm}
-                  className="px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                >
-                  {modalMode === "add" ? "Tiếp Tục" : "Cập nhật"}
-                </Button>
+              <ModalFooter className="flex justify-between items-center pt-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                <div>
+                  {modalMode === "edit" && (
+                    <Button
+                      color="danger"
+                      variant="flat"
+                      onPress={handleDeleteClick}
+                      className="hover:bg-red-100"
+                    >
+                      Xóa Kho Hàng
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <Button color="default" variant="light" onPress={onClose}>
+                    Hủy
+                  </Button>
+                  <Button
+                    color="success"
+                    onPress={handleSubmitForm}
+                    className="px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  >
+                    {modalMode === "add" ? "Tiếp Tục" : "Cập nhật"}
+                  </Button>
+                </div>
               </ModalFooter>
             </>
           )}
@@ -899,6 +946,63 @@ const WarehouseManagement = () => {
                   loadingText="Đang cập nhật..."
                 >
                   Xác nhận
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={isDeleteConfirmOpen}
+        onOpenChange={onDeleteConfirmOpenChange}
+        size="md"
+        backdrop="blur"
+        style={{ zIndex: 9999 }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-red-500" />
+                  <span className="text-red-700">Xác nhận xóa kho hàng</span>
+                </div>
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-3">
+                  <p className="text-gray-600">
+                    Bạn có chắc chắn muốn xóa vĩnh viễn kho hàng này không? Hành
+                    động này không thể hoàn tác.
+                  </p>
+                  <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <p className="font-medium text-red-800">
+                      {editingWarehouse?.warehouseName}
+                    </p>
+                    <p className="text-sm text-red-700">
+                      {editingWarehouse?.address}
+                    </p>
+                  </div>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="default"
+                  variant="light"
+                  onPress={onClose}
+                  isDisabled={isLoading}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  color="danger"
+                  onPress={handleConfirmDelete}
+                  isLoading={isLoading}
+                  loadingText="Đang xóa..."
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Xác nhận xóa
                 </Button>
               </ModalFooter>
             </>
