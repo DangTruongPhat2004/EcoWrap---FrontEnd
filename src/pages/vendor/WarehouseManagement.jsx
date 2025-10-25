@@ -36,6 +36,11 @@ const WarehouseManagement = () => {
     onOpen: onConfirmOpen,
     onOpenChange: onConfirmOpenChange,
   } = useDisclosure();
+  const {
+    isOpen: isUpdateConfirmOpen,
+    onOpen: onUpdateConfirmOpen,
+    onOpenChange: onUpdateConfirmOpenChange,
+  } = useDisclosure();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -44,6 +49,8 @@ const WarehouseManagement = () => {
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [editingWarehouse, setEditingWarehouse] = useState(null);
+  const [modalMode, setModalMode] = useState("add"); // 'add' or 'edit'
   const [formData, setFormData] = useState({
     warehouseName: "",
     address: "",
@@ -193,6 +200,7 @@ const WarehouseManagement = () => {
   // Reset form
   const resetForm = () => {
     setFormData({
+      ...formData, // Giữ lại SĐT đã điền sẵn
       warehouseName: "",
       address: "",
       phoneNumber: "",
@@ -201,6 +209,7 @@ const WarehouseManagement = () => {
       wardId: "",
     });
     setErrors({});
+    setEditingWarehouse(null);
   };
 
   // Calculate pagination
@@ -210,6 +219,7 @@ const WarehouseManagement = () => {
   const currentWarehouses = filteredWarehouses.slice(startIndex, endIndex);
 
   const handleAddWarehouse = () => {
+    setModalMode("add");
     setFormData({
       warehouseName: "",
       address: "",
@@ -222,14 +232,34 @@ const WarehouseManagement = () => {
     onOpen();
   };
 
+  const handleEditWarehouse = (warehouse) => {
+    setModalMode("edit");
+    setEditingWarehouse(warehouse);
+    setFormData({
+      warehouseName: warehouse.warehouseName,
+      address: warehouse.address,
+      phoneNumber: warehouse.phoneNumber,
+      provinceId: warehouse.provinceId,
+      districtId: warehouse.districtId,
+      wardId: warehouse.wardId,
+    });
+    setErrors({});
+    onOpen();
+  };
+
   const handleSubmitForm = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
     }
+    // Đóng modal chính và mở modal xác nhận tương ứng
     onOpenChange();
-    onConfirmOpen();
+    if (modalMode === "add") {
+      onConfirmOpen();
+    } else {
+      onUpdateConfirmOpen();
+    }
   };
 
   const handleConfirmCreate = async () => {
@@ -260,6 +290,38 @@ const WarehouseManagement = () => {
     } catch (error) {
       console.error("Error creating warehouse:", error);
       alert("Có lỗi xảy ra khi tạo kho hàng. Vui lòng thử lại.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmUpdate = async () => {
+    if (!editingWarehouse) return;
+    setIsLoading(true);
+    try {
+      const warehouseData = {
+        warehouseName: formData.warehouseName,
+        address: formData.address,
+        phoneNumber: formData.phoneNumber,
+        provinceId: formData.provinceId,
+        districtId: formData.districtId,
+        wardId: formData.wardId,
+      };
+
+      await warehouseApi.updateWarehouse(editingWarehouse.warehouseId, warehouseData);
+
+      // Refresh the warehouses list
+      await fetchWarehouses();
+
+      // Close modals and reset form
+      onUpdateConfirmOpenChange();
+      resetForm();
+
+      // Show success message
+      alert("Cập nhật kho hàng thành công!");
+    } catch (error) {
+      console.error("Error updating warehouse:", error);
+      alert("Có lỗi xảy ra khi cập nhật kho hàng. Vui lòng thử lại.");
     } finally {
       setIsLoading(false);
     }
@@ -370,7 +432,11 @@ const WarehouseManagement = () => {
           </TableHeader>
           <TableBody>
             {currentWarehouses.map((warehouse) => (
-              <TableRow key={warehouse.id}>
+              <TableRow
+                key={warehouse.warehouseId}
+                onClick={() => handleEditWarehouse(warehouse)}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+              >
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -464,9 +530,15 @@ const WarehouseManagement = () => {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-xl font-semibold text-green-800">
-                  Thêm Kho Hàng Mới
-                </h2>
+                {modalMode === "add" ? (
+                  <h2 className="text-xl font-semibold text-green-800">
+                    Thêm Kho Hàng Mới
+                  </h2>
+                ) : (
+                  <h2 className="text-xl font-semibold text-green-800">
+                    Cập nhật thông tin kho hàng
+                  </h2>
+                )}
                 <p className="text-sm text-green-600">
                   Điền thông tin chi tiết về kho hàng
                 </p>
@@ -675,7 +747,7 @@ const WarehouseManagement = () => {
                   onPress={handleSubmitForm}
                   className="px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                 >
-                  Tiếp Tục
+                  {modalMode === "add" ? "Tiếp Tục" : "Cập nhật"}
                 </Button>
               </ModalFooter>
             </>
@@ -683,7 +755,7 @@ const WarehouseManagement = () => {
         </ModalContent>
       </Modal>
 
-      {/* Confirmation Modal */}
+      {/* Add Confirmation Modal */}
       <Modal
         isOpen={isConfirmOpen}
         onOpenChange={onConfirmOpenChange}
@@ -748,6 +820,78 @@ const WarehouseManagement = () => {
                   loadingText="Đang tạo..."
                 >
                   Xác nhận tạo
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      {/* Update Confirmation Modal */}
+      <Modal
+        isOpen={isUpdateConfirmOpen}
+        onOpenChange={onUpdateConfirmOpenChange}
+        size="md"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  <span>Xác nhận cập nhật</span>
+                </div>
+              </ModalHeader>
+              <ModalBody>
+                <div className="space-y-3">
+                  <p className="text-gray-600">
+                    Bạn có chắc chắn muốn cập nhật kho hàng với thông tin mới?
+                  </p>
+                  <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <div>
+                      <span className="font-medium">Tên kho:</span>{" "}
+                      {formData.warehouseName}
+                    </div>
+                    <div>
+                      <span className="font-medium">Địa chỉ:</span>{" "}
+                      {formData.address}
+                    </div>
+                    <div>
+                      <span className="font-medium">Số điện thoại:</span>{" "}
+                      {formData.phoneNumber}
+                    </div>
+                    <div>
+                      <span className="font-medium">Vị trí:</span>{" "}
+                      {
+                        provinces.find((p) => p.id === formData.provinceId)
+                          ?.name
+                      }{" "}
+                      -{" "}
+                      {
+                        districts.find((d) => d.id === formData.districtId)
+                          ?.name
+                      }{" "}
+                      - {wards.find((w) => w.id === formData.wardId)?.name}
+                    </div>
+                  </div>
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button
+                  color="danger"
+                  variant="light"
+                  onPress={onClose}
+                  isDisabled={isLoading}
+                >
+                  Hủy
+                </Button>
+                <Button
+                  color="success"
+                  onPress={handleConfirmUpdate}
+                  isLoading={isLoading}
+                  loadingText="Đang cập nhật..."
+                >
+                  Xác nhận
                 </Button>
               </ModalFooter>
             </>
