@@ -20,14 +20,14 @@ import {
 } from "@heroui/react";
 import {
   Plus,
-  Download,
   Search,
   MapPin,
   Phone,
   Building,
   AlertTriangle,
 } from "lucide-react";
-import { warehouseApi } from "../../services";
+import warehouseApi from "../../services/warehouseApi";
+import { getUserById } from "../../services/userApi";
 
 const WarehouseManagement = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -43,6 +43,7 @@ const WarehouseManagement = () => {
   const [warehouses, setWarehouses] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
   const [formData, setFormData] = useState({
     warehouseName: "",
     address: "",
@@ -100,7 +101,21 @@ const WarehouseManagement = () => {
 
   // Initialize warehouses with API data
   React.useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        // Lấy thông tin user (chứa SĐT) từ localStorage hoặc API
+        const localUser = JSON.parse(localStorage.getItem("user"));
+        if (localUser && localUser.userId) {
+          const userData = await getUserById(localUser.userId);
+          setUserInfo(userData);
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        // Có thể hiển thị thông báo lỗi nếu cần
+      }
+    };
     fetchWarehouses();
+    fetchInitialData();
   }, []);
 
   // Filter warehouses based on search term
@@ -195,7 +210,15 @@ const WarehouseManagement = () => {
   const currentWarehouses = filteredWarehouses.slice(startIndex, endIndex);
 
   const handleAddWarehouse = () => {
-    resetForm();
+    setFormData({
+      warehouseName: "",
+      address: "",
+      phoneNumber: userInfo?.phoneNumber || "", // Tự động điền SĐT của user
+      provinceId: "",
+      districtId: "",
+      wardId: "",
+    });
+    setErrors({});
     onOpen();
   };
 
@@ -240,11 +263,6 @@ const WarehouseManagement = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleDownloadReport = () => {
-    // Implement download report functionality
-    console.log("Downloading warehouse report...");
   };
 
   // Loading state
