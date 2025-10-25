@@ -308,7 +308,10 @@ const WarehouseManagement = () => {
         wardId: formData.wardId,
       };
 
-      await warehouseApi.updateWarehouse(editingWarehouse.warehouseId, warehouseData);
+      await warehouseApi.updateWarehouse(
+        editingWarehouse.warehouseId,
+        warehouseData
+      );
 
       // Refresh the warehouses list
       await fetchWarehouses();
@@ -760,6 +763,8 @@ const WarehouseManagement = () => {
         isOpen={isConfirmOpen}
         onOpenChange={onConfirmOpenChange}
         size="md"
+        backdrop="blur"
+        style={{ zIndex: 9999 }}
       >
         <ModalContent>
           {(onClose) => (
@@ -832,6 +837,8 @@ const WarehouseManagement = () => {
         isOpen={isUpdateConfirmOpen}
         onOpenChange={onUpdateConfirmOpenChange}
         size="md"
+        backdrop="blur"
+        style={{ zIndex: 9999 }}
       >
         <ModalContent>
           {(onClose) => (
