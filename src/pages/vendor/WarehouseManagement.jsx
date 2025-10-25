@@ -535,6 +535,7 @@ const WarehouseManagement = () => {
                         classNames={{
                           input: "text-sm",
                         }}
+                        disabled={true}
                       />
                     </div>
                   </div>
