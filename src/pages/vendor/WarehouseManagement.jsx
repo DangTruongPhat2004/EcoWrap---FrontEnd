@@ -274,6 +274,25 @@ const WarehouseManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Global styles for dropdown z-index */}
+      <style jsx global>{`
+        .heroui-select-popover {
+          z-index: 10000 !important;
+        }
+        .heroui-select-popover-content {
+          background: white !important;
+          border: 1px solid #e5e7eb !important;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+        }
+        .heroui-select-listbox {
+          background: white !important;
+        }
+        .heroui-select-listbox-wrapper {
+          background: white !important;
+        }
+      `}</style>
+
       {/* Header Section */}
       <div className="space-y-4">
         <div>
@@ -410,197 +429,232 @@ const WarehouseManagement = () => {
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        size="3xl"
+        size="4xl"
         scrollBehavior="inside"
         classNames={{
-          base: "max-h-[90vh]",
-          body: "py-6",
-          header: "pb-2",
-          footer: "pt-2",
+          base: "max-h-[95vh] bg-gradient-to-br from-white to-gray-50 z-50",
+          body: "py-6 max-h-[70vh] overflow-y-auto",
+          header:
+            "pb-2 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200",
+          footer:
+            "pt-2 bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200",
         }}
+        backdrop="blur"
+        style={{ zIndex: 9999 }}
       >
         <ModalContent>
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-xl font-semibold">Thêm Kho Hàng Mới</h2>
-                <p className="text-sm text-gray-500">
+                <h2 className="text-xl font-semibold text-green-800">
+                  Thêm Kho Hàng Mới
+                </h2>
+                <p className="text-sm text-green-600">
                   Điền thông tin chi tiết về kho hàng
                 </p>
               </ModalHeader>
-              <ModalBody>
-                <div className="space-y-6">
+              <ModalBody className="bg-gradient-to-b from-white to-gray-50">
+                <div className="space-y-4">
                   {/* Tên Kho Hàng */}
-                  <div className="space-y-2">
-                    <Input
-                      label="Tên Kho Hàng"
-                      placeholder="Nhập tên kho hàng"
-                      variant="bordered"
-                      value={formData.warehouseName}
-                      onChange={(e) =>
-                        handleInputChange("warehouseName", e.target.value)
-                      }
-                      isInvalid={!!errors.warehouseName}
-                      errorMessage={errors.warehouseName}
-                      isRequired
-                      classNames={{
-                        label: "text-sm font-medium text-gray-700",
-                        input: "text-sm",
-                      }}
-                    />
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Tên Kho Hàng <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Nhập tên kho hàng"
+                        variant="bordered"
+                        value={formData.warehouseName}
+                        onChange={(e) =>
+                          handleInputChange("warehouseName", e.target.value)
+                        }
+                        isInvalid={!!errors.warehouseName}
+                        errorMessage={errors.warehouseName}
+                        classNames={{
+                          input: "text-sm",
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Địa Chỉ */}
-                  <div className="space-y-2">
-                    <Input
-                      label="Địa Chỉ"
-                      placeholder="Nhập địa chỉ chi tiết"
-                      variant="bordered"
-                      value={formData.address}
-                      onChange={(e) =>
-                        handleInputChange("address", e.target.value)
-                      }
-                      isInvalid={!!errors.address}
-                      errorMessage={errors.address}
-                      isRequired
-                      classNames={{
-                        label: "text-sm font-medium text-gray-700",
-                        input: "text-sm",
-                      }}
-                    />
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Địa Chỉ <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Nhập địa chỉ chi tiết"
+                        variant="bordered"
+                        value={formData.address}
+                        onChange={(e) =>
+                          handleInputChange("address", e.target.value)
+                        }
+                        isInvalid={!!errors.address}
+                        errorMessage={errors.address}
+                        classNames={{
+                          input: "text-sm",
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Số Điện Thoại */}
-                  <div className="space-y-2">
-                    <Input
-                      label="Số Điện Thoại"
-                      placeholder="Nhập số điện thoại"
-                      variant="bordered"
-                      value={formData.phoneNumber}
-                      onChange={(e) =>
-                        handleInputChange("phoneNumber", e.target.value)
-                      }
-                      isInvalid={!!errors.phoneNumber}
-                      errorMessage={errors.phoneNumber}
-                      isRequired
-                      classNames={{
-                        label: "text-sm font-medium text-gray-700",
-                        input: "text-sm",
-                      }}
-                    />
+                  <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-gray-700 block">
+                        Số Điện Thoại <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        placeholder="Nhập số điện thoại"
+                        variant="bordered"
+                        value={formData.phoneNumber}
+                        onChange={(e) =>
+                          handleInputChange("phoneNumber", e.target.value)
+                        }
+                        isInvalid={!!errors.phoneNumber}
+                        errorMessage={errors.phoneNumber}
+                        classNames={{
+                          input: "text-sm",
+                        }}
+                      />
+                    </div>
                   </div>
 
                   {/* Vị trí địa lý */}
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                      Vị trí địa lý
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                    <h3 className="text-sm font-semibold text-green-800 border-b border-green-300 pb-2 mb-4">
+                      📍 Vị trí địa lý
                     </h3>
 
                     {/* Tỉnh/Thành Phố */}
-                    <div className="space-y-2">
-                      <Select
-                        label="Tỉnh/Thành Phố"
-                        placeholder="Chọn tỉnh/thành phố"
-                        variant="bordered"
-                        selectedKeys={
-                          formData.provinceId ? [formData.provinceId] : []
-                        }
-                        onSelectionChange={(keys) =>
-                          handleInputChange(
-                            "provinceId",
-                            Array.from(keys)[0] || ""
-                          )
-                        }
-                        isInvalid={!!errors.provinceId}
-                        errorMessage={errors.provinceId}
-                        isRequired
-                        classNames={{
-                          label: "text-sm font-medium text-gray-700",
-                          trigger: "text-sm",
-                        }}
-                      >
-                        {provinces.map((province) => (
-                          <SelectItem key={province.id} value={province.id}>
-                            {province.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                    <div className="mb-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 block">
+                          Tỉnh/Thành Phố <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          placeholder="Chọn tỉnh/thành phố"
+                          variant="bordered"
+                          selectedKeys={
+                            formData.provinceId ? [formData.provinceId] : []
+                          }
+                          onSelectionChange={(keys) =>
+                            handleInputChange(
+                              "provinceId",
+                              Array.from(keys)[0] || ""
+                            )
+                          }
+                          isInvalid={!!errors.provinceId}
+                          errorMessage={errors.provinceId}
+                          classNames={{
+                            trigger: "text-sm bg-white",
+                            popoverContent:
+                              "bg-white border border-gray-200 shadow-lg z-50",
+                            listbox: "bg-white",
+                            listboxWrapper: "bg-white",
+                          }}
+                        >
+                          {provinces.map((province) => (
+                            <SelectItem key={province.id} value={province.id}>
+                              {province.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
 
                     {/* Quận/Huyện */}
-                    <div className="space-y-2">
-                      <Select
-                        label="Quận/Huyện"
-                        placeholder="Chọn quận/huyện"
-                        variant="bordered"
-                        selectedKeys={
-                          formData.districtId ? [formData.districtId] : []
-                        }
-                        onSelectionChange={(keys) =>
-                          handleInputChange(
-                            "districtId",
-                            Array.from(keys)[0] || ""
-                          )
-                        }
-                        isInvalid={!!errors.districtId}
-                        errorMessage={errors.districtId}
-                        isDisabled={!formData.provinceId}
-                        isRequired
-                        classNames={{
-                          label: "text-sm font-medium text-gray-700",
-                          trigger: "text-sm",
-                        }}
-                      >
-                        {filteredDistricts.map((district) => (
-                          <SelectItem key={district.id} value={district.id}>
-                            {district.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                    <div className="mb-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 block">
+                          Quận/Huyện <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          placeholder="Chọn quận/huyện"
+                          variant="bordered"
+                          selectedKeys={
+                            formData.districtId ? [formData.districtId] : []
+                          }
+                          onSelectionChange={(keys) =>
+                            handleInputChange(
+                              "districtId",
+                              Array.from(keys)[0] || ""
+                            )
+                          }
+                          isInvalid={!!errors.districtId}
+                          errorMessage={errors.districtId}
+                          isDisabled={!formData.provinceId}
+                          classNames={{
+                            trigger: "text-sm bg-white",
+                            popoverContent:
+                              "bg-white border border-gray-200 shadow-lg z-50",
+                            listbox: "bg-white",
+                            listboxWrapper: "bg-white",
+                          }}
+                        >
+                          {filteredDistricts.map((district) => (
+                            <SelectItem key={district.id} value={district.id}>
+                              {district.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
 
                     {/* Phường/Xã */}
-                    <div className="space-y-2">
-                      <Select
-                        label="Phường/Xã"
-                        placeholder="Chọn phường/xã"
-                        variant="bordered"
-                        selectedKeys={formData.wardId ? [formData.wardId] : []}
-                        onSelectionChange={(keys) =>
-                          handleInputChange("wardId", Array.from(keys)[0] || "")
-                        }
-                        isInvalid={!!errors.wardId}
-                        errorMessage={errors.wardId}
-                        isDisabled={!formData.districtId}
-                        isRequired
-                        classNames={{
-                          label: "text-sm font-medium text-gray-700",
-                          trigger: "text-sm",
-                        }}
-                      >
-                        {filteredWards.map((ward) => (
-                          <SelectItem key={ward.id} value={ward.id}>
-                            {ward.name}
-                          </SelectItem>
-                        ))}
-                      </Select>
+                    <div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-gray-700 block">
+                          Phường/Xã <span className="text-red-500">*</span>
+                        </label>
+                        <Select
+                          placeholder="Chọn phường/xã"
+                          variant="bordered"
+                          selectedKeys={
+                            formData.wardId ? [formData.wardId] : []
+                          }
+                          onSelectionChange={(keys) =>
+                            handleInputChange(
+                              "wardId",
+                              Array.from(keys)[0] || ""
+                            )
+                          }
+                          isInvalid={!!errors.wardId}
+                          errorMessage={errors.wardId}
+                          isDisabled={!formData.districtId}
+                          classNames={{
+                            trigger: "text-sm bg-white",
+                            popoverContent:
+                              "bg-white border border-gray-200 shadow-lg z-50",
+                            listbox: "bg-white",
+                            listboxWrapper: "bg-white",
+                          }}
+                        >
+                          {filteredWards.map((ward) => (
+                            <SelectItem key={ward.id} value={ward.id}>
+                              {ward.name}
+                            </SelectItem>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                   </div>
                 </div>
               </ModalBody>
-              <ModalFooter className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <ModalFooter className="flex justify-end gap-3 pt-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
                 <Button
                   color="danger"
                   variant="light"
                   onPress={onClose}
-                  className="px-6"
+                  className="px-6 hover:bg-red-50"
                 >
                   Hủy
                 </Button>
                 <Button
                   color="success"
                   onPress={handleSubmitForm}
-                  className="px-6"
+                  className="px-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
                 >
                   Tiếp Tục
                 </Button>
