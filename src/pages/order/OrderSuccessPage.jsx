@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   CheckCircle2,
   Clipboard,
@@ -15,6 +16,9 @@ import {
   FileText,
   RotateCw,
 } from "lucide-react";
+import { getOrderById } from "../../services/orderApi";
+import toast from "react-hot-toast";
+import dayjs from "dayjs";
 
 // --------- helpers ----------
 const fmtVND = (n) => (Number(n) || 0).toLocaleString("vi-VN") + "đ";
@@ -27,7 +31,9 @@ function Copyable({ text }) {
       await navigator.clipboard.writeText(text || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
-    } catch {}
+    } catch (error) {
+      console.error("Copy failed:", error);
+    }
   };
   return (
     <button
@@ -298,17 +304,20 @@ const ShippingCard = ({ shipping }) => (
 
 // --------- 5) Hỗ trợ & Chính sách ----------
 const SupportPolicyCard = () => {
-  const Item = ({ icon: Icon, text }) => (
-    <div className="flex items-center gap-3 py-2">
-      <Icon size={16} className="text-green-700" />
-      <a
-        href="#"
-        className="text-gray-700 hover:text-green-600 text-sm transition-colors"
-      >
-        {text}
-      </a>
-    </div>
-  );
+  const Item = ({ icon, text }) => {
+    const IconComponent = icon;
+    return (
+      <div className="flex items-center gap-3 py-2">
+        <IconComponent size={16} className="text-green-700" />
+        <a
+          href="#"
+          className="text-gray-700 hover:text-green-600 text-sm transition-colors"
+        >
+          {text}
+        </a>
+      </div>
+    );
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
@@ -347,41 +356,122 @@ const SupportPolicyCard = () => {
 };
 
 // --------- Trang chính ----------
-export default function OrderSuccessPage({
-  order = {
-    code: "ORDER20250627123456",
-    createdAt: "27/06/2025 12:27 PM",
-    items: [
-      {
-        name: "Túi Giấy Kraft 26×32cm",
-        desc: "Túi đựng bánh mì túi kín",
-        qty: 100,
-        price: 2000,
-        thumb:
-          "https://images.unsplash.com/photo-1603252109303-2751441dd157?q=80&w=240",
-      },
-    ],
-    shippingFee: "Miễn phí",
-    impactKg: 20,
-    shipping: {
-      name: "Nguyễn Văn A",
-      phone: "0909 123 456",
-      address: "123 Đường Xanh, Quận 1, TP.HCM",
-      carrier: "GHTK",
-      service: "Giao tiêu chuẩn, 3-5 ngày",
-      eta: "30/06/2025 - 02/07/2025",
-      tracking: "TRACK123456",
-    },
-  },
-}) {
+export default function OrderSuccessPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const orderId = searchParams.get("orderId");
+
+  const [order, setOrder] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchOrderData = async () => {
+      if (!orderId) {
+        setError("Không tìm thấy mã đơn hàng");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await getOrderById(orderId);
+
+        if (response.success && response.data) {
+          setOrder(response.data);
+        } else {
+          // Check if backend not implemented
+          if (response.message?.includes("chưa được backend triển khai")) {
+            setError(
+              "Backend chưa triển khai API lấy chi tiết đơn hàng. Vui lòng liên hệ đội phát triển."
+            );
+          } else {
+            setError(response.message || "Không thể tải thông tin đơn hàng");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching order:", err);
+        if (err.response?.status === 501) {
+          setError(
+            "Backend chưa triển khai chức năng xem chi tiết đơn hàng (GetOrderByIdAsync)"
+          );
+        } else {
+          setError("Đã xảy ra lỗi khi tải đơn hàng");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrderData();
+  }, [orderId]);
+
   const handleTrackOrder = () => {
-    // Navigate to order tracking page
-    console.log(`Tracking order: ${order.code}`);
+    // Since backend GetOrderByIdAsync is not implemented yet,
+    // we'll stay on this page or refresh to show latest data
+    if (order?.orderId) {
+      toast.info("Chức năng theo dõi chi tiết đơn hàng đang được phát triển");
+      // Could refresh the current order data here if needed
+    }
   };
 
   const handleContinueShopping = () => {
-    // Navigate to home page
-    console.log("Continue shopping");
+    navigate("/products");
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-6 bg-gray-50 min-h-screen">
+        <div className="flex justify-center items-center h-64">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          <p className="ml-4 text-gray-600">Đang tải thông tin đơn hàng...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-6 bg-gray-50 min-h-screen">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+          <p className="text-red-800 mb-4">
+            {error || "Không tìm thấy đơn hàng"}
+          </p>
+          <button
+            onClick={() => navigate("/cart")}
+            className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+          >
+            Quay lại giỏ hàng
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Transform order data to component format
+  const orderData = {
+    code: `ORD-${order.orderId}`,
+    createdAt: dayjs(order.createdDate).format("DD/MM/YYYY HH:mm"),
+    status: order.orderStatus,
+    items:
+      order.cartItems?.map((item) => ({
+        name: item.productName || "Sản phẩm",
+        desc: item.product?.productDescription || "",
+        qty: item.quantity,
+        price: item.cartItemPrice / item.quantity,
+        thumb: item.product?.productImages?.[0] || null,
+      })) || [],
+    shippingFee: "Đang tính toán",
+    impactKg: Math.round((order.totalAmount || 0) * 0.2), // Estimate
+    shipping: {
+      name: order.customer?.user?.fullName || "Khách hàng",
+      phone: order.customer?.user?.phoneNumber || "",
+      address: `${order.address}, ${order.ward}, ${order.district}, ${order.province}`,
+      carrier: order.transportUnit || "Đang xử lý",
+      service: "Giao hàng tiêu chuẩn",
+      eta: "3-5 ngày làm việc",
+      tracking: order.shippingCode || "Đang cập nhật",
+    },
   };
 
   return (
@@ -393,13 +483,13 @@ export default function OrderSuccessPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Cột trái - Thông tin chính */}
         <div className="lg:col-span-2 space-y-6">
-          <OrderInfoCard order={order} />
-          <ShippingCard shipping={order.shipping} />
+          <OrderInfoCard order={orderData} />
+          <ShippingCard shipping={orderData.shipping} />
         </div>
 
         {/* Cột phải - Thông tin phụ */}
         <div className="space-y-6">
-          <EnvironmentCard impactKg={order.impactKg} />
+          <EnvironmentCard impactKg={orderData.impactKg} />
           <SupportPolicyCard />
         </div>
       </div>
@@ -411,7 +501,7 @@ export default function OrderSuccessPage({
           className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors flex-1"
         >
           <FileText size={18} />
-          Theo dõi đơn hàng
+          Xem chi tiết đơn hàng
         </button>
         <button
           onClick={handleContinueShopping}
