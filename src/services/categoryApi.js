@@ -1,0 +1,59 @@
+import apiClient from "./apiClient";
+
+// Get all categories
+export const getAllCategories = async () => {
+  try {
+    const response = await apiClient.get("/category");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    throw error;
+  }
+};
+
+// Get category by ID
+export const getCategoryById = async (id) => {
+  try {
+    const response = await apiClient.get(`/category/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching category:", error);
+    throw error;
+  }
+};
+
+// Create new category
+export const createCategory = async (categoryData) => {
+  try {
+    const response = await apiClient.post("/category", categoryData);
+    return response.data;
+  } catch (error) {
+    console.error("Error creating category:", error);
+    throw error;
+  }
+};
+
+// Update category
+export const updateCategory = async (categoryData) => {
+  try {
+    const response = await apiClient.put(
+      `/category/${categoryData.categoryId}`,
+      categoryData
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating category:", error);
+    throw error;
+  }
+};
+
+// Delete category
+export const deleteCategory = async (id) => {
+  try {
+    const response = await apiClient.delete(`/category/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting category:", error);
+    throw error;
+  }
+};

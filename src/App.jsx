@@ -22,6 +22,7 @@ import {
   UserManagement,
   OrderManagement,
   OrderDetailAdmin,
+  CategoryManagement,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProfile from "./pages/vendor/VendorProfile";
@@ -184,6 +185,7 @@ function App() {
           <Route path="users" element={<UserManagement />} />
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:orderId" element={<OrderDetailAdmin />} />
+          <Route path="categories" element={<CategoryManagement />} />
           {/* Add other nested admin routes here */}
         </Route>
         <Route

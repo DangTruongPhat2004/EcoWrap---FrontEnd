@@ -6,6 +6,7 @@ import {
   ChartBarIcon,
   SparklesIcon,
   ShoppingBagIcon,
+  TagIcon,
 } from "@heroicons/react/24/outline";
 import { Link, useLocation } from "react-router-dom";
 import { Card, CardBody } from "@heroui/react";
@@ -16,6 +17,7 @@ const AdminSidebar = () => {
   const menuItems = [
     { path: "/admin/dashboard", icon: HomeIcon, label: "Hồ sơ" },
     { path: "/admin/orders", icon: ShoppingBagIcon, label: "Quản lí đơn hàng" },
+    { path: "/admin/categories", icon: TagIcon, label: "Quản lí danh mục" },
     { path: "/admin/approvals", icon: CheckCircleIcon, label: "Phê duyệt" },
     { path: "/admin/users", icon: UsersIcon, label: "Quản lí người dùng" },
     { path: "/admin/settings", icon: CogIcon, label: "Cài Đặt" },

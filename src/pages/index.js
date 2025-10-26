@@ -20,6 +20,7 @@ export { default as VendorApprovalDetail } from "./admin/VendorApprovalDetail";
 export { default as UserManagement } from "./admin/UserManagement";
 export { default as OrderManagement } from "./admin/OrderManagement";
 export { default as OrderDetailAdmin } from "./admin/OrderDetailAdmin";
+export { default as CategoryManagement } from "./admin/CategoryManagement";
 
 // Order pages
 export { default as OrderSuccessPage } from "./order/OrderSuccessPage";
