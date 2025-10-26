@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableHeader,
@@ -9,13 +10,12 @@ import {
   Button,
   Input,
   Pagination,
-  useDisclosure,
 } from "@heroui/react";
-import { Plus, Search, Package, AlertTriangle } from "lucide-react";
+import { Plus, Search, AlertTriangle } from "lucide-react";
 import { getMyProducts } from "../../services/productApi";
 
 const ProductManagement = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -60,15 +60,11 @@ const ProductManagement = () => {
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
   const handleAddProduct = () => {
-    // Logic để mở modal thêm sản phẩm sẽ được thêm ở đây
-    console.log("Mở modal thêm sản phẩm mới");
-    // onOpen();
+    navigate("/vendor/products/new");
   };
 
-  const handleEditProduct = (product) => {
-    // Logic để mở modal sửa sản phẩm sẽ được thêm ở đây
-    console.log("Sửa sản phẩm:", product);
-    // onOpen();
+  const handleViewProduct = (product) => {
+    navigate(`/vendor/products/${product.productId}`);
   };
 
   // Loading state
@@ -136,7 +132,7 @@ const ProductManagement = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">
         <Table aria-label="Product management table">
           <TableHeader>
-            <TableColumn className="text-gray-700 font-semibold w-[80px]">
+            <TableColumn className="text-gray-700 font-semibold">
               ID
             </TableColumn>
             <TableColumn className="text-gray-700 font-semibold w-[120px]">
@@ -144,9 +140,6 @@ const ProductManagement = () => {
             </TableColumn>
             <TableColumn className="text-gray-700 font-semibold">
               Tên Sản Phẩm
-            </TableColumn>
-            <TableColumn className="text-gray-700 font-semibold">
-              Kích Cỡ
             </TableColumn>
             <TableColumn className="text-gray-700 font-semibold">
               Loại
@@ -171,7 +164,7 @@ const ProductManagement = () => {
             {currentProducts.map((product) => (
               <TableRow
                 key={product.productId}
-                onClick={() => handleEditProduct(product)}
+                onClick={() => handleViewProduct(product)}
                 className="cursor-pointer hover:bg-gray-50 transition-colors"
               >
                 <TableCell>
@@ -183,8 +176,8 @@ const ProductManagement = () => {
                   <img
                     src={
                       product.imageFile
-                        // ? product.imageFile
-                        // : "https://via.placeholder.com/80"
+                      // ? product.imageFile
+                      // : "https://via.placeholder.com/80"
                     }
                     alt={product.productName}
                     width={80}
@@ -203,17 +196,12 @@ const ProductManagement = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {product.size || "Chưa có"}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-700">
                     {product.category || "Chưa có"}
                   </span>
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {product.material || "Chưa có"}
+                    {product.materialType || product.material || "Chưa có"}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -224,6 +212,24 @@ const ProductManagement = () => {
                     })}
                   </span>
                 </TableCell>
+                {/* <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      product.productStatus === "In stock"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {product.productStatus === "In stock"
+                      ? "Còn hàng"
+                      : "Hết hàng"}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm font-mono text-gray-600">
+                    #{product.id}
+                  </span>
+                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>
@@ -255,8 +261,6 @@ const ProductManagement = () => {
           />
         </div>
       )}
-
-      {/* TODO: Add/Edit Product Modal */}
     </div>
   );
 };
