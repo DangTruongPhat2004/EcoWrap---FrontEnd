@@ -27,6 +27,9 @@ import WarehouseManagement from "./pages/vendor/WarehouseManagement";
 import VendorProductDetail from "./pages/vendor/VendorProductDetail";
 import AddProduct from "./pages/vendor/AddProduct";
 import ProductManagement from "./pages/vendor/ProductManagement";
+import InventoryManagement from "./pages/vendor/InventoryManagement";
+import InventoryDetail from "./pages/vendor/InventoryDetail";
+import AddInventory from "./pages/vendor/AddInventory";
 import Profile from "./pages/customer/Profile";
 import VendorRegistration from "./pages/VendorRegistration";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
@@ -194,6 +197,9 @@ function App() {
           <Route path="warehouses" element={<WarehouseManagement />} />
           <Route path="products" element={<ProductManagement />} />
           <Route path="products/new" element={<AddProduct />} />
+          <Route path="inventory" element={<InventoryManagement />} />
+          <Route path="inventory/new" element={<AddInventory />} />
+          <Route path="inventory/:id" element={<InventoryDetail />} />
           <Route path="products/:id" element={<VendorProductDetail />} />
           {/* Add other nested vendor routes here */}
         </Route>

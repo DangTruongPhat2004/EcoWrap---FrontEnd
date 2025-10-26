@@ -53,6 +53,13 @@ const VendorSidebar = () => {
       submenu: [],
     },
     {
+      id: "inventory",
+      label: "Tồn Kho",
+      icon: Package,
+      path: "/vendor/inventory",
+      submenu: [],
+    },
+    {
       id: "reports",
       label: "Báo Cáo Thống Kê",
       icon: BarChart3,
