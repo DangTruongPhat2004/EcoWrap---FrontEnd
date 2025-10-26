@@ -39,10 +39,17 @@ const VendorSidebar = () => {
       submenu: [],
     },
     {
-      id: "management",
-      label: "Quản Lý Kho Hàng",
+      id: "warehouses",
+      label: "Kho Hàng",
       icon: Package,
-      path: "/vendor/warehouse",
+      path: "/vendor/warehouses",
+      submenu: [],
+    },
+    {
+      id: "products",
+      label: "Sản Phẩm",
+      icon: ShoppingBag,
+      path: "/vendor/products",
       submenu: [],
     },
     {
