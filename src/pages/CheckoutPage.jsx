@@ -12,7 +12,7 @@ import CouponCard from "../components/checkout/CouponCard";
 import { Bike } from "lucide-react";
 import { fmtVND } from "../utils/money";
 import { getAllCarts } from "../services/cartApi";
-import { createOrder } from "../services/orderApi";
+import { createOrder, declineOrder } from "../services/orderApi";
 import { createPaymentLink } from "../services/paymentApi";
 import toast from "react-hot-toast";
 
@@ -199,19 +199,40 @@ export default function CheckoutPage() {
             "❌ [CheckoutPage] Payment link creation failed:",
             paymentResponse
           );
-          // Payment link creation failed, but order was created
-          toast.error("Không thể tạo link thanh toán. Vui lòng thử lại sau.");
-          // Navigate to order success page anyway so user can see their order
-          navigate(`/order-success?orderId=${orderId}`);
+          // Payment link creation failed - cancel the order
+          toast.error("Không thể tạo link thanh toán. Đang hủy đơn hàng...");
+
+          try {
+            await declineOrder(orderId);
+            console.log("✅ [CheckoutPage] Order cancelled successfully");
+          } catch (cancelErr) {
+            console.error(
+              "❌ [CheckoutPage] Failed to cancel order:",
+              cancelErr
+            );
+          }
+
+          // Stay on checkout page so user can try again
+          toast.error("Vui lòng thử lại hoặc liên hệ hỗ trợ.");
         }
       } catch (paymentErr) {
         console.error(
           "❌ [CheckoutPage] Error creating payment link:",
           paymentErr
         );
-        toast.error("Lỗi khi tạo link thanh toán");
-        // Navigate to order success page anyway
-        navigate(`/order-success?orderId=${orderId}`);
+
+        // Payment link API call failed - cancel the order
+        toast.error("Lỗi khi tạo link thanh toán. Đang hủy đơn hàng...");
+
+        try {
+          await declineOrder(orderId);
+          console.log("✅ [CheckoutPage] Order cancelled successfully");
+        } catch (cancelErr) {
+          console.error("❌ [CheckoutPage] Failed to cancel order:", cancelErr);
+        }
+
+        // Stay on checkout page so user can try again
+        toast.error("Vui lòng thử lại hoặc liên hệ hỗ trợ.");
       }
     } catch (err) {
       console.error("❌ [CheckoutPage] Error in order placement flow:", err);
