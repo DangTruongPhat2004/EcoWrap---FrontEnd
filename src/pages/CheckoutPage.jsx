@@ -29,8 +29,8 @@ export default function CheckoutPage() {
     ward: "",
     hamlet: "",
   });
-  const [shippingMethod, setShippingMethod] = React.useState("express");
-  const [paymentMethod, setPaymentMethod] = React.useState("vnpay");
+  const [shippingMethod, setShippingMethod] = React.useState("ghtk");
+  const [paymentMethod, setPaymentMethod] = React.useState("payos");
 
   // Fetch cart data on mount
   React.useEffect(() => {
@@ -101,6 +101,8 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    console.log("🚀 [CheckoutPage] Starting order placement flow");
+
     // Validate address fields
     if (
       !address.address ||
@@ -109,17 +111,22 @@ export default function CheckoutPage() {
       !address.ward ||
       !address.hamlet
     ) {
+      console.error("❌ [CheckoutPage] Address validation failed:", address);
       toast.error("Vui lòng điền đầy đủ thông tin địa chỉ giao hàng");
       return;
     }
 
     if (items.length === 0) {
+      console.error("❌ [CheckoutPage] Cart is empty");
       toast.error("Giỏ hàng trống");
       return;
     }
 
     try {
       setPlacing(true);
+      console.log(
+        "✅ [CheckoutPage] Validation passed, proceeding to create order"
+      );
 
       // Step 1: Create order from cart
       const orderData = {
@@ -130,43 +137,78 @@ export default function CheckoutPage() {
         hamlet: address.hamlet,
       };
 
+      console.log(
+        "📦 [CheckoutPage] Calling createOrder API with data:",
+        orderData
+      );
       const orderResponse = await createOrder(orderData);
+      console.log("📦 [CheckoutPage] createOrder API response:", orderResponse);
 
       if (!orderResponse.success) {
+        console.error(
+          "❌ [CheckoutPage] Order creation failed:",
+          orderResponse
+        );
         toast.error(orderResponse.message || "Không thể tạo đơn hàng");
         return;
       }
 
       const orderId = orderResponse.data.orderId;
+      console.log(
+        "✅ [CheckoutPage] Order created successfully. Order ID:",
+        orderId
+      );
       toast.success("Đơn hàng đã được tạo!");
 
       // Step 2: Create payment link with PayOS
       try {
+        console.log(
+          "💳 [CheckoutPage] Calling createPaymentLink API with orderId:",
+          orderId
+        );
         const paymentResponse = await createPaymentLink(orderId);
+        console.log(
+          "💳 [CheckoutPage] createPaymentLink API response:",
+          paymentResponse
+        );
 
         if (paymentResponse.success && paymentResponse.checkoutUrl) {
+          console.log("✅ [CheckoutPage] Payment link created successfully");
+          console.log(
+            "🌐 [CheckoutPage] Redirecting to PayOS URL:",
+            paymentResponse.checkoutUrl
+          );
+
           // Redirect to PayOS checkout page
           toast.success("Đang chuyển đến trang thanh toán...");
           window.location.href = paymentResponse.checkoutUrl;
         } else {
+          console.error(
+            "❌ [CheckoutPage] Payment link creation failed:",
+            paymentResponse
+          );
           // Payment link creation failed, but order was created
           toast.error("Không thể tạo link thanh toán. Vui lòng thử lại sau.");
           // Navigate to order success page anyway so user can see their order
           navigate(`/order-success?orderId=${orderId}`);
         }
       } catch (paymentErr) {
-        console.error("Error creating payment link:", paymentErr);
+        console.error(
+          "❌ [CheckoutPage] Error creating payment link:",
+          paymentErr
+        );
         toast.error("Lỗi khi tạo link thanh toán");
         // Navigate to order success page anyway
         navigate(`/order-success?orderId=${orderId}`);
       }
     } catch (err) {
-      console.error("Error creating order:", err);
+      console.error("❌ [CheckoutPage] Error in order placement flow:", err);
       const errorMessage =
         err?.response?.data?.message || "Đã xảy ra lỗi khi đặt hàng";
       toast.error(errorMessage);
     } finally {
       setPlacing(false);
+      console.log("🏁 [CheckoutPage] Order placement flow completed");
     }
   };
 
