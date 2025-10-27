@@ -20,10 +20,22 @@ import {
   VendorApprovals,
   VendorApprovalDetail,
   UserManagement,
+  OrderManagement,
+  OrderDetailAdmin,
+  CategoryManagement,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProfile from "./pages/vendor/VendorProfile";
+import WarehouseManagement from "./pages/vendor/WarehouseManagement";
+import VendorProductDetail from "./pages/vendor/VendorProductDetail";
+import AddProduct from "./pages/vendor/AddProduct";
+import ProductManagement from "./pages/vendor/ProductManagement";
+import InventoryManagement from "./pages/vendor/InventoryManagement";
+import InventoryDetail from "./pages/vendor/InventoryDetail";
+import AddInventory from "./pages/vendor/AddInventory";
 import Profile from "./pages/customer/Profile";
+import OrdersPage from "./pages/customer/OrdersPage";
+import OrderDetailPage from "./pages/customer/OrderDetailPage";
 import VendorRegistration from "./pages/VendorRegistration";
 import VendorRegistrationSuccess from "./pages/VendorRegistrationSuccess";
 import { ProtectedRoute } from "./routes";
@@ -33,6 +45,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import CartPage from "./pages/CartPage";
 import Pagetest from "./pages/Pagetest";
 import BankTransferPage from "./pages/bank-tranfer";
+import PaymentReturnPage from "./pages/PaymentReturnPage";
 import OrderSuccessPage from "./pages/order/OrderSuccessPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import React from "react";
@@ -105,6 +118,7 @@ function AppRoutes() {
       <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/bank-transfer" element={<BankTransferPage />} />
+      <Route path="/payment/return" element={<PaymentReturnPage />} />
       <Route path="/order-success" element={<OrderSuccessPage />} />
       <Route path="/verify-otp" element={<VerifyOtpPage />} />
       <Route path="/vendor-registration" element={<VendorRegistration />} />
@@ -159,6 +173,8 @@ function App() {
         >
           <Route index element={<Profile />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:orderId" element={<OrderDetailPage />} />
           {/* Add other nested customer routes here */}
         </Route>
         <Route
@@ -174,6 +190,9 @@ function App() {
           <Route path="approvals" element={<VendorApprovals />} />
           <Route path="approvals/:id" element={<VendorApprovalDetail />} />
           <Route path="users" element={<UserManagement />} />
+          <Route path="orders" element={<OrderManagement />} />
+          <Route path="orders/:orderId" element={<OrderDetailAdmin />} />
+          <Route path="categories" element={<CategoryManagement />} />
           {/* Add other nested admin routes here */}
         </Route>
         <Route
@@ -187,6 +206,13 @@ function App() {
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
           <Route path="profile" element={<VendorProfile />} />
+          <Route path="warehouses" element={<WarehouseManagement />} />
+          <Route path="products" element={<ProductManagement />} />
+          <Route path="products/new" element={<AddProduct />} />
+          <Route path="inventory" element={<InventoryManagement />} />
+          <Route path="inventory/new" element={<AddInventory />} />
+          <Route path="inventory/:id" element={<InventoryDetail />} />
+          <Route path="products/:id" element={<VendorProductDetail />} />
           {/* Add other nested vendor routes here */}
         </Route>
 
