@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardBody,
@@ -7,36 +7,11 @@ import {
   SelectItem,
   Textarea,
   Checkbox,
+  Spinner,
 } from "@nextui-org/react";
-
-const DISTRICTS_HCM = [
-  { key: "Quận 1", label: "Quận 1" },
-  { key: "Quận 3", label: "Quận 3" },
-  { key: "Quận 7", label: "Quận 7" },
-  { key: "Bình Thạnh", label: "Bình Thạnh" },
-  { key: "TP. Thủ Đức", label: "TP. Thủ Đức" },
-];
-
-const WARDS_Q1 = [
-  { key: "Phường Bến Nghé", label: "Phường Bến Nghé" },
-  { key: "Phường Bến Thành", label: "Phường Bến Thành" },
-  { key: "Phường Cầu Kho", label: "Phường Cầu Kho" },
-  { key: "Phường Đa Kao", label: "Phường Đa Kao" },
-  { key: "Phường Nguyễn Thái Bình", label: "Phường Nguyễn Thái Bình" },
-];
-
-const HAMLETS = [
-  { key: "Ấp 1", label: "Ấp 1" },
-  { key: "Ấp 2", label: "Ấp 2" },
-  { key: "Ấp 3", label: "Ấp 3" },
-  { key: "Không có", label: "Không có" },
-];
-
-const PROVINCES = [
-  { key: "TP. Hồ Chí Minh", label: "TP. Hồ Chí Minh" },
-  { key: "Hà Nội", label: "Hà Nội" },
-  { key: "Đà Nẵng", label: "Đà Nẵng" },
-];
+import { getUserById } from "../../services/userApi";
+import { getUserIdFromJwt } from "../../utils/jwt";
+import toast from "react-hot-toast";
 
 export default function AddressForm({
   value,
@@ -48,7 +23,118 @@ export default function AddressForm({
   const v = value || {};
   const set = (k, val) => onChange?.({ ...v, [k]: val });
 
-  const [touched, setTouched] = React.useState({});
+  const [touched, setTouched] = useState({});
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [loadingProvinces, setLoadingProvinces] = useState(false);
+  const [loadingDistricts, setLoadingDistricts] = useState(false);
+  const [loadingWards, setLoadingWards] = useState(false);
+  const [userDataLoaded, setUserDataLoaded] = useState(false);
+
+  // Auto-fill user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const userId = getUserIdFromJwt(token);
+        if (!userId) return;
+
+        const userData = await getUserById(userId);
+
+        // Only autofill if form is empty
+        if (!v.fullName && !userDataLoaded) {
+          const autofillData = {
+            fullName: userData.fullName || "",
+            phone: userData.phoneNumber || "",
+          };
+
+          // Merge autofill data with existing values
+          onChange?.({ ...v, ...autofillData });
+          setUserDataLoaded(true);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []); // Only run once on mount
+
+  // Fetch provinces from Vietnam Province Open API
+  useEffect(() => {
+    const fetchProvinces = async () => {
+      setLoadingProvinces(true);
+      try {
+        const response = await fetch("https://provinces.open-api.vn/api/p/");
+        const data = await response.json();
+        setProvinces(data.map((p) => ({ code: p.code, name: p.name })));
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
+        toast.error("Không thể tải danh sách tỉnh/thành phố");
+      } finally {
+        setLoadingProvinces(false);
+      }
+    };
+
+    fetchProvinces();
+  }, []);
+
+  // Fetch districts when province changes
+  useEffect(() => {
+    if (!v.provinceCode) {
+      setDistricts([]);
+      return;
+    }
+
+    const fetchDistricts = async () => {
+      setLoadingDistricts(true);
+      try {
+        const response = await fetch(
+          `https://provinces.open-api.vn/api/p/${v.provinceCode}?depth=2`
+        );
+        const data = await response.json();
+        setDistricts(
+          data.districts.map((d) => ({ code: d.code, name: d.name }))
+        );
+      } catch (error) {
+        console.error("Error fetching districts:", error);
+        toast.error("Không thể tải danh sách quận/huyện");
+      } finally {
+        setLoadingDistricts(false);
+      }
+    };
+
+    fetchDistricts();
+  }, [v.provinceCode]);
+
+  // Fetch wards when district changes
+  useEffect(() => {
+    if (!v.districtCode) {
+      setWards([]);
+      return;
+    }
+
+    const fetchWards = async () => {
+      setLoadingWards(true);
+      try {
+        const response = await fetch(
+          `https://provinces.open-api.vn/api/d/${v.districtCode}?depth=2`
+        );
+        const data = await response.json();
+        setWards(data.wards.map((w) => ({ code: w.code, name: w.name })));
+      } catch (error) {
+        console.error("Error fetching wards:", error);
+        toast.error("Không thể tải danh sách phường/xã");
+      } finally {
+        setLoadingWards(false);
+      }
+    };
+
+    fetchWards();
+  }, [v.districtCode]);
 
   const err = {
     fullName: !v.fullName?.trim() ? "Vui lòng nhập họ tên" : "",
@@ -57,7 +143,6 @@ export default function AddressForm({
     province: !v.province ? "Chọn tỉnh/thành" : "",
     district: !v.district ? "Chọn quận/huyện" : "",
     ward: !v.ward ? "Chọn phường/xã" : "",
-    hamlet: !v.hamlet ? "Chọn ấp" : "",
   };
 
   const showErr = (k) => touched[k] && err[k];
@@ -130,25 +215,36 @@ export default function AddressForm({
               placeholder="Chọn tỉnh/thành phố"
               selectedKeys={v.province ? [v.province] : []}
               onSelectionChange={(keys) => {
-                const selectedKey = Array.from(keys)[0];
-                console.log("🏙️ Province selected:", selectedKey);
-                set("province", selectedKey);
+                const selectedProvinceName = Array.from(keys)[0];
+                const province = provinces.find(
+                  (p) => p.name === selectedProvinceName
+                );
+                console.log(
+                  "🏙️ Province selected:",
+                  selectedProvinceName,
+                  province
+                );
+                set("province", selectedProvinceName);
+                set("provinceCode", province?.code || "");
                 // Reset dependent fields
                 set("district", "");
+                set("districtCode", "");
                 set("ward", "");
+                set("wardCode", "");
               }}
               onBlur={() => markTouched("province")}
               isInvalid={!!showErr("province")}
               variant="bordered"
               selectionMode="single"
+              isLoading={loadingProvinces}
               classNames={{
                 trigger: "data-[hover=true]:bg-default-100",
                 selectorIcon: "right-3",
               }}
             >
-              {PROVINCES.map((prov) => (
-                <SelectItem key={prov.key} value={prov.key}>
-                  {prov.label}
+              {provinces.map((prov) => (
+                <SelectItem key={prov.name} value={prov.name}>
+                  {prov.name}
                 </SelectItem>
               ))}
             </Select>
@@ -167,22 +263,29 @@ export default function AddressForm({
               placeholder="Chọn quận/huyện"
               selectedKeys={v.district ? [v.district] : []}
               onSelectionChange={(keys) => {
-                const selectedKey = Array.from(keys)[0];
-                set("district", selectedKey);
-                set("ward", ""); // Reset ward when district changes
+                const selectedDistrictName = Array.from(keys)[0];
+                const district = districts.find(
+                  (d) => d.name === selectedDistrictName
+                );
+                set("district", selectedDistrictName);
+                set("districtCode", district?.code || "");
+                set("ward", "");
+                set("wardCode", "");
               }}
               onBlur={() => markTouched("district")}
               isInvalid={!!showErr("district")}
               variant="bordered"
-              isDisabled={!v.province || v.province !== "TP. Hồ Chí Minh"}
+              isDisabled={!v.provinceCode}
+              isLoading={loadingDistricts}
+              selectionMode="single"
               classNames={{
                 trigger: "data-[hover=true]:bg-default-100",
                 selectorIcon: "right-3",
               }}
             >
-              {DISTRICTS_HCM.map((district) => (
-                <SelectItem key={district.key} value={district.key}>
-                  {district.label}
+              {districts.map((district) => (
+                <SelectItem key={district.name} value={district.name}>
+                  {district.name}
                 </SelectItem>
               ))}
             </Select>
@@ -191,9 +294,9 @@ export default function AddressForm({
                 {showErr("district")}
               </span>
             )}
-            {v.province !== "TP. Hồ Chí Minh" && (
+            {!v.provinceCode && (
               <span className="text-xs text-gray-500">
-                Chỉ khả dụng cho TP.HCM
+                Vui lòng chọn tỉnh/thành trước
               </span>
             )}
           </div>
@@ -206,62 +309,48 @@ export default function AddressForm({
               placeholder="Chọn phường/xã"
               selectedKeys={v.ward ? [v.ward] : []}
               onSelectionChange={(keys) => {
-                const selectedKey = Array.from(keys)[0];
-                set("ward", selectedKey);
+                const selectedWardName = Array.from(keys)[0];
+                const ward = wards.find((w) => w.name === selectedWardName);
+                set("ward", selectedWardName);
+                set("wardCode", ward?.code || "");
               }}
               onBlur={() => markTouched("ward")}
               isInvalid={!!showErr("ward")}
               variant="bordered"
-              isDisabled={!v.district}
+              isDisabled={!v.districtCode}
+              isLoading={loadingWards}
+              selectionMode="single"
               classNames={{
                 trigger: "data-[hover=true]:bg-default-100",
                 selectorIcon: "right-3",
               }}
             >
-              {WARDS_Q1.map((ward) => (
-                <SelectItem key={ward.key} value={ward.key}>
-                  {ward.label}
+              {wards.map((ward) => (
+                <SelectItem key={ward.name} value={ward.name}>
+                  {ward.name}
                 </SelectItem>
               ))}
             </Select>
             {showErr("ward") && (
               <span className="text-sm text-red-600">{showErr("ward")}</span>
             )}
-            {!v.district && (
+            {!v.districtCode && (
               <span className="text-xs text-gray-500">
-                Chọn quận/huyện trước
+                Vui lòng chọn quận/huyện trước
               </span>
             )}
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">
-              Ấp <span className="text-red-500">*</span>
+              Ấp/Thôn (tuỳ chọn)
             </label>
-            <Select
-              placeholder="Chọn ấp"
-              selectedKeys={v.hamlet ? [v.hamlet] : []}
-              onSelectionChange={(keys) => {
-                const selectedKey = Array.from(keys)[0];
-                set("hamlet", selectedKey);
-              }}
-              onBlur={() => markTouched("hamlet")}
-              isInvalid={!!showErr("hamlet")}
+            <Input
+              placeholder="Nhập ấp/thôn nếu có"
+              value={v.hamlet || ""}
+              onValueChange={(val) => set("hamlet", val)}
               variant="bordered"
-              classNames={{
-                trigger: "data-[hover=true]:bg-default-100",
-                selectorIcon: "right-3",
-              }}
-            >
-              {HAMLETS.map((hamlet) => (
-                <SelectItem key={hamlet.key} value={hamlet.key}>
-                  {hamlet.label}
-                </SelectItem>
-              ))}
-            </Select>
-            {showErr("hamlet") && (
-              <span className="text-sm text-red-600">{showErr("hamlet")}</span>
-            )}
+            />
           </div>
 
           <Textarea

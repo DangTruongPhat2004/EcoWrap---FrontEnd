@@ -24,6 +24,10 @@ const AdminSidebar = () => {
     navigate("/login");
   };
 
+  const handleLogoClick = () => {
+    navigate("/");
+  };
+
   const menuItems = [
     {
       id: "dashboard",
@@ -82,7 +86,10 @@ const AdminSidebar = () => {
     <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-emerald-50 to-green-100 shadow-lg border-r border-green-200 flex flex-col">
       {/* Logo and Brand */}
       <div className="p-6 border-b border-green-200">
-        <div className="flex items-center space-x-3">
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center space-x-3 w-full hover:opacity-80 transition-opacity"
+        >
           <div className="w-14 h-14 rounded-lg overflow-hidden">
             <img
               src={logo}
@@ -90,11 +97,11 @@ const AdminSidebar = () => {
               className="w-full h-full object-contain"
             />
           </div>
-          <div>
+          <div className="text-left">
             <h2 className="font-bold text-sm text-green-800">EcoWrap</h2>
             <p className="text-xs text-green-600">Admin Dashboard</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Navigation Menu */}
