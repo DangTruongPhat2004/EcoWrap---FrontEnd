@@ -23,11 +23,14 @@ export default function CheckoutPage() {
   const [loading, setLoading] = React.useState(true);
   const [placing, setPlacing] = React.useState(false);
   const [address, setAddress] = React.useState({
+    fullName: "",
+    phone: "",
     address: "",
     province: "",
     district: "",
     ward: "",
     hamlet: "",
+    note: "",
   });
   const [shippingMethod, setShippingMethod] = React.useState("ghtk");
   const [paymentMethod, setPaymentMethod] = React.useState("payos");
@@ -71,7 +74,7 @@ export default function CheckoutPage() {
     () => items.reduce((s, it) => s + it.price * it.qty, 0),
     [items]
   );
-  const region = address.province || "HCM";
+  const region = address.province || "TP. Hồ Chí Minh";
 
   const { fee: shipFee } = useShippingFee({ method: shippingMethod, region });
   const {
@@ -103,16 +106,25 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     console.log("🚀 [CheckoutPage] Starting order placement flow");
 
-    // Validate address fields
+    // Validate required address fields that match backend CreateOrderRequest
     if (
-      !address.address ||
-      !address.province ||
-      !address.district ||
-      !address.ward ||
-      !address.hamlet
+      !address.address?.trim() ||
+      !address.province?.trim() ||
+      !address.district?.trim() ||
+      !address.ward?.trim() ||
+      !address.hamlet?.trim()
     ) {
       console.error("❌ [CheckoutPage] Address validation failed:", address);
-      toast.error("Vui lòng điền đầy đủ thông tin địa chỉ giao hàng");
+      toast.error(
+        "Vui lòng điền đầy đủ thông tin địa chỉ giao hàng (Address, Province, District, Ward, Hamlet)"
+      );
+      return;
+    }
+
+    // Validate user info (not sent to backend but good UX)
+    if (!address.fullName?.trim() || !address.phone?.trim()) {
+      console.error("❌ [CheckoutPage] User info validation failed");
+      toast.error("Vui lòng điền họ tên và số điện thoại");
       return;
     }
 

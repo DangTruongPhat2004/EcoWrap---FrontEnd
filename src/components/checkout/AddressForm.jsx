@@ -10,17 +10,32 @@ import {
 } from "@nextui-org/react";
 
 const DISTRICTS_HCM = [
-  { key: "Q1", label: "Quận 1" },
-  { key: "Q3", label: "Quận 3" },
-  { key: "Q7", label: "Quận 7" },
-  { key: "QB", label: "Bình Thạnh" },
-  { key: "TPTHUCDUC", label: "TP. Thủ Đức" },
+  { key: "Quận 1", label: "Quận 1" },
+  { key: "Quận 3", label: "Quận 3" },
+  { key: "Quận 7", label: "Quận 7" },
+  { key: "Bình Thạnh", label: "Bình Thạnh" },
+  { key: "TP. Thủ Đức", label: "TP. Thủ Đức" },
 ];
 
-const CITIES = [
-  { key: "HCM", label: "TP. Hồ Chí Minh" },
-  { key: "HN", label: "Hà Nội" },
-  { key: "DN", label: "Đà Nẵng" },
+const WARDS_Q1 = [
+  { key: "Phường Bến Nghé", label: "Phường Bến Nghé" },
+  { key: "Phường Bến Thành", label: "Phường Bến Thành" },
+  { key: "Phường Cầu Kho", label: "Phường Cầu Kho" },
+  { key: "Phường Đa Kao", label: "Phường Đa Kao" },
+  { key: "Phường Nguyễn Thái Bình", label: "Phường Nguyễn Thái Bình" },
+];
+
+const HAMLETS = [
+  { key: "Ấp 1", label: "Ấp 1" },
+  { key: "Ấp 2", label: "Ấp 2" },
+  { key: "Ấp 3", label: "Ấp 3" },
+  { key: "Không có", label: "Không có" },
+];
+
+const PROVINCES = [
+  { key: "TP. Hồ Chí Minh", label: "TP. Hồ Chí Minh" },
+  { key: "Hà Nội", label: "Hà Nội" },
+  { key: "Đà Nẵng", label: "Đà Nẵng" },
 ];
 
 export default function AddressForm({
@@ -39,7 +54,10 @@ export default function AddressForm({
     fullName: !v.fullName?.trim() ? "Vui lòng nhập họ tên" : "",
     phone: !/^0\d{9}$/.test(v.phone || "") ? "SĐT 10 số, bắt đầu bằng 0" : "",
     address: !v.address?.trim() ? "Vui lòng nhập địa chỉ" : "",
-    city: !v.city ? "Chọn tỉnh/thành" : "",
+    province: !v.province ? "Chọn tỉnh/thành" : "",
+    district: !v.district ? "Chọn quận/huyện" : "",
+    ward: !v.ward ? "Chọn phường/xã" : "",
+    hamlet: !v.hamlet ? "Chọn ấp" : "",
   };
 
   const showErr = (k) => touched[k] && err[k];
@@ -110,33 +128,38 @@ export default function AddressForm({
             </label>
             <Select
               placeholder="Chọn tỉnh/thành phố"
-              selectedKeys={v.city ? [v.city] : []}
+              selectedKeys={v.province ? [v.province] : []}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0];
-                set("city", selectedKey);
+                set("province", selectedKey);
+                // Reset dependent fields
+                set("district", "");
+                set("ward", "");
               }}
-              onBlur={() => markTouched("city")}
-              isInvalid={!!showErr("city")}
+              onBlur={() => markTouched("province")}
+              isInvalid={!!showErr("province")}
               variant="bordered"
               classNames={{
                 trigger: "data-[hover=true]:bg-default-100",
                 selectorIcon: "right-3",
               }}
             >
-              {CITIES.map((city) => (
-                <SelectItem key={city.key} value={city.key}>
-                  {city.label}
+              {PROVINCES.map((prov) => (
+                <SelectItem key={prov.key} value={prov.key}>
+                  {prov.label}
                 </SelectItem>
               ))}
             </Select>
-            {showErr("city") && (
-              <span className="text-sm text-red-600">{showErr("city")}</span>
+            {showErr("province") && (
+              <span className="text-sm text-red-600">
+                {showErr("province")}
+              </span>
             )}
           </div>
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">
-              Quận/Huyện
+              Quận/Huyện <span className="text-red-500">*</span>
             </label>
             <Select
               placeholder="Chọn quận/huyện"
@@ -144,9 +167,12 @@ export default function AddressForm({
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0];
                 set("district", selectedKey);
+                set("ward", ""); // Reset ward when district changes
               }}
+              onBlur={() => markTouched("district")}
+              isInvalid={!!showErr("district")}
               variant="bordered"
-              isDisabled={!v.city || v.city !== "HCM"}
+              isDisabled={!v.province || v.province !== "TP. Hồ Chí Minh"}
               classNames={{
                 trigger: "data-[hover=true]:bg-default-100",
                 selectorIcon: "right-3",
@@ -158,10 +184,81 @@ export default function AddressForm({
                 </SelectItem>
               ))}
             </Select>
-            {v.city !== "HCM" && (
+            {showErr("district") && (
+              <span className="text-sm text-red-600">
+                {showErr("district")}
+              </span>
+            )}
+            {v.province !== "TP. Hồ Chí Minh" && (
               <span className="text-xs text-gray-500">
                 Chỉ khả dụng cho TP.HCM
               </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Phường/Xã <span className="text-red-500">*</span>
+            </label>
+            <Select
+              placeholder="Chọn phường/xã"
+              selectedKeys={v.ward ? [v.ward] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0];
+                set("ward", selectedKey);
+              }}
+              onBlur={() => markTouched("ward")}
+              isInvalid={!!showErr("ward")}
+              variant="bordered"
+              isDisabled={!v.district}
+              classNames={{
+                trigger: "data-[hover=true]:bg-default-100",
+                selectorIcon: "right-3",
+              }}
+            >
+              {WARDS_Q1.map((ward) => (
+                <SelectItem key={ward.key} value={ward.key}>
+                  {ward.label}
+                </SelectItem>
+              ))}
+            </Select>
+            {showErr("ward") && (
+              <span className="text-sm text-red-600">{showErr("ward")}</span>
+            )}
+            {!v.district && (
+              <span className="text-xs text-gray-500">
+                Chọn quận/huyện trước
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-gray-700">
+              Ấp <span className="text-red-500">*</span>
+            </label>
+            <Select
+              placeholder="Chọn ấp"
+              selectedKeys={v.hamlet ? [v.hamlet] : []}
+              onSelectionChange={(keys) => {
+                const selectedKey = Array.from(keys)[0];
+                set("hamlet", selectedKey);
+              }}
+              onBlur={() => markTouched("hamlet")}
+              isInvalid={!!showErr("hamlet")}
+              variant="bordered"
+              classNames={{
+                trigger: "data-[hover=true]:bg-default-100",
+                selectorIcon: "right-3",
+              }}
+            >
+              {HAMLETS.map((hamlet) => (
+                <SelectItem key={hamlet.key} value={hamlet.key}>
+                  {hamlet.label}
+                </SelectItem>
+              ))}
+            </Select>
+            {showErr("hamlet") && (
+              <span className="text-sm text-red-600">{showErr("hamlet")}</span>
             )}
           </div>
 
