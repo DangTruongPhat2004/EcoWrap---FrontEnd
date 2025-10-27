@@ -26,6 +26,13 @@ import {
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProfile from "./pages/vendor/VendorProfile";
+import WarehouseManagement from "./pages/vendor/WarehouseManagement";
+import VendorProductDetail from "./pages/vendor/VendorProductDetail";
+import AddProduct from "./pages/vendor/AddProduct";
+import ProductManagement from "./pages/vendor/ProductManagement";
+import InventoryManagement from "./pages/vendor/InventoryManagement";
+import InventoryDetail from "./pages/vendor/InventoryDetail";
+import AddInventory from "./pages/vendor/AddInventory";
 import Profile from "./pages/customer/Profile";
 import OrdersPage from "./pages/customer/OrdersPage";
 import OrderDetailPage from "./pages/customer/OrderDetailPage";
@@ -199,6 +206,13 @@ function App() {
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
           <Route path="profile" element={<VendorProfile />} />
+          <Route path="warehouses" element={<WarehouseManagement />} />
+          <Route path="products" element={<ProductManagement />} />
+          <Route path="products/new" element={<AddProduct />} />
+          <Route path="inventory" element={<InventoryManagement />} />
+          <Route path="inventory/new" element={<AddInventory />} />
+          <Route path="inventory/:id" element={<InventoryDetail />} />
+          <Route path="products/:id" element={<VendorProductDetail />} />
           {/* Add other nested vendor routes here */}
         </Route>
 

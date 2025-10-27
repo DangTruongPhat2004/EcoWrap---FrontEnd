@@ -6,3 +6,6 @@ export * from "./sellerRegistrationApi";
 
 // Product API
 export * from "./productApi";
+
+// Warehouse API
+export { default as warehouseApi } from "./warehouseApi";
