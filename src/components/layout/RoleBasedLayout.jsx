@@ -96,15 +96,21 @@ const RoleBasedLayout = () => {
 
   // Return appropriate layout based on user role
   // Role names from JWT: 'Admin', 'Seller', 'User'
-  if (userRole === "Seller") {
-    return <DashboardLayout sidebar={VendorSidebar} />;
-  }
+
+  console.log("🎯 Selecting sidebar for role:", userRole);
 
   if (userRole === "Admin") {
+    console.log("✅ Returning AdminSidebar");
     return <DashboardLayout sidebar={AdminSidebar} />;
   }
 
+  if (userRole === "Seller") {
+    console.log("✅ Returning VendorSidebar");
+    return <DashboardLayout sidebar={VendorSidebar} />;
+  }
+
   // Default to customer layout for User role and any other roles
+  console.log("✅ Returning CustomerSidebar (default)");
   return <DashboardLayout sidebar={CustomerSidebar} />;
 };
 

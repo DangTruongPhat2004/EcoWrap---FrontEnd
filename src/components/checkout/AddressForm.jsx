@@ -131,6 +131,7 @@ export default function AddressForm({
               selectedKeys={v.province ? [v.province] : []}
               onSelectionChange={(keys) => {
                 const selectedKey = Array.from(keys)[0];
+                console.log("🏙️ Province selected:", selectedKey);
                 set("province", selectedKey);
                 // Reset dependent fields
                 set("district", "");
@@ -139,6 +140,7 @@ export default function AddressForm({
               onBlur={() => markTouched("province")}
               isInvalid={!!showErr("province")}
               variant="bordered"
+              selectionMode="single"
               classNames={{
                 trigger: "data-[hover=true]:bg-default-100",
                 selectorIcon: "right-3",
