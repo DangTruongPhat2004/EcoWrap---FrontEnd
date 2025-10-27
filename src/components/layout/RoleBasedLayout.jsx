@@ -16,10 +16,51 @@ const RoleBasedLayout = () => {
     const token = localStorage.getItem("token");
     if (token) {
       const payload = decodeJwt(token);
-      const role =
+
+      // Get role from JWT - could be string ("Admin", "Seller", "User") or number (1, 2, 3)
+      let role =
         payload?.[
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
+
+      console.log("📋 Full JWT Payload:", payload);
+      console.log("🎭 Raw Role from JWT:", role, "| Type:", typeof role);
+
+      // If role is a number, map it to string role name
+      if (
+        typeof role === "number" ||
+        (typeof role === "string" && !isNaN(role))
+      ) {
+        const roleId = parseInt(role);
+        console.log("🔢 Converting numeric roleId:", roleId);
+        switch (roleId) {
+          case 1:
+            role = "Admin";
+            break;
+          case 2:
+            role = "User"; // Customer
+            break;
+          case 3:
+            role = "Seller";
+            break;
+          default:
+            role = "User"; // Default fallback
+        }
+      }
+
+      // Normalize role to handle case-insensitive matching
+      if (typeof role === "string") {
+        const roleLower = role.toLowerCase();
+        if (roleLower === "admin") {
+          role = "Admin";
+        } else if (roleLower === "seller") {
+          role = "Seller";
+        } else if (roleLower === "user" || roleLower === "customer") {
+          role = "User";
+        }
+      }
+
+      console.log("✅ Final Mapped Role:", role);
       setUserRole(role);
 
       // Redirect users to their appropriate dashboard based on role
