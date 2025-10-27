@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import DashboardLayout from "./DashboardLayout";
 import VendorSidebar from "./VendorSidebar";
 import CustomerSidebar from "./CustomerSidebar";
@@ -7,6 +8,8 @@ import { decodeJwt } from "../../utils/jwt";
 
 const RoleBasedLayout = () => {
   const [userRole, setUserRole] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     // Get role from JWT token (more reliable than localStorage user object)
@@ -18,12 +21,27 @@ const RoleBasedLayout = () => {
           "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
         ];
       setUserRole(role);
+
+      // Redirect users to their appropriate dashboard based on role
+      const currentPath = location.pathname;
+
+      if (role === "Admin" && !currentPath.startsWith("/admin")) {
+        navigate("/admin/dashboard", { replace: true });
+      } else if (role === "Seller" && !currentPath.startsWith("/vendor")) {
+        navigate("/vendor/dashboard", { replace: true });
+      } else if (
+        role === "User" &&
+        !currentPath.startsWith("/customer") &&
+        !currentPath.startsWith("/account")
+      ) {
+        navigate("/", { replace: true }); // Customers go to homepage
+      }
     } else {
       // Fallback to localStorage user
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       setUserRole(user.role);
     }
-  }, []);
+  }, [navigate, location.pathname]);
 
   // Show loading or default layout while determining role
   if (userRole === null) {

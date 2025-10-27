@@ -1,109 +1,173 @@
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  HomeIcon,
-  CheckCircleIcon,
-  UsersIcon,
-  CogIcon,
-  ChartBarIcon,
-  SparklesIcon,
-  ShoppingBagIcon,
-  TagIcon,
-} from "@heroicons/react/24/outline";
-import { Link, useLocation } from "react-router-dom";
-import { Card, CardBody } from "@heroui/react";
+  Home,
+  ShoppingBag,
+  Tag,
+  CheckCircle,
+  Users,
+  Settings,
+  BarChart3,
+  Shield,
+  LogOut,
+  User,
+} from "lucide-react";
+import logo from "../../assets/logo.png";
 
 const AdminSidebar = () => {
-  const location = useLocation();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    { path: "/admin/dashboard", icon: HomeIcon, label: "Hồ sơ" },
-    { path: "/admin/orders", icon: ShoppingBagIcon, label: "Quản lí đơn hàng" },
-    { path: "/admin/categories", icon: TagIcon, label: "Quản lí danh mục" },
-    { path: "/admin/approvals", icon: CheckCircleIcon, label: "Phê duyệt" },
-    { path: "/admin/users", icon: UsersIcon, label: "Quản lí người dùng" },
-    { path: "/admin/settings", icon: CogIcon, label: "Cài Đặt" },
-  ];
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const isActive = (path) => {
-    return location.pathname === path;
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    navigate("/login");
   };
 
+  const menuItems = [
+    {
+      id: "dashboard",
+      label: "Dashboard",
+      icon: Home,
+      path: "/admin/dashboard",
+    },
+    {
+      id: "orders",
+      label: "Quản lí đơn hàng",
+      icon: ShoppingBag,
+      path: "/admin/orders",
+    },
+    {
+      id: "categories",
+      label: "Quản lí danh mục",
+      icon: Tag,
+      path: "/admin/categories",
+    },
+    {
+      id: "approvals",
+      label: "Phê duyệt",
+      icon: CheckCircle,
+      path: "/admin/approvals",
+    },
+    {
+      id: "users",
+      label: "Quản lí người dùng",
+      icon: Users,
+      path: "/admin/users",
+    },
+    {
+      id: "settings",
+      label: "Cài Đặt",
+      icon: Settings,
+      path: "/admin/settings",
+    },
+  ];
+
+  const analyticsItems = [
+    {
+      id: "reports",
+      label: "Báo Cáo Thống Kê",
+      icon: BarChart3,
+      path: "/admin/reports",
+    },
+    {
+      id: "security",
+      label: "Bảo Mật Hệ Thống",
+      icon: Shield,
+      path: "/admin/security",
+    },
+  ];
+
   return (
-    <aside className="w-64 bg-gradient-to-b from-emerald-50 to-emerald-100 min-h-screen p-4 flex flex-col">
-      {/* Logo Section */}
-      <div className="mb-8 flex items-center gap-3 p-4">
-        <div className="w-12 h-12 bg-emerald-600 rounded-lg flex items-center justify-center">
-          <SparklesIcon className="w-8 h-8 text-white" />
-        </div>
-        <div>
-          <h1 className="text-xl font-bold text-emerald-800">Eco</h1>
-          <h2 className="text-lg font-semibold text-emerald-700">Wrap</h2>
+    <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-emerald-50 to-green-100 shadow-lg border-r border-green-200 flex flex-col">
+      {/* Logo and Brand */}
+      <div className="p-6 border-b border-green-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-14 h-14 rounded-lg overflow-hidden">
+            <img
+              src={logo}
+              alt="EcoWrap Logo"
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <h2 className="font-bold text-sm text-green-800">EcoWrap</h2>
+            <p className="text-xs text-green-600">Admin Dashboard</p>
+          </div>
         </div>
       </div>
 
-      {/* Main Navigation */}
-      <nav className="flex-1">
-        <ul className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
+      {/* Navigation Menu */}
+      <nav className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-2">
+          {menuItems.map((item) => (
+            <div key={item.id}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-emerald-600 text-white shadow-md"
+                      : "text-green-700 hover:bg-green-200 hover:text-green-800"
+                  }`
+                }
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </NavLink>
+            </div>
+          ))}
+        </div>
 
-            return (
-              <li key={item.path}>
-                <Link
-                  to={item.path}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    active
-                      ? "bg-white text-emerald-700 shadow-md font-semibold"
-                      : "text-emerald-800 hover:bg-emerald-200/50"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        {/* Analytics Section */}
+        <div className="mt-8 pt-6 border-t border-green-200">
+          <h3 className="text-sm font-semibold text-green-800 mb-3 px-3">
+            📊 Phân Tích & Bảo Mật
+          </h3>
+          <div className="space-y-2">
+            {analyticsItems.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-emerald-600 text-white shadow-md"
+                      : "text-green-700 hover:bg-green-200 hover:text-green-800"
+                  }`
+                }
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="font-medium text-sm">{item.label}</span>
+              </NavLink>
+            ))}
+          </div>
+        </div>
       </nav>
 
-      {/* THÔNG BÁO Section */}
-      <div className="mt-6">
-        <h3 className="text-sm font-semibold text-emerald-700 mb-3 px-4">
-          THÔNG BÁO
-        </h3>
+      {/* User Profile Section - Fixed at bottom */}
+      <div className="mt-auto p-4 border-t border-green-200 bg-white/50 backdrop-blur-sm">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center">
+            <User className="w-5 h-5 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-green-800 text-sm">
+              {user.name || "Admin"}
+            </p>
+            <p className="text-xs text-green-600">Quản trị viên</p>
+          </div>
+        </div>
 
-        <Card className="bg-white shadow-sm">
-          <CardBody className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                <ChartBarIcon className="w-5 h-5 text-emerald-600" />
-              </div>
-              <span className="text-sm font-semibold text-emerald-800">
-                Tác Động Sinh Thái
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="text-gray-700">Tiết kiệm</span>
-                </div>
-                <span className="font-semibold text-gray-900">35kg nhựa</span>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                  <span className="text-gray-700">Giảm</span>
-                </div>
-                <span className="font-semibold text-gray-900">12kg CO2</span>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center space-x-2 p-3 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-200 hover:border-red-300"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Đăng xuất</span>
+        </button>
       </div>
-    </aside>
+    </div>
   );
 };
 

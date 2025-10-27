@@ -18,7 +18,6 @@ import {
 } from "@nextui-org/react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import toast from "react-hot-toast";
-import AdminSidebar from "../../components/layout/AdminSidebar";
 import {
   getAllCategories,
   createCategory,
@@ -122,85 +121,88 @@ const CategoryManagement = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar />
-      <div className="flex-1 p-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">
-                Quản lý danh mục
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Quản lý danh mục sản phẩm của hệ thống
-              </p>
-            </div>
-            <Button
-              color="primary"
-              startContent={<Plus size={20} />}
-              onPress={handleOpenAdd}
-            >
-              Thêm danh mục
-            </Button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Quản lý danh mục
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Quản lý danh mục sản phẩm của hệ thống
+            </p>
           </div>
-
-          {/* Table */}
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <Spinner size="lg" />
-            </div>
-          ) : (
-            <Table aria-label="Categories table">
-              <TableHeader>
-                <TableColumn>ID</TableColumn>
-                <TableColumn>TÊN DANH MỤC</TableColumn>
-                <TableColumn>THAO TÁC</TableColumn>
-              </TableHeader>
-              <TableBody emptyContent="Chưa có danh mục nào">
-                {categories.map((category) => (
-                  <TableRow key={category.categoryId}>
-                    <TableCell>{category.categoryId}</TableCell>
-                    <TableCell>{category.categoryName}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          color="warning"
-                          variant="flat"
-                          onPress={() => handleOpenEdit(category)}
-                        >
-                          <Pencil size={16} />
-                        </Button>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          color="danger"
-                          variant="flat"
-                          onPress={() => handleOpenDelete(category)}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <Button
+            color="success"
+            startContent={<Plus size={20} />}
+            onPress={handleOpenAdd}
+            className="bg-emerald-600 text-white"
+          >
+            Thêm danh mục
+          </Button>
         </div>
       </div>
 
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Spinner size="lg" color="success" />
+          </div>
+        ) : (
+          <Table aria-label="Categories table" className="min-h-[400px]">
+            <TableHeader>
+              <TableColumn>ID</TableColumn>
+              <TableColumn>TÊN DANH MỤC</TableColumn>
+              <TableColumn>THAO TÁC</TableColumn>
+            </TableHeader>
+            <TableBody emptyContent="Chưa có danh mục nào">
+              {categories.map((category) => (
+                <TableRow key={category.categoryId}>
+                  <TableCell>{category.categoryId}</TableCell>
+                  <TableCell className="font-medium">
+                    {category.categoryName}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="warning"
+                        variant="flat"
+                        onPress={() => handleOpenEdit(category)}
+                      >
+                        <Pencil size={16} />
+                      </Button>
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        color="danger"
+                        variant="flat"
+                        onPress={() => handleOpenDelete(category)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
       {/* Add/Edit Modal */}
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalContent>
-          <ModalHeader>
+          <ModalHeader className="text-xl font-bold">
             {selectedCategory ? "Chỉnh sửa danh mục" : "Thêm danh mục mới"}
           </ModalHeader>
-          <ModalBody>
+          <ModalBody className="gap-4">
             <Input
               label="ID danh mục"
+              labelPlacement="outside"
               placeholder="Nhập ID (số nguyên)"
               type="number"
               value={formData.categoryId}
@@ -211,15 +213,18 @@ const CategoryManagement = () => {
                 })
               }
               isDisabled={!!selectedCategory}
+              variant="bordered"
               required
             />
             <Input
               label="Tên danh mục"
+              labelPlacement="outside"
               placeholder="Nhập tên danh mục"
               value={formData.categoryName}
               onChange={(e) =>
                 setFormData({ ...formData, categoryName: e.target.value })
               }
+              variant="bordered"
               required
             />
           </ModalBody>
@@ -227,7 +232,11 @@ const CategoryManagement = () => {
             <Button color="danger" variant="light" onPress={onClose}>
               Hủy
             </Button>
-            <Button color="primary" onPress={handleSubmit}>
+            <Button
+              color="success"
+              onPress={handleSubmit}
+              className="bg-emerald-600 text-white"
+            >
               {selectedCategory ? "Cập nhật" : "Thêm"}
             </Button>
           </ModalFooter>
@@ -237,7 +246,7 @@ const CategoryManagement = () => {
       {/* Delete Confirmation Modal */}
       <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
         <ModalContent>
-          <ModalHeader>Xác nhận xóa</ModalHeader>
+          <ModalHeader className="text-xl font-bold">Xác nhận xóa</ModalHeader>
           <ModalBody>
             <p>
               Bạn có chắc chắn muốn xóa danh mục{" "}
