@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import DashboardLayout from "./components/layout/DashboardLayout";
 import RoleBasedLayout from "./components/layout/RoleBasedLayout";
 import {
   Home,
@@ -199,7 +198,7 @@ function App() {
           path="/vendor/*"
           element={
             <ProtectedRoute requiredRole="Seller">
-              <DashboardLayout />
+              <RoleBasedLayout />
             </ProtectedRoute>
           }
         >
