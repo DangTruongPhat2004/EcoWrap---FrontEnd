@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Edit3,
   Save,
@@ -13,17 +13,26 @@ import {
   Key,
   Lock,
 } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
+import {
+  getUserById,
+  updateUser,
+  changePassword,
+} from "../../services/userApi";
+import toast from "react-hot-toast";
 
 const Profile = () => {
+  const { user } = useAuthStore();
   const [formData, setFormData] = useState({
-    username: "ecoSeller123",
-    fullName: "Nguyễn Văn A",
-    phone: "0901234567",
-    email: "password123",
+    username: "",
+    fullName: "",
+    phone: "",
+    email: "",
   });
+  const [originalData, setOriginalData] = useState({});
+  const [loading, setLoading] = useState(true);
 
   const [isEditing, setIsEditing] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const [resetPasswordData, setResetPasswordData] = useState({
     oldPassword: "",
@@ -33,6 +42,44 @@ const Profile = () => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // Fetch user data from API
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!user?.userId) {
+        toast.error("Không tìm thấy thông tin người dùng");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await getUserById(user.userId);
+
+        if (response.success && response.data) {
+          const userData = {
+            username: response.data.userName || "",
+            fullName: response.data.fullName || "",
+            phone: response.data.phoneNumber || "",
+            email: response.data.email || "",
+          };
+          setFormData(userData);
+          setOriginalData(userData);
+        } else {
+          toast.error(response.message || "Không thể tải thông tin người dùng");
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast.error("Đã xảy ra lỗi khi tải thông tin người dùng");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [user]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -42,14 +89,40 @@ const Profile = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Save logic here
-    setIsEditing(false);
-    // Show success message
+  const handleSave = async () => {
+    if (!user?.userId) {
+      toast.error("Không tìm thấy thông tin người dùng");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      const updateData = {
+        userName: formData.username,
+        fullName: formData.fullName,
+        phoneNumber: formData.phone,
+        email: formData.email,
+      };
+
+      const response = await updateUser(user.userId, updateData);
+
+      if (response.success) {
+        toast.success("Cập nhật thông tin thành công!");
+        setOriginalData(formData);
+        setIsEditing(false);
+      } else {
+        toast.error(response.message || "Không thể cập nhật thông tin");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error);
+      toast.error("Đã xảy ra lỗi khi cập nhật thông tin");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    // Reset form data if needed
+    setFormData(originalData);
     setIsEditing(false);
   };
 
@@ -61,20 +134,51 @@ const Profile = () => {
     }));
   };
 
-  const handleResetPassword = () => {
-    // Reset password logic here
-    if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
-      alert("Mật khẩu mới không khớp!");
+  const handleResetPassword = async () => {
+    // Validation
+    if (
+      !resetPasswordData.oldPassword ||
+      !resetPasswordData.newPassword ||
+      !resetPasswordData.confirmPassword
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
-    // API call to reset password
-    console.log("Resetting password...", resetPasswordData);
-    setShowForgotPasswordModal(false);
-    setResetPasswordData({
-      oldPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+
+    if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
+      toast.error("Mật khẩu mới không khớp!");
+      return;
+    }
+
+    if (resetPasswordData.newPassword.length < 6) {
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      const response = await changePassword(
+        resetPasswordData.oldPassword,
+        resetPasswordData.newPassword
+      );
+
+      if (response.success) {
+        toast.success("Đổi mật khẩu thành công!");
+        setShowForgotPasswordModal(false);
+        setResetPasswordData({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        toast.error(response.message || "Không thể đổi mật khẩu");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error("Đã xảy ra lỗi khi đổi mật khẩu");
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   const handleCloseForgotPasswordModal = () => {
@@ -93,227 +197,235 @@ const Profile = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           Thông Tin Cá Nhân
         </h1>
-        <p className="text-gray-600">
-          Quản lý thông tin cá nhân của bạn
-        </p>
+        <p className="text-gray-600">Quản lý thông tin cá nhân của bạn</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Information Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                <Edit3 className="w-5 h-5 mr-2 text-emerald-600" />
-                Chỉnh Sửa Thông Tin
-              </h2>
-              {!isEditing && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center space-x-2"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  <span>Chỉnh sửa</span>
-                </button>
-              )}
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Username
-                </label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
-                    isEditing
-                      ? "border-gray-300 bg-white"
-                      : "border-gray-200 bg-gray-50"
-                  }`}
-                  placeholder="Username của bạn để sử dụ trong"
-                />
+      {loading ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mb-4"></div>
+          <p className="text-gray-600">Đang tải thông tin...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Profile Information Form */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Edit3 className="w-5 h-5 mr-2 text-emerald-600" />
+                  Chỉnh Sửa Thông Tin
+                </h2>
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center space-x-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    <span>Chỉnh sửa</span>
+                  </button>
+                )}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Họ và Tên*
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  disabled={!isEditing}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
-                    isEditing
-                      ? "border-gray-300 bg-white"
-                      : "border-gray-200 bg-gray-50"
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Số Điện Thoại*
-                </label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l-lg">
-                    +84
-                  </span>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Username
+                  </label>
                   <input
                     type="text"
-                    name="phone"
-                    value={formData.phone}
+                    name="username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`flex-1 px-3 py-2 border rounded-r-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                      isEditing
+                        ? "border-gray-300 bg-white"
+                        : "border-gray-200 bg-gray-50"
+                    }`}
+                    placeholder="Username của bạn để sử dụ trong"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Họ và Tên*
+                  </label>
+                  <input
+                    type="text"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
                       isEditing
                         ? "border-gray-300 bg-white"
                         : "border-gray-200 bg-gray-50"
                     }`}
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Mật Khẩu
-                </label>
-                <div className="relative">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Số Điện Thoại*
+                  </label>
+                  <div className="flex">
+                    <span className="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm rounded-l-lg">
+                      +84
+                    </span>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      className={`flex-1 px-3 py-2 border rounded-r-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                        isEditing
+                          ? "border-gray-300 bg-white"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
                       isEditing
                         ? "border-gray-300 bg-white"
                         : "border-gray-200 bg-gray-50"
                     }`}
+                    placeholder="email@example.com"
                   />
+                </div>
+
+                {/* Password Change Button */}
+                <div className="pt-2 border-t border-gray-200">
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowForgotPasswordModal(true)}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center space-x-1 font-medium"
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
+                    <Key className="w-4 h-4" />
+                    <span>Đổi mật khẩu</span>
+                  </button>
+                </div>
+              </div>
+
+              {isEditing && (
+                <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleCancel}
+                    disabled={isSaving}
+                    className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Hủy</span>
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSaving ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Đang lưu...</span>
+                      </>
                     ) : (
-                      <Eye className="w-4 h-4" />
+                      <>
+                        <Save className="w-4 h-4" />
+                        <span>Lưu Thay Đổi</span>
+                      </>
                     )}
                   </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowForgotPasswordModal(true)}
-                  className="mt-2 text-sm text-emerald-600 hover:text-emerald-700 flex items-center space-x-1"
-                >
-                  <Key className="w-4 h-4" />
-                  <span>Quên mật khẩu?</span>
-                </button>
-              </div>
+              )}
             </div>
-
-            {isEditing && (
-              <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleCancel}
-                  className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Hủy</span>
-                </button>
-                <button
-                  onClick={handleSave}
-                  className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Lưu Thay Đổi</span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Profile Avatar & Stats */}
-        <div className="space-y-6">
-          {/* Avatar Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Ảnh Đại Diện
-            </h3>
-
-            <div className="w-24 h-24 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <User className="w-12 h-12 text-white" />
-            </div>
-
-            <div className="mb-4">
-              <p className="font-medium text-gray-900 flex items-center justify-center">
-                <User className="w-4 h-4 mr-2" />
-                {formData.fullName}
-              </p>
-              <p className="text-sm text-gray-500 text-center">
-                Thành viên EcoWrap
-              </p>
-            </div>
-
-            <button className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center space-x-2">
-              <Camera className="w-4 h-4" />
-              <span>Xem Chi Tiết Tên Đăng</span>
-            </button>
           </div>
 
-          {/* Activity Stats */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <TrendingUp className="w-5 h-5 mr-2 text-emerald-600" />
-              Hoạt Động
-            </h3>
+          {/* Profile Avatar & Stats */}
+          <div className="space-y-6">
+            {/* Avatar Section */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Ảnh Đại Diện
+              </h3>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
-                    <Package className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Đơn hàng đã mua</p>
-                    <p className="font-semibold text-emerald-600">25</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded-full flex items-center">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    +12%
-                  </span>
-                </div>
+              <div className="w-24 h-24 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="w-12 h-12 text-white" />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                    <Recycle className="w-5 h-5 text-green-600" />
+              <div className="mb-4">
+                <p className="font-medium text-gray-900 flex items-center justify-center">
+                  <User className="w-4 h-4 mr-2" />
+                  {formData.fullName}
+                </p>
+                <p className="text-sm text-gray-500 text-center">
+                  Thành viên EcoWrap
+                </p>
+              </div>
+
+              <button className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center space-x-2">
+                <Camera className="w-4 h-4" />
+                <span>Xem Chi Tiết Tên Đăng</span>
+              </button>
+            </div>
+
+            {/* Activity Stats */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <TrendingUp className="w-5 h-5 mr-2 text-emerald-600" />
+                Hoạt Động
+              </h3>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                      <Package className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Đơn hàng đã mua</p>
+                      <p className="font-semibold text-emerald-600">25</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Điểm tích lũy</p>
-                    <p className="font-semibold text-emerald-600">1,250</p>
+                  <div className="text-right">
+                    <span className="text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded-full flex items-center">
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      +12%
+                    </span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded-full">
-                    Điểm thưởng
-                  </span>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                      <Recycle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Điểm tích lũy</p>
+                      <p className="font-semibold text-emerald-600">1,250</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-emerald-600 text-xs bg-emerald-50 px-2 py-1 rounded-full">
+                      Điểm thưởng
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Forgot Password Modal */}
       {showForgotPasswordModal && (
@@ -418,17 +530,28 @@ const Profile = () => {
             <div className="flex justify-end space-x-3 mt-6">
               <button
                 onClick={handleCloseForgotPasswordModal}
-                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2"
+                disabled={isChangingPassword}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <X className="w-4 h-4" />
                 <span>Hủy</span>
               </button>
               <button
                 onClick={handleResetPassword}
-                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2"
+                disabled={isChangingPassword}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4" />
-                <span>Đặt Lại Mật Khẩu</span>
+                {isChangingPassword ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Đặt Lại Mật Khẩu</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

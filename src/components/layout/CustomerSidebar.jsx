@@ -13,6 +13,10 @@ const CustomerSidebar = () => {
     navigate("/login");
   };
 
+  const handleLogoClick = () => {
+    navigate("/");
+  };
+
   const menuItems = [
     {
       id: "profile",
@@ -32,7 +36,10 @@ const CustomerSidebar = () => {
     <div className="fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-emerald-50 to-green-100 shadow-lg border-r border-green-200 flex flex-col">
       {/* Logo and Brand */}
       <div className="p-6 border-b border-green-200">
-        <div className="flex items-center space-x-3">
+        <button
+          onClick={handleLogoClick}
+          className="flex items-center space-x-3 w-full hover:opacity-80 transition-opacity"
+        >
           <div className="w-14 h-14 rounded-lg overflow-hidden">
             <img
               src={logo}
@@ -40,11 +47,11 @@ const CustomerSidebar = () => {
               className="w-full h-full object-contain"
             />
           </div>
-          <div>
+          <div className="text-left">
             <h2 className="font-bold text-sm text-green-800">EcoWrap</h2>
             <p className="text-xs text-green-600">Customer Dashboard</p>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Navigation Menu */}
@@ -58,7 +65,7 @@ const CustomerSidebar = () => {
                 `flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                   isActive
                     ? "bg-emerald-600 text-white shadow-md"
-                    : "text-gray-700 hover:bg-emerald-100 hover:text-emerald-700"
+                    : "text-green-700 hover:bg-green-200 hover:text-green-800"
                 }`
               }
             >
