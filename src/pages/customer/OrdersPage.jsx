@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardBody, Button, Chip } from "@nextui-org/react";
-import { Package, ChevronRight, Filter, Search } from "lucide-react";
+import { Package, ChevronRight, Filter, CreditCard, Eye } from "lucide-react";
 import {
   getMyOrders,
   getOrderStatusLabel,
   getOrderStatusColor,
 } from "../../services/orderApi";
+import { createPaymentLink } from "../../services/paymentApi";
 import { fmtVND } from "../../utils/money";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
@@ -55,13 +56,35 @@ export default function OrdersPage() {
     navigate(`/customer/orders/${orderId}`);
   };
 
+  const handlePayNow = async (orderId, e) => {
+    e.stopPropagation(); // Prevent card click
+    try {
+      toast.loading("Đang tạo link thanh toán...", { id: "payment" });
+      const response = await createPaymentLink(orderId);
+
+      if (response.success && response.checkoutUrl) {
+        toast.success("Chuyển đến trang thanh toán", { id: "payment" });
+        // Redirect to PayOS payment page
+        window.location.href = response.checkoutUrl;
+      } else {
+        toast.error(response.message || "Không thể tạo link thanh toán", {
+          id: "payment",
+        });
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Đã xảy ra lỗi khi tạo link thanh toán", { id: "payment" });
+    }
+  };
+
   const statusOptions = [
     { value: "all", label: "Tất cả" },
-    { value: "Pending", label: "Chờ xác nhận" },
+    { value: "Pending", label: "Chờ thanh toán" },
     { value: "Packaging", label: "Đang đóng gói" },
     { value: "Shipping", label: "Đang giao hàng" },
     { value: "Completed", label: "Hoàn thành" },
     { value: "Canceled", label: "Đã hủy" },
+    { value: "Declined", label: "Đã từ chối" },
   ];
 
   return (
@@ -160,9 +183,7 @@ export default function OrdersPage() {
             {orders.map((order) => (
               <Card
                 key={order.orderId}
-                className="border border-gray-200 hover:shadow-md transition-shadow cursor-pointer"
-                isPressable
-                onPress={() => handleViewOrder(order.orderId)}
+                className="border border-gray-200 hover:shadow-md transition-shadow"
               >
                 <CardBody className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -208,7 +229,7 @@ export default function OrdersPage() {
                     </div>
 
                     {/* Order Total & Action */}
-                    <div className="flex flex-row md:flex-col items-center md:items-end gap-4">
+                    <div className="flex flex-col items-end gap-3">
                       <div className="text-right">
                         <div className="text-sm text-gray-500 mb-1">
                           Tổng tiền
@@ -217,10 +238,34 @@ export default function OrdersPage() {
                           {fmtVND(order.totalPrice)}
                         </div>
                       </div>
-                      <ChevronRight
-                        size={24}
-                        className="text-gray-400 md:hidden"
-                      />
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        {order.orderStatus === "Pending" && (
+                          <Button
+                            size="sm"
+                            color="warning"
+                            variant="solid"
+                            startContent={<CreditCard size={16} />}
+                            onPress={(e) => handlePayNow(order.orderId, e)}
+                            className="font-medium"
+                          >
+                            Thanh toán
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          color="primary"
+                          variant="flat"
+                          startContent={<Eye size={16} />}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleViewOrder(order.orderId);
+                          }}
+                        >
+                          Chi tiết
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardBody>

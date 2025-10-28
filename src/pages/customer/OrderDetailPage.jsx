@@ -7,10 +7,8 @@ import {
   CheckCircle2,
   Clock,
   MapPin,
-  Phone,
-  User,
+  CreditCard,
   ArrowLeft,
-  Calendar,
 } from "lucide-react";
 import {
   getOrderById,
@@ -18,6 +16,7 @@ import {
   getOrderStatusLabel,
   getOrderStatusColor,
 } from "../../services/orderApi";
+import { createPaymentLink } from "../../services/paymentApi";
 import { fmtVND } from "../../utils/money";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
@@ -70,6 +69,25 @@ export default function OrderDetailPage() {
     }
   };
 
+  const handlePayNow = async () => {
+    try {
+      toast.loading("Đang tạo link thanh toán...", { id: "payment" });
+      const response = await createPaymentLink(orderId);
+
+      if (response.success && response.checkoutUrl) {
+        toast.success("Chuyển đến trang thanh toán", { id: "payment" });
+        window.location.href = response.checkoutUrl;
+      } else {
+        toast.error(response.message || "Không thể tạo link thanh toán", {
+          id: "payment",
+        });
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      toast.error("Đã xảy ra lỗi khi tạo link thanh toán", { id: "payment" });
+    }
+  };
+
   if (loading) {
     return (
       <main className="bg-[#F6F7F3] min-h-screen">
@@ -102,6 +120,7 @@ export default function OrderDetailPage() {
   }
 
   const canConfirmDelivery = order.orderStatus === "Shipping";
+  const canPayNow = order.orderStatus === "Pending";
 
   return (
     <main className="bg-[#F6F7F3] min-h-screen">
@@ -115,7 +134,6 @@ export default function OrderDetailPage() {
         >
           Quay lại danh sách đơn hàng
         </Button>
-
         {/* Header */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -127,24 +145,36 @@ export default function OrderDetailPage() {
                 {getOrderStatusLabel(order.orderStatus)}
               </Chip>
               <span className="text-sm text-gray-600">
-                Đặt ngày {dayjs(order.createdDate).format("DD/MM/YYYY HH:mm")}
+                Đặt ngày {dayjs(order.createdAt).format("DD/MM/YYYY HH:mm")}
               </span>
             </div>
           </div>
 
-          {canConfirmDelivery && (
-            <Button
-              color="success"
-              size="lg"
-              startContent={<CheckCircle2 size={20} />}
-              onPress={handleConfirmDelivery}
-              isLoading={confirming}
-            >
-              Xác nhận đã nhận hàng
-            </Button>
-          )}
-        </div>
-
+          <div className="flex gap-3">
+            {canPayNow && (
+              <Button
+                color="warning"
+                size="lg"
+                startContent={<CreditCard size={20} />}
+                onPress={handlePayNow}
+                className="font-medium"
+              >
+                Thanh toán ngay
+              </Button>
+            )}
+            {canConfirmDelivery && (
+              <Button
+                color="success"
+                size="lg"
+                startContent={<CheckCircle2 size={20} />}
+                onPress={handleConfirmDelivery}
+                isLoading={confirming}
+              >
+                Xác nhận đã nhận hàng
+              </Button>
+            )}
+          </div>
+        </div>{" "}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -159,38 +189,43 @@ export default function OrderDetailPage() {
                 </div>
 
                 <div className="mt-6 space-y-4">
-                  {order.cartItems?.map((item, index) => (
+                  {order.items?.map((item, index) => (
                     <div
-                      key={index}
+                      key={item.id || index}
                       className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0"
                     >
-                      {item.product?.productImages?.[0] && (
+                      {item.thumb && (
                         <img
-                          src={item.product.productImages[0]}
-                          alt={item.productName}
+                          src={item.thumb}
+                          alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg border border-gray-200"
                         />
                       )}
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-800 mb-1">
-                          {item.productName || "Sản phẩm"}
+                          {item.name || "Sản phẩm"}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {item.product?.productDescription || ""}
+                          {item.desc || ""}
                         </p>
                         <div className="text-sm text-gray-600 mt-1">
-                          Số lượng: {item.quantity}
+                          Số lượng: {item.qty}
                         </div>
+                        {item.designFile && (
+                          <div className="text-xs text-emerald-600 mt-1">
+                            ✓ Có thiết kế tùy chỉnh
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <div className="text-sm text-gray-500 mb-1">
                           Đơn giá
                         </div>
                         <div className="font-medium text-gray-800">
-                          {fmtVND(item.cartItemPrice / item.quantity)}
+                          {fmtVND(item.price)}
                         </div>
                         <div className="text-sm text-emerald-600 font-semibold mt-1">
-                          {fmtVND(item.cartItemPrice)}
+                          {fmtVND(item.price * item.qty)}
                         </div>
                       </div>
                     </div>
@@ -234,7 +269,7 @@ export default function OrderDetailPage() {
                   <TimelineItem
                     icon={CheckCircle2}
                     title="Đơn hàng đã được tạo"
-                    time={dayjs(order.createdDate).format("DD/MM/YYYY HH:mm")}
+                    time={dayjs(order.createdAt).format("DD/MM/YYYY HH:mm")}
                     completed
                   />
                   {order.orderStatus !== "Pending" && (
@@ -242,8 +277,8 @@ export default function OrderDetailPage() {
                       icon={Package}
                       title="Đơn hàng đang được đóng gói"
                       time={
-                        order.updatedDate
-                          ? dayjs(order.updatedDate).format("DD/MM/YYYY HH:mm")
+                        order.updatedAt
+                          ? dayjs(order.updatedAt).format("DD/MM/YYYY HH:mm")
                           : ""
                       }
                       completed={[
@@ -270,8 +305,8 @@ export default function OrderDetailPage() {
                       icon={CheckCircle2}
                       title="Giao hàng thành công"
                       time={
-                        order.updatedDate
-                          ? dayjs(order.updatedDate).format("DD/MM/YYYY HH:mm")
+                        order.updatedAt
+                          ? dayjs(order.updatedAt).format("DD/MM/YYYY HH:mm")
                           : ""
                       }
                       completed
@@ -298,7 +333,7 @@ export default function OrderDetailPage() {
                   <div>
                     <div className="text-sm text-gray-500 mb-1">Người nhận</div>
                     <div className="font-medium text-gray-800">
-                      {order.customer?.user?.fullName || "Khách hàng"}
+                      {order.customerName || "Khách hàng"}
                     </div>
                   </div>
 
@@ -307,7 +342,7 @@ export default function OrderDetailPage() {
                       Số điện thoại
                     </div>
                     <div className="font-medium text-gray-800">
-                      {order.customer?.user?.phoneNumber || "Chưa cập nhật"}
+                      {order.customerPhone || "Chưa cập nhật"}
                     </div>
                   </div>
 
@@ -316,11 +351,11 @@ export default function OrderDetailPage() {
                       Địa chỉ giao hàng
                     </div>
                     <div className="font-medium text-gray-800">
-                      {order.address}
+                      {order.shippingAddress}
                       <br />
-                      {order.ward}, {order.district}
+                      {order.shippingWard}, {order.shippingDistrict}
                       <br />
-                      {order.province}
+                      {order.shippingProvince}
                     </div>
                   </div>
 
