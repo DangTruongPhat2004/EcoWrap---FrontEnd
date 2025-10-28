@@ -162,7 +162,7 @@ const Login = () => {
         } else if (userRole === "Seller" || userRole === 3) {
           redirectTo = "/vendor";
         } else if (userRole === "User" || userRole === 2) {
-          redirectTo = "/customer";
+          redirectTo = "/"; // Customers go to homepage
         } else {
           redirectTo = "/"; // fallback
         }

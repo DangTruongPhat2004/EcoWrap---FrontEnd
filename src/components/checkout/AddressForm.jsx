@@ -34,18 +34,20 @@ export default function AddressForm({
 
   // Auto-fill user data on mount
   useEffect(() => {
+    let isMounted = true;
+
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) return;
+        if (!token || !isMounted) return;
 
         const userId = getUserIdFromJwt(token);
         if (!userId) return;
 
         const userData = await getUserById(userId);
 
-        // Only autofill if form is empty
-        if (!v.fullName && !userDataLoaded) {
+        // Only autofill if form is empty and component is still mounted
+        if (!v.fullName && !userDataLoaded && isMounted) {
           const autofillData = {
             fullName: userData.fullName || "",
             phone: userData.phoneNumber || "",
@@ -61,7 +63,11 @@ export default function AddressForm({
     };
 
     fetchUserData();
-  }, []); // Only run once on mount
+
+    return () => {
+      isMounted = false;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch provinces from Vietnam Province Open API
   useEffect(() => {
@@ -213,9 +219,10 @@ export default function AddressForm({
             </label>
             <Select
               placeholder="Chọn tỉnh/thành phố"
-              selectedKeys={v.province ? [v.province] : []}
+              selectedKeys={v.province ? new Set([v.province]) : new Set()}
               onSelectionChange={(keys) => {
-                const selectedProvinceName = Array.from(keys)[0];
+                const selectedKeys = Array.from(keys);
+                const selectedProvinceName = selectedKeys[0];
                 const province = provinces.find(
                   (p) => p.name === selectedProvinceName
                 );
@@ -224,7 +231,7 @@ export default function AddressForm({
                   selectedProvinceName,
                   province
                 );
-                set("province", selectedProvinceName);
+                set("province", selectedProvinceName || "");
                 set("provinceCode", province?.code || "");
                 // Reset dependent fields
                 set("district", "");
@@ -261,13 +268,14 @@ export default function AddressForm({
             </label>
             <Select
               placeholder="Chọn quận/huyện"
-              selectedKeys={v.district ? [v.district] : []}
+              selectedKeys={v.district ? new Set([v.district]) : new Set()}
               onSelectionChange={(keys) => {
-                const selectedDistrictName = Array.from(keys)[0];
+                const selectedKeys = Array.from(keys);
+                const selectedDistrictName = selectedKeys[0];
                 const district = districts.find(
                   (d) => d.name === selectedDistrictName
                 );
-                set("district", selectedDistrictName);
+                set("district", selectedDistrictName || "");
                 set("districtCode", district?.code || "");
                 set("ward", "");
                 set("wardCode", "");
@@ -307,11 +315,12 @@ export default function AddressForm({
             </label>
             <Select
               placeholder="Chọn phường/xã"
-              selectedKeys={v.ward ? [v.ward] : []}
+              selectedKeys={v.ward ? new Set([v.ward]) : new Set()}
               onSelectionChange={(keys) => {
-                const selectedWardName = Array.from(keys)[0];
+                const selectedKeys = Array.from(keys);
+                const selectedWardName = selectedKeys[0];
                 const ward = wards.find((w) => w.name === selectedWardName);
-                set("ward", selectedWardName);
+                set("ward", selectedWardName || "");
                 set("wardCode", ward?.code || "");
               }}
               onBlur={() => markTouched("ward")}
