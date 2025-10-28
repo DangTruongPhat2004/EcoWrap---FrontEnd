@@ -160,6 +160,8 @@ function App() {
         >
           <Route index element={<Profile />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:orderId" element={<OrderDetailPage />} />
           {/* Add other nested account routes here */}
         </Route>
         <Route

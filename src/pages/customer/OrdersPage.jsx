@@ -22,13 +22,18 @@ export default function OrdersPage() {
   const fetchOrders = React.useCallback(async () => {
     try {
       setLoading(true);
+      console.log("[OrdersPage] Fetching orders with filter:", statusFilter);
       const params = statusFilter !== "all" ? { status: statusFilter } : {};
       const response = await getMyOrders(params);
 
+      console.log("[OrdersPage] Response:", response);
+
       if (response.success) {
+        console.log("[OrdersPage] Orders fetched:", response.data?.length || 0);
         setOrders(response.data || []);
         setBackendNotImplemented(false);
       } else {
+        console.error("[OrdersPage] Failed:", response.message);
         // Check if it's a backend implementation issue
         if (response.message?.includes("chưa được backend triển khai")) {
           setBackendNotImplemented(true);

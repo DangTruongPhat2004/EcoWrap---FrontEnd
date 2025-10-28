@@ -125,6 +125,29 @@ export const getMyOrders = async (params = {}) => {
 };
 
 /**
+ * Admin: Get all orders in the system
+ * @param {Object} params - Query parameters
+ * @param {string} params.status - Filter by status (optional)
+ * @returns {Promise} List of all orders
+ */
+export const getAllOrdersAdmin = async (params = {}) => {
+  try {
+    const response = await apiClient.get("/api/order/all", { params });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 501 || error.response?.status === 404) {
+      console.error("Backend GetAllOrdersAdminAsync not implemented yet");
+      return {
+        success: false,
+        data: [],
+        message: "Chức năng lấy tất cả đơn hàng chưa được backend triển khai.",
+      };
+    }
+    throw error;
+  }
+};
+
+/**
  * Admin: Confirm packaging for an order
  * This moves order from "Pending" to "Packaging" status
  * @param {number} orderId - Order ID

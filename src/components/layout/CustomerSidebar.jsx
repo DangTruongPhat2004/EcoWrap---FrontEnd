@@ -18,19 +18,13 @@ const CustomerSidebar = () => {
       id: "profile",
       label: "Hồ Sơ",
       icon: User,
-      path: "/account",
-    },
-    {
-      id: "history",
-      label: "Lịch Sử Mua Hàng",
-      icon: History,
-      path: "/account/orders",
+      path: "/customer/profile",
     },
     {
       id: "orders",
-      label: "Đơn Hàng",
+      label: "Đơn Hàng Của Tôi",
       icon: ClipboardList,
-      path: "/account/orders",
+      path: "/customer/orders",
     },
   ];
 

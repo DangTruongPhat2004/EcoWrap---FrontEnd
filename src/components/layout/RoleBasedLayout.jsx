@@ -67,16 +67,14 @@ const RoleBasedLayout = () => {
       const currentPath = location.pathname;
 
       if (role === "Admin" && !currentPath.startsWith("/admin")) {
+        console.log("🔄 Redirecting Admin to /admin/dashboard");
         navigate("/admin/dashboard", { replace: true });
       } else if (role === "Seller" && !currentPath.startsWith("/vendor")) {
+        console.log("🔄 Redirecting Seller to /vendor/dashboard");
         navigate("/vendor/dashboard", { replace: true });
-      } else if (
-        role === "User" &&
-        !currentPath.startsWith("/customer") &&
-        !currentPath.startsWith("/account")
-      ) {
-        navigate("/", { replace: true }); // Customers go to homepage
       }
+      // Remove automatic redirect for User/Customer - let them access customer routes
+      // Customers can navigate freely between /customer/* and /account/*
     } else {
       // Fallback to localStorage user
       const user = JSON.parse(localStorage.getItem("user") || "{}");
