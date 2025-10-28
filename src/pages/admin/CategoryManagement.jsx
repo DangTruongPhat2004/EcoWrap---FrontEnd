@@ -70,6 +70,34 @@ const CategoryManagement = () => {
       return;
     }
 
+    // Validation: Check for duplicate ID or Name
+    const duplicateId = categories.find(
+      (cat) =>
+        cat.categoryId === formData.categoryId &&
+        (!selectedCategory || cat.categoryId !== selectedCategory.categoryId)
+    );
+
+    const duplicateName = categories.find(
+      (cat) =>
+        cat.categoryName.toLowerCase() ===
+          formData.categoryName.toLowerCase() &&
+        (!selectedCategory || cat.categoryId !== selectedCategory.categoryId)
+    );
+
+    if (duplicateId) {
+      toast.error(
+        `ID ${formData.categoryId} đã tồn tại. Vui lòng chọn ID khác.`
+      );
+      return;
+    }
+
+    if (duplicateName) {
+      toast.error(
+        `Tên danh mục "${formData.categoryName}" đã tồn tại. Vui lòng chọn tên khác.`
+      );
+      return;
+    }
+
     try {
       setIsSaving(true);
       if (selectedCategory) {

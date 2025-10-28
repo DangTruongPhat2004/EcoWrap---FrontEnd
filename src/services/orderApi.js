@@ -84,14 +84,7 @@ export const getOrderById = async (orderId) => {
 
     return response.data;
   } catch (error) {
-    if (error.response?.status === 501) {
-      console.error("Backend GetOrderByIdAsync not implemented yet");
-      return {
-        success: false,
-        message:
-          "Chức năng xem chi tiết đơn hàng chưa được backend triển khai.",
-      };
-    }
+    console.error("Error fetching order by ID:", error);
     throw error;
   }
 };
