@@ -17,12 +17,24 @@ export default function PaymentReturnPage() {
     // PayOS typically returns with these parameters:
     // - code: Payment status code
     // - id: Transaction ID
-    // - orderCode: Your order code
+    // - orderCode: Your order code (format: {orderId}{MMddHHmmss} - e.g., 1231028151030)
     // - cancel: true if payment was cancelled
 
     const code = searchParams.get("code");
     const cancel = searchParams.get("cancel");
-    const orderId = searchParams.get("orderCode"); // This might be your order ID
+    const orderCodeFromPayOS = searchParams.get("orderCode"); // Full orderCode with timestamp
+
+    // Extract orderId from orderCode (remove last 10 digits timestamp: MMddHHmmss)
+    let orderId = null;
+    if (orderCodeFromPayOS) {
+      const orderCodeStr = orderCodeFromPayOS.toString();
+      if (orderCodeStr.length > 10) {
+        // Extract orderId by removing timestamp suffix
+        orderId = orderCodeStr.slice(0, -10);
+      } else {
+        orderId = orderCodeStr; // Fallback if format is different
+      }
+    }
 
     // Determine payment status based on PayOS response
     if (cancel === "true") {
@@ -41,6 +53,14 @@ export default function PaymentReturnPage() {
     if (orderId) {
       sessionStorage.setItem("lastOrderId", orderId);
     }
+
+    // Log for debugging
+    console.log("PayOS Return:", {
+      code,
+      cancel,
+      orderCodeFromPayOS,
+      extractedOrderId: orderId,
+    });
   }, [searchParams]);
 
   const handleViewOrder = () => {
