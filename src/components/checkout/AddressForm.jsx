@@ -22,6 +22,7 @@ export default function AddressForm({
 }) {
   const v = value || {};
   const set = (k, val) => onChange?.({ ...v, [k]: val });
+  const setMany = (updates) => onChange?.({ ...v, ...updates });
 
   const [touched, setTouched] = useState({});
   const [provinces, setProvinces] = useState([]);
@@ -231,13 +232,15 @@ export default function AddressForm({
                   selectedProvinceName,
                   province
                 );
-                set("province", selectedProvinceName || "");
-                set("provinceCode", province?.code || "");
-                // Reset dependent fields
-                set("district", "");
-                set("districtCode", "");
-                set("ward", "");
-                set("wardCode", "");
+                // Single atomic update to avoid stale merges
+                setMany({
+                  province: selectedProvinceName || "",
+                  provinceCode: province?.code || "",
+                  district: "",
+                  districtCode: "",
+                  ward: "",
+                  wardCode: "",
+                });
               }}
               onBlur={() => markTouched("province")}
               isInvalid={!!showErr("province")}
@@ -275,10 +278,13 @@ export default function AddressForm({
                 const district = districts.find(
                   (d) => d.name === selectedDistrictName
                 );
-                set("district", selectedDistrictName || "");
-                set("districtCode", district?.code || "");
-                set("ward", "");
-                set("wardCode", "");
+                // Single atomic update to avoid stale merges
+                setMany({
+                  district: selectedDistrictName || "",
+                  districtCode: district?.code || "",
+                  ward: "",
+                  wardCode: "",
+                });
               }}
               onBlur={() => markTouched("district")}
               isInvalid={!!showErr("district")}
@@ -320,8 +326,11 @@ export default function AddressForm({
                 const selectedKeys = Array.from(keys);
                 const selectedWardName = selectedKeys[0];
                 const ward = wards.find((w) => w.name === selectedWardName);
-                set("ward", selectedWardName || "");
-                set("wardCode", ward?.code || "");
+                // Single atomic update to avoid stale merges
+                setMany({
+                  ward: selectedWardName || "",
+                  wardCode: ward?.code || "",
+                });
               }}
               onBlur={() => markTouched("ward")}
               isInvalid={!!showErr("ward")}
