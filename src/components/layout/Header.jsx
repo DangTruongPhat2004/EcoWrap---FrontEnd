@@ -297,6 +297,15 @@ function Header() {
         </NavbarItem>
         <NavbarItem>
           <NextUILink
+            href="/thiet-ke/new"
+            color="foreground"
+            className="text-black text-[16px] font-normal hover:text-green-600 transition-colors"
+          >
+            Thiết kế
+          </NextUILink>
+        </NavbarItem>
+        <NavbarItem>
+          <NextUILink
             href="/collections"
             color="foreground"
             className="text-black text-[16px] font-normal hover:text-green-600 transition-colors"

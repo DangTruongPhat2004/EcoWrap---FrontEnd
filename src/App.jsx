@@ -56,6 +56,7 @@ import ChatPage from "./pages/ChatPage";
 import MessagesLayout from "./pages/MessagesLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StorePage from "./pages/StorePage";
+import CustomizePage from "./pages/customer/CustomizePage";
 
 // This component now acts as the main layout wrapper.
 // It uses the location to decide which layout to render.
@@ -131,6 +132,24 @@ function AppRoutes() {
       <Route path="/unauthorized" element={<Unauthorized />} />
       <Route path="/test" element={<MinimalDebugTest />} />
       <Route path="/testpage" element={<Pagetest />} />
+
+      {/* Customize/Design Routes */}
+      <Route
+        path="/thiet-ke"
+        element={
+          <ProtectedRoute>
+            <CustomizePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/thiet-ke/:id"
+        element={
+          <ProtectedRoute>
+            <CustomizePage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Old chat routes (if still needed) */}
       <Route path="/conversations" element={<ConversationsPage />} />
