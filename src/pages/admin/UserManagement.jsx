@@ -36,7 +36,13 @@ const UserManagement = () => {
     setLoading(true);
     try {
       const data = await getAllUsers();
-      setUsers(data);
+      // Normalize to array in case API returns { data: [...] } or other shapes
+      const normalized = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+        ? data.data
+        : [];
+      setUsers(normalized);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Không thể tải danh sách người dùng");
@@ -131,7 +137,9 @@ const UserManagement = () => {
     }
   };
 
-  const filteredUsers = users.filter((user) => {
+  const usersArray = Array.isArray(users) ? users : [];
+
+  const filteredUsers = usersArray.filter((user) => {
     const matchesSearch =
       user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,14 +156,14 @@ const UserManagement = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const totalUsers = users.length;
-  const totalSellers = users.filter((u) => u.roleId === 2).length;
-  const totalBuyers = users.filter((u) => u.roleId === 3).length;
-  const verifiedUsers = users.filter((u) => u.isVerified).length;
+  const totalUsers = usersArray.length;
+  const totalSellers = usersArray.filter((u) => u.roleId === 2).length;
+  const totalBuyers = usersArray.filter((u) => u.roleId === 3).length;
+  const verifiedUsers = usersArray.filter((u) => u.isVerified).length;
 
   const roleCounts = {
     all: totalUsers,
-    1: users.filter((u) => u.roleId === 1).length,
+    1: usersArray.filter((u) => u.roleId === 1).length,
     2: totalSellers,
     3: totalBuyers,
   };

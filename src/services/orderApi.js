@@ -126,7 +126,7 @@ export const getMyOrders = async (params = {}) => {
  */
 export const getOrderByIdAdmin = async (orderId) => {
   try {
-    const response = await apiClient.get(`/api/order/admin/${orderId}`);
+    const response = await apiClient.get(`/api/Order/${orderId}`);
 
     // Backend returns: { success, message, data: AdminOrderDetailResponse }
     if (response.data.success && response.data.data) {
@@ -204,7 +204,7 @@ export const getOrderByIdAdmin = async (orderId) => {
  */
 export const getAllOrdersAdmin = async (params = {}) => {
   try {
-    const response = await apiClient.get("/api/order/all", { params });
+    const response = await apiClient.get("/api/Order/all", { params });
     return response.data;
   } catch (error) {
     if (error.response?.status === 501 || error.response?.status === 404) {
