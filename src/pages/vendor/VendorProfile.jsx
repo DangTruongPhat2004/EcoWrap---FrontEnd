@@ -9,8 +9,14 @@ import {
   Camera,
   MapPin,
   QrCode,
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { getMySellerInfo, updateSeller } from "../../services/sellerApi";
+import { changePassword } from "../../services/userApi";
+import toast from "react-hot-toast";
 
 const VendorProfile = () => {
   const [formData, setFormData] = useState({
@@ -34,6 +40,18 @@ const VendorProfile = () => {
   const [companyImageFile, setCompanyImageFile] = useState(null);
   const [bannerPreview, setBannerPreview] = useState(null);
   const [bannerFile, setBannerFile] = useState(null);
+
+  // Password change state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   // Fetch seller info on mount
   useEffect(() => {
@@ -156,6 +174,53 @@ const VendorProfile = () => {
     setCompanyImageFile(null);
     setBannerFile(null);
     setIsEditing(false);
+  };
+
+  const handlePasswordInput = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleChangePassword = async () => {
+    if (
+      !passwordForm.oldPassword ||
+      !passwordForm.newPassword ||
+      !passwordForm.confirmPassword
+    ) {
+      toast.error("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      toast.error("Mật khẩu mới không khớp");
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      return;
+    }
+    try {
+      setIsChangingPassword(true);
+      const res = await changePassword(
+        passwordForm.oldPassword,
+        passwordForm.newPassword
+      );
+      if (res?.success) {
+        toast.success("Đổi mật khẩu thành công");
+        setShowPasswordModal(false);
+        setPasswordForm({
+          oldPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        toast.error(res?.message || "Không thể đổi mật khẩu");
+      }
+    } catch (e) {
+      toast.error("Có lỗi khi đổi mật khẩu");
+      console.error(e);
+    } finally {
+      setIsChangingPassword(false);
+    }
   };
 
   if (loading && !formData.companyName) {
@@ -328,6 +393,26 @@ const VendorProfile = () => {
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Account Security - Change password */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Key className="w-5 h-5 mr-2 text-emerald-600" />
+                  Bảo mật tài khoản
+                </h2>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Quản lý mật khẩu đăng nhập của bạn
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowPasswordModal(true)}
+                className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center gap-2"
+              >
+                <Lock className="w-4 h-4" /> Đổi mật khẩu
+              </button>
             </div>
           </div>
 
@@ -503,6 +588,136 @@ const VendorProfile = () => {
           </div>
         </div>
       </div>
+
+      {/* Change Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 backdrop-blur-md flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <Lock className="w-5 h-5 mr-2 text-emerald-600" /> Đặt Lại Mật
+                Khẩu
+              </h3>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mật khẩu cũ*
+                </label>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? "text" : "password"}
+                    name="oldPassword"
+                    value={passwordForm.oldPassword}
+                    onChange={handlePasswordInput}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Nhập mật khẩu hiện tại"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showOldPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Mật khẩu mới*
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    name="newPassword"
+                    value={passwordForm.newPassword}
+                    onChange={handlePasswordInput}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Nhập mật khẩu mới"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Xác nhận mật khẩu mới*
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={passwordForm.confirmPassword}
+                    onChange={handlePasswordInput}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    placeholder="Nhập lại mật khẩu mới"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                disabled={isChangingPassword}
+                className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                <X className="w-4 h-4" /> Hủy
+              </button>
+              <button
+                onClick={handleChangePassword}
+                disabled={isChangingPassword}
+                className="px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isChangingPassword ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Đang xử lý...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Đặt Lại Mật Khẩu</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

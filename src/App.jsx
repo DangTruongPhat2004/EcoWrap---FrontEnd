@@ -190,6 +190,7 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="settings" element={<Profile />} />
           <Route path="approvals" element={<VendorApprovals />} />
           <Route path="approvals/:id" element={<VendorApprovalDetail />} />
           <Route path="users" element={<UserManagement />} />

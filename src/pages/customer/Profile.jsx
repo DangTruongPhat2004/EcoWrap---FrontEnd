@@ -14,6 +14,7 @@ import {
   Lock,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
+import { getUserIdFromToken } from "../../utils/jwt";
 import {
   getUserById,
   updateUser,
@@ -45,40 +46,66 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
-  // Fetch user data from API
+  // Hydrate from localStorage immediately, then fetch fresh data by ID
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.userId) {
-        toast.error("Không tìm thấy thông tin người dùng");
-        setLoading(false);
-        return;
+    // 1) Prefill from localStorage for instant UI across all roles
+    try {
+      const raw = localStorage.getItem("user");
+      if (raw) {
+        const u = JSON.parse(raw);
+        const localData = {
+          username: u?.userName || u?.username || "",
+          fullName: u?.fullName || "",
+          phone: u?.phoneNumber || u?.phone || "",
+          email: u?.email || "",
+        };
+        setFormData(localData);
+        setOriginalData(localData);
       }
+    } catch {}
 
+    // 2) Resolve userId from store, localStorage, or token then fetch
+    const resolveAndFetch = async () => {
       try {
         setLoading(true);
-        const response = await getUserById(user.userId);
+        let userId = user?.userId;
+        if (!userId) {
+          const raw = localStorage.getItem("user");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            userId = parsed?.userId;
+          }
+        }
+        if (!userId) {
+          const token = localStorage.getItem("token");
+          userId = getUserIdFromToken(token);
+        }
 
-        if (response.success && response.data) {
+        if (!userId) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await getUserById(userId);
+        const r = response?.data ?? response; // accept plain object or {data}
+        if (r) {
           const userData = {
-            username: response.data.userName || "",
-            fullName: response.data.fullName || "",
-            phone: response.data.phoneNumber || "",
-            email: response.data.email || "",
+            username: r.userName || r.username || "",
+            fullName: r.fullName || "",
+            phone: r.phoneNumber || r.phone || "",
+            email: r.email || "",
           };
           setFormData(userData);
           setOriginalData(userData);
-        } else {
-          toast.error(response.message || "Không thể tải thông tin người dùng");
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        toast.error("Đã xảy ra lỗi khi tải thông tin người dùng");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    resolveAndFetch();
   }, [user]);
 
   const handleInputChange = (e) => {
