@@ -13,7 +13,7 @@ export const getAllSellers = async () => {
 
 // Get seller by ID (Admin only)
 export const getSellerById = async (id) => {
-  const response = await apiClient.get(`/api/seller/${id}`);
+  const response = await apiClient.get(`/api/Seller/${id}`);
   return response.data;
 };
 

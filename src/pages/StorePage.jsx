@@ -32,8 +32,13 @@ export default function StorePage() {
 
       // Fetch seller info
       const sellerResponse = await getSellerById(sellerId);
-      if (sellerResponse.success && sellerResponse.data) {
-        setSeller(sellerResponse.data);
+      // Accept both shapes: { success, data } or plain object
+      if (sellerResponse) {
+        const sellerData =
+          sellerResponse && typeof sellerResponse === "object"
+            ? sellerResponse.data ?? sellerResponse
+            : null;
+        if (sellerData) setSeller(sellerData);
       }
 
       // Fetch seller products
