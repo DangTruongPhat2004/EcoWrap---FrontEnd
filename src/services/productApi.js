@@ -27,6 +27,8 @@ const transformProduct = (product) => {
           id: product.seller.sellerId,
           companyName: product.seller.companyName,
           address: product.seller.address,
+          companyImage: product.seller.companyImage || null,
+          companyBanner: product.seller.companyBanner || null,
           // Use product count from seller's products array if available
           productCount: product.seller.products?.length || 0,
           // For now, we'll need to calculate ratings per-seller by fetching all products

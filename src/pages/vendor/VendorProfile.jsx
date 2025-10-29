@@ -21,6 +21,8 @@ const VendorProfile = () => {
     accountHolderName: "",
     bankBranch: "",
     qrCodeImage: null,
+    companyImage: null,
+    companyBanner: null,
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -28,6 +30,10 @@ const VendorProfile = () => {
   const [error, setError] = useState(null);
   const [qrPreview, setQrPreview] = useState(null);
   const [qrFile, setQrFile] = useState(null);
+  const [companyImagePreview, setCompanyImagePreview] = useState(null);
+  const [companyImageFile, setCompanyImageFile] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
+  const [bannerFile, setBannerFile] = useState(null);
 
   // Fetch seller info on mount
   useEffect(() => {
@@ -49,8 +55,12 @@ const VendorProfile = () => {
         accountHolderName: sellerData.accountHolderName || "",
         bankBranch: sellerData.bankBranch || "",
         qrCodeImage: sellerData.qrcodeImage || null,
+        companyImage: sellerData.companyImage || null,
+        companyBanner: sellerData.companyBanner || null,
       });
       setQrPreview(sellerData.qrcodeImage);
+      setCompanyImagePreview(sellerData.companyImage || null);
+      setBannerPreview(sellerData.companyBanner || null);
     } catch (err) {
       console.error("Error fetching seller info:", err);
       setError("Không thể tải thông tin người bán");
@@ -79,6 +89,26 @@ const VendorProfile = () => {
     }
   };
 
+  const handleCompanyImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setCompanyImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setCompanyImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setBannerFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => setBannerPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -95,6 +125,14 @@ const VendorProfile = () => {
       // Add QR code image if changed
       if (qrFile) {
         formDataToSend.append("QRCodeImage", qrFile);
+      }
+
+      // Add company avatar and banner if changed
+      if (companyImageFile) {
+        formDataToSend.append("CompanyImage", companyImageFile);
+      }
+      if (bannerFile) {
+        formDataToSend.append("CompanyBanner", bannerFile);
       }
 
       await updateSeller(formDataToSend);
@@ -115,6 +153,8 @@ const VendorProfile = () => {
   const handleCancel = () => {
     fetchSellerInfo(); // Reset to original data
     setQrFile(null);
+    setCompanyImageFile(null);
+    setBannerFile(null);
     setIsEditing(false);
   };
 
@@ -179,6 +219,43 @@ const VendorProfile = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Banner uploader */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ảnh Banner cửa hàng
+                </label>
+                <div className="w-full h-40 md:h-56 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center">
+                  {bannerPreview ? (
+                    <img
+                      src={bannerPreview}
+                      alt="Banner"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="text-center text-gray-400 text-sm">
+                      Chưa có banner
+                    </div>
+                  )}
+                </div>
+                {isEditing && (
+                  <div className="mt-2">
+                    <input
+                      type="file"
+                      id="bannerUpload"
+                      accept="image/*"
+                      onChange={handleBannerChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="bannerUpload"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer text-sm"
+                    >
+                      <Camera className="w-4 h-4" /> Tải banner
+                    </label>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Tên Công Ty*
@@ -215,6 +292,41 @@ const VendorProfile = () => {
                   }`}
                   placeholder="Nhập địa chỉ công ty"
                 />
+              </div>
+
+              {/* Company avatar uploader */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Ảnh đại diện công ty
+                </label>
+                <div className="w-32 h-32 rounded-lg bg-gray-50 border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center">
+                  {companyImagePreview ? (
+                    <img
+                      src={companyImagePreview}
+                      alt="Company"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-gray-400" />
+                  )}
+                </div>
+                {isEditing && (
+                  <div className="mt-2">
+                    <input
+                      type="file"
+                      id="companyImageUpload"
+                      accept="image/*"
+                      onChange={handleCompanyImageChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="companyImageUpload"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 cursor-pointer text-sm"
+                    >
+                      <Camera className="w-4 h-4" /> Tải ảnh đại diện
+                    </label>
+                  </div>
+                )}
               </div>
             </div>
           </div>

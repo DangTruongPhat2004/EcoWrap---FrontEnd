@@ -781,9 +781,13 @@ const ProductDetail = () => {
               className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: "#F5F1EA" }}
             >
-              {product.seller?.user?.profilePicture ? (
+              {product.seller?.companyImage ||
+              product.seller?.user?.profilePicture ? (
                 <img
-                  src={product.seller.user.profilePicture}
+                  src={
+                    product.seller?.companyImage ||
+                    product.seller.user.profilePicture
+                  }
                   alt={
                     product.seller.companyName || product.seller.user.fullName
                   }
