@@ -55,6 +55,7 @@ import ConversationsPage from "./pages/ConversationsPage";
 import ChatPage from "./pages/ChatPage";
 import MessagesLayout from "./pages/MessagesLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import StorePage from "./pages/StorePage";
 
 // This component now acts as the main layout wrapper.
 // It uses the location to decide which layout to render.
@@ -114,6 +115,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:id" element={<ProductDetail />} />
+      <Route path="/store/:sellerId" element={<StorePage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/bank-transfer" element={<BankTransferPage />} />

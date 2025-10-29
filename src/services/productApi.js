@@ -149,6 +149,38 @@ export const getMyProducts = async () => {
 };
 
 /**
+ * Get products by seller ID
+ * @param {string|number} sellerId - The seller ID
+ * @returns {Promise} Object with success flag and data
+ */
+export const getProductsBySeller = async (sellerId) => {
+  try {
+    // Get all products and filter by seller
+    const response = await apiClient.get("/api/Product");
+    const allProducts = response.data;
+
+    if (!Array.isArray(allProducts)) {
+      return { success: true, data: [] };
+    }
+
+    // Filter products by seller ID
+    const sellerProducts = allProducts.filter(
+      (product) =>
+        product.sellerId === parseInt(sellerId) ||
+        product.seller?.sellerId === parseInt(sellerId)
+    );
+
+    return {
+      success: true,
+      data: sellerProducts.map(transformProduct),
+    };
+  } catch (error) {
+    console.error("Error fetching products by seller:", error);
+    return { success: false, data: [], error: error.message };
+  }
+};
+
+/**
  * Create a new product (Seller only)
  * @param {FormData} formData - The form data containing product info
  * @returns {Promise} Response from the API

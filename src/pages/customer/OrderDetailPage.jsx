@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Card, CardBody, Button, Chip } from "@nextui-org/react";
+import { Card, CardBody, Button, Chip, Avatar } from "@nextui-org/react";
 import {
   Package,
   Truck,
@@ -9,6 +9,8 @@ import {
   MapPin,
   CreditCard,
   ArrowLeft,
+  Store,
+  MessageCircle,
 } from "lucide-react";
 import {
   getOrderById,
@@ -20,6 +22,29 @@ import { createPaymentLink } from "../../services/paymentApi";
 import { fmtVND } from "../../utils/money";
 import toast from "react-hot-toast";
 import dayjs from "dayjs";
+
+// Helper function to group items by seller
+function groupItemsBySeller(items) {
+  if (!items || items.length === 0) return [];
+
+  const grouped = items.reduce((acc, item) => {
+    const sellerId = item.sellerId || "unknown";
+    const sellerName = item.sellerName || "Nhà bán hàng";
+
+    if (!acc[sellerId]) {
+      acc[sellerId] = {
+        sellerId,
+        sellerName,
+        items: [],
+      };
+    }
+
+    acc[sellerId].items.push(item);
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+}
 
 export default function OrderDetailPage() {
   const navigate = useNavigate();
@@ -178,77 +203,144 @@ export default function OrderDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Order Items */}
-            <Card className="border border-gray-200">
-              <CardBody className="p-6">
-                <div className="flex items-center gap-3 pb-4 border-b border-gray-200">
-                  <Package size={20} className="text-emerald-600" />
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Chi tiết sản phẩm
-                  </h2>
-                </div>
-
-                <div className="mt-6 space-y-4">
-                  {order.items?.map((item, index) => (
-                    <div
-                      key={item.id || index}
-                      className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-0"
-                    >
-                      {item.thumb && (
-                        <img
-                          src={item.thumb}
-                          alt={item.name}
-                          className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+            {/* Group items by seller */}
+            {groupItemsBySeller(order.items).map((sellerGroup, idx) => (
+              <Card key={idx} className="border border-gray-200">
+                <CardBody className="p-0">
+                  {/* Seller Header */}
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      {/* Clickable Seller Avatar */}
+                      <button
+                        onClick={() =>
+                          sellerGroup.sellerId &&
+                          navigate(`/store/${sellerGroup.sellerId}`)
+                        }
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <Avatar
+                          size="sm"
+                          name={sellerGroup.sellerName || "S"}
+                          classNames={{
+                            base: "bg-emerald-100",
+                            name: "text-emerald-700 font-semibold",
+                          }}
                         />
-                      )}
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-800 mb-1">
-                          {item.name || "Sản phẩm"}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          {item.desc || ""}
-                        </p>
-                        <div className="text-sm text-gray-600 mt-1">
-                          Số lượng: {item.qty}
-                        </div>
-                        {item.designFile && (
-                          <div className="text-xs text-emerald-600 mt-1">
-                            ✓ Có thiết kế tùy chỉnh
+                      </button>
+
+                      {/* Clickable Seller Name */}
+                      <button
+                        onClick={() =>
+                          sellerGroup.sellerId &&
+                          navigate(`/store/${sellerGroup.sellerId}`)
+                        }
+                        className="font-semibold text-gray-800 hover:text-emerald-600 hover:underline cursor-pointer transition-colors"
+                      >
+                        {sellerGroup.sellerName || "Nhà bán hàng"}
+                      </button>
+
+                      <Button
+                        size="sm"
+                        variant="bordered"
+                        startContent={<MessageCircle size={14} />}
+                        className="text-xs"
+                      >
+                        Chat
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Products */}
+                  <div className="p-6 space-y-4">
+                    {sellerGroup.items.map((item, index) => (
+                      <div
+                        key={item.id || index}
+                        className="flex gap-4 pb-4 border-b border-gray-100 last:border-0"
+                      >
+                        {/* Product Image */}
+                        {item.thumb && (
+                          <div className="flex-shrink-0">
+                            <img
+                              src={item.thumb}
+                              alt={item.name}
+                              className="w-24 h-24 object-cover rounded-lg border border-gray-200"
+                            />
                           </div>
                         )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm text-gray-500 mb-1">
-                          Đơn giá
-                        </div>
-                        <div className="font-medium text-gray-800">
-                          {fmtVND(item.price)}
-                        </div>
-                        <div className="text-sm text-emerald-600 font-semibold mt-1">
-                          {fmtVND(item.price * item.qty)}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
 
-                {/* Order Summary */}
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Tạm tính ({order.totalAmount} sản phẩm):</span>
-                      <span>{fmtVND(order.totalPrice)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                      <span>Phí vận chuyển:</span>
-                      <span>Đang tính toán</span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold text-gray-800 pt-3 border-t border-gray-200">
-                      <span>Tổng cộng:</span>
-                      <span className="text-emerald-600">
-                        {fmtVND(order.totalPrice)}
+                        {/* Product Info */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-800 mb-1 line-clamp-2">
+                            {item.name || "Sản phẩm"}
+                          </h3>
+                          {item.desc && (
+                            <p className="text-sm text-gray-500 mb-2">
+                              {item.desc}
+                            </p>
+                          )}
+                          {item.designFile && (
+                            <div className="text-xs text-emerald-600 mb-2">
+                              ✓ Có thiết kế tùy chỉnh
+                            </div>
+                          )}
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="text-gray-600">x{item.qty}</span>
+                          </div>
+                        </div>
+
+                        {/* Price */}
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-sm text-gray-400 line-through mb-1">
+                            {/* Could show original price here if available */}
+                          </div>
+                          <div className="text-gray-800 font-medium mb-1">
+                            {fmtVND(item.price)}
+                          </div>
+                          <div className="text-emerald-600 font-semibold">
+                            {fmtVND(item.price * item.qty)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Seller Total */}
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className="flex justify-end items-center gap-4">
+                      <span className="text-gray-600">
+                        Tổng ({sellerGroup.items.length} sản phẩm):
+                      </span>
+                      <span className="text-xl font-bold text-emerald-600">
+                        {fmtVND(
+                          sellerGroup.items.reduce(
+                            (sum, item) => sum + item.price * item.qty,
+                            0
+                          )
+                        )}
                       </span>
                     </div>
+                  </div>
+                </CardBody>
+              </Card>
+            ))}
+
+            {/* Order Summary */}
+            <Card className="border border-gray-200">
+              <CardBody className="p-6">
+                <div className="space-y-3">
+                  <div className="flex justify-between text-gray-600">
+                    <span>Tạm tính ({order.totalAmount} sản phẩm):</span>
+                    <span>{fmtVND(order.totalPrice)}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-600">
+                    <span>Phí vận chuyển:</span>
+                    <span className="text-emerald-600">Miễn phí</span>
+                  </div>
+                  <div className="flex justify-between text-xl font-bold text-gray-800 pt-3 border-t-2 border-gray-200">
+                    <span>Tổng cộng:</span>
+                    <span className="text-emerald-600">
+                      {fmtVND(order.totalPrice)}
+                    </span>
                   </div>
                 </div>
               </CardBody>

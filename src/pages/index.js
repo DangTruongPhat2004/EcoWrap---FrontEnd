@@ -6,6 +6,7 @@ export { default as Unauthorized } from "./Unauthorized";
 export { default as Register } from "./Register";
 export { default as Products } from "./Products";
 export { default as ProductDetail } from "./ProductDetail";
+export { default as StorePage } from "./StorePage";
 export { default as VendorDashboard } from "./vendor/VendorDashboard";
 export { default as Profile } from "./customer/Profile";
 export { default as OrdersPage } from "./customer/OrdersPage";

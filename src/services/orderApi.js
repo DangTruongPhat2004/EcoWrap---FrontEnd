@@ -72,6 +72,8 @@ export const getOrderById = async (orderId) => {
             qty: item.quantity,
             price: item.pricePerItem,
             designFile: item.designFile,
+            sellerId: item.sellerId,
+            sellerName: item.sellerName,
           })) || [],
       };
 
@@ -113,6 +115,83 @@ export const getMyOrders = async (params = {}) => {
           "Chức năng lấy danh sách đơn hàng chưa được backend triển khai. Backend cần implement GetAllOrderAsync trong OrderService.",
       };
     }
+    throw error;
+  }
+};
+
+/**
+ * Admin: Get order by ID with seller bank details
+ * @param {number} orderId - Order ID to fetch
+ * @returns {Promise} Order details with seller payment information
+ */
+export const getOrderByIdAdmin = async (orderId) => {
+  try {
+    const response = await apiClient.get(`/api/order/admin/${orderId}`);
+
+    // Backend returns: { success, message, data: AdminOrderDetailResponse }
+    if (response.data.success && response.data.data) {
+      const backendData = response.data.data;
+
+      // Transform backend structure to frontend structure
+      const transformedData = {
+        orderId: backendData.orderId,
+        code: backendData.orderId?.toString(),
+        orderStatus: backendData.orderStatus,
+        createdAt: backendData.createdDate,
+        updatedAt: backendData.updatedDate,
+        totalPrice: backendData.totalPrice,
+        totalAmount: backendData.totalAmount,
+
+        // Customer info
+        customerId: backendData.customerId,
+        customerName: backendData.customerName,
+        customerEmail: backendData.customerEmail,
+        customerPhone: backendData.customerPhone,
+
+        // Shipping address
+        shippingAddress: backendData.shippingAddress,
+        shippingWard: backendData.shippingWard,
+        shippingDistrict: backendData.shippingDistrict,
+        shippingProvince: backendData.shippingProvince,
+        shippingHamlet: backendData.shippingHamlet,
+
+        // Shipping info
+        transportUnit: backendData.transportUnit,
+        shippingCode: backendData.shippingCode,
+
+        // Transform items with seller bank info
+        items:
+          backendData.items?.map((item) => ({
+            id: item.cartItemId,
+            productId: item.productId,
+            name: item.productName,
+            thumb: item.productImageUrl,
+            desc: item.designFile ? "Có thiết kế tùy chỉnh" : "",
+            qty: item.quantity,
+            price: item.pricePerItem,
+            designFile: item.designFile,
+            sellerId: item.sellerId,
+            sellerName: item.sellerCompanyName,
+            bankAccountNumber: item.sellerBankAccountNumber,
+            bankName: item.sellerBankName,
+            accountHolderName: item.sellerAccountHolderName,
+            bankBranch: item.sellerBankBranch,
+            qrcodeImage: item.sellerQRCodeImage,
+            sellerEmail: item.sellerUserEmail,
+            sellerPhone: item.sellerUserPhone,
+          })) || [],
+      };
+
+      return {
+        success: true,
+        message: response.data.message,
+        data: transformedData,
+      };
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching admin order by ID:", error);
     throw error;
   }
 };
