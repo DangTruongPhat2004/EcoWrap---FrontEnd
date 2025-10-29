@@ -73,17 +73,3 @@ export async function changePassword(oldPassword, newPassword) {
     throw error;
   }
 }
-
-/**
- * GET /api/Users/profile
- * Get current user's profile
- */
-export async function getMyProfile() {
-  try {
-    const response = await api.get("api/Users/profile");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
-    throw error;
-  }
-}

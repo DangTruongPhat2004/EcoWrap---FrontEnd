@@ -155,17 +155,24 @@ export const getMyProducts = async () => {
  */
 export const getProductsBySeller = async (sellerId) => {
   try {
-    // Use the dedicated backend endpoint for getting products by seller
-    const response = await apiClient.get(`/api/Product/seller/${sellerId}`);
-    const products = response.data;
+    // Get all products and filter by seller
+    const response = await apiClient.get("/api/Product");
+    const allProducts = response.data;
 
-    if (!Array.isArray(products)) {
+    if (!Array.isArray(allProducts)) {
       return { success: true, data: [] };
     }
 
+    // Filter products by seller ID
+    const sellerProducts = allProducts.filter(
+      (product) =>
+        product.sellerId === parseInt(sellerId) ||
+        product.seller?.sellerId === parseInt(sellerId)
+    );
+
     return {
       success: true,
-      data: products.map(transformProduct),
+      data: sellerProducts.map(transformProduct),
     };
   } catch (error) {
     console.error("Error fetching products by seller:", error);

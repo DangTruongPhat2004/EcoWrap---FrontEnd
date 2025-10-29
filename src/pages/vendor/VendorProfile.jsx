@@ -21,8 +21,6 @@ const VendorProfile = () => {
     accountHolderName: "",
     bankBranch: "",
     qrCodeImage: null,
-    companyImage: null,
-    companyBanner: null,
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -30,10 +28,6 @@ const VendorProfile = () => {
   const [error, setError] = useState(null);
   const [qrPreview, setQrPreview] = useState(null);
   const [qrFile, setQrFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
-  const [bannerPreview, setBannerPreview] = useState(null);
-  const [bannerFile, setBannerFile] = useState(null);
 
   // Fetch seller info on mount
   useEffect(() => {
@@ -55,12 +49,8 @@ const VendorProfile = () => {
         accountHolderName: sellerData.accountHolderName || "",
         bankBranch: sellerData.bankBranch || "",
         qrCodeImage: sellerData.qrcodeImage || null,
-        companyImage: sellerData.companyImage || null,
-        companyBanner: sellerData.companyBanner || null,
       });
       setQrPreview(sellerData.qrcodeImage);
-      setImagePreview(sellerData.companyImage);
-      setBannerPreview(sellerData.companyBanner);
     } catch (err) {
       console.error("Error fetching seller info:", err);
       setError("Không thể tải thông tin người bán");
@@ -89,30 +79,6 @@ const VendorProfile = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBannerChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setBannerFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBannerPreview(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -129,16 +95,6 @@ const VendorProfile = () => {
       // Add QR code image if changed
       if (qrFile) {
         formDataToSend.append("QRCodeImage", qrFile);
-      }
-
-      // Add company image if changed
-      if (imageFile) {
-        formDataToSend.append("CompanyImage", imageFile);
-      }
-
-      // Add company banner if changed
-      if (bannerFile) {
-        formDataToSend.append("CompanyBanner", bannerFile);
       }
 
       await updateSeller(formDataToSend);
@@ -159,8 +115,6 @@ const VendorProfile = () => {
   const handleCancel = () => {
     fetchSellerInfo(); // Reset to original data
     setQrFile(null);
-    setImageFile(null);
-    setBannerFile(null);
     setIsEditing(false);
   };
 
@@ -375,105 +329,6 @@ const VendorProfile = () => {
 
         {/* QR Code Section */}
         <div className="space-y-6">
-          {/* Company Banner Upload */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Camera className="w-5 h-5 mr-2 text-emerald-600" />
-              Banner Cửa Hàng
-            </h3>
-
-            <div className="space-y-4">
-              {bannerPreview ? (
-                <div className="w-full h-40 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden">
-                  <img
-                    src={bannerPreview}
-                    alt="Store Banner"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-full h-40 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <div className="text-center">
-                    <Camera className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">Chưa có banner</p>
-                  </div>
-                </div>
-              )}
-
-              {isEditing && (
-                <div>
-                  <input
-                    type="file"
-                    id="bannerUpload"
-                    accept="image/*"
-                    onChange={handleBannerChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="bannerUpload"
-                    className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center space-x-2 cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Tải lên banner</span>
-                  </label>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Kích thước đề xuất: 1200x400px
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Company Image/Logo Upload */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <Building2 className="w-5 h-5 mr-2 text-emerald-600" />
-              Logo Cửa Hàng
-            </h3>
-
-            <div className="space-y-4">
-              {imagePreview ? (
-                <div className="w-full aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 overflow-hidden">
-                  <img
-                    src={imagePreview}
-                    alt="Store Logo"
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-full aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-                  <div className="text-center">
-                    <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">Chưa có logo</p>
-                  </div>
-                </div>
-              )}
-
-              {isEditing && (
-                <div>
-                  <input
-                    type="file"
-                    id="imageUpload"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="imageUpload"
-                    className="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm flex items-center justify-center space-x-2 cursor-pointer"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Tải lên logo</span>
-                  </label>
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    Kích thước đề xuất: 400x400px
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* QR Code Upload */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
               <QrCode className="w-5 h-5 mr-2 text-emerald-600" />
