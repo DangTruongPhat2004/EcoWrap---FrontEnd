@@ -11,15 +11,7 @@ const colorApiClient = axios.create({
   timeout: 10000,
 });
 
-// Unsplash API for images (requires API key)
-const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || "demo";
-const unsplashClient = axios.create({
-  baseURL: "https://api.unsplash.com",
-  timeout: 10000,
-  headers: {
-    Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
-  },
-});
+// Removed Unsplash API - using local assets instead
 
 // Iconify API for icons (free, no auth)
 const iconifyClient = axios.create({
@@ -116,61 +108,30 @@ export const colorService = {
 };
 
 /**
- * Image Services (Unsplash)
+ * Image Services (Local/Placeholder)
  */
 export const imageService = {
   /**
-   * Search for images by query
+   * Search for images by query - now returns placeholder data
    */
-  async searchImages(query, page = 1, perPage = 20) {
-    try {
-      const response = await unsplashClient.get("/search/photos", {
-        params: {
-          query,
-          page,
-          per_page: perPage,
-          orientation: "squarish",
-        },
-      });
-      return {
-        images: response.data.results.map((img) => ({
-          id: img.id,
-          url: img.urls.regular,
-          thumb: img.urls.thumb,
-          small: img.urls.small,
-          description: img.description || img.alt_description,
-          photographer: img.user.name,
-          photographerUrl: img.user.links.html,
-        })),
-        total: response.data.total,
-        totalPages: response.data.total_pages,
-      };
-    } catch (error) {
-      console.error("Error searching images:", error);
-      return { images: [], total: 0, totalPages: 0 };
-    }
+  async searchImages(query) {
+    console.log("Image search disabled:", query);
+    // Return empty array or use placeholder images
+    return { images: [], total: 0, totalPages: 0 };
   },
 
   /**
-   * Get eco-friendly themed images
+   * Get eco-friendly themed images - returns empty for now
    */
-  async getEcoImages(page = 1) {
-    const queries = [
-      "eco friendly",
-      "sustainable",
-      "nature",
-      "green",
-      "leaves",
-    ];
-    const randomQuery = queries[Math.floor(Math.random() * queries.length)];
-    return this.searchImages(randomQuery, page, 20);
+  async getEcoImages() {
+    return { images: [], total: 0, totalPages: 0 };
   },
 
   /**
-   * Get pattern/texture images
+   * Get pattern/texture images - returns empty for now
    */
-  async getPatterns(page = 1) {
-    return this.searchImages("pattern texture", page, 20);
+  async getPatterns() {
+    return { images: [], total: 0, totalPages: 0 };
   },
 };
 

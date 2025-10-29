@@ -237,7 +237,9 @@ const ThanhPhanPanel = ({ canvasRef }) => {
               ))}
             </div>
           )}
-          <p className="text-xs text-gray-500 mt-2">Powered by Unsplash</p>
+          <p className="text-xs text-gray-500 mt-2">
+            Ảnh trực tuyến tạm thời không khả dụng
+          </p>
         </AccordionItem>
 
         {/* Elements & Icons */}

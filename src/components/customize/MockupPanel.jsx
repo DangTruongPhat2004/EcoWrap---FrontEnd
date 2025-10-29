@@ -2,20 +2,49 @@ import React, { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { Button } from "@nextui-org/react";
-import { RotateCw, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { RotateCw, ZoomIn, ZoomOut } from "lucide-react";
+import { createPackaging, PACKAGING_TYPES } from "./PackagingModels";
 
-const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
+const MockupPanel = ({
+  canvasRef,
+  embedded = false,
+  packagingType = "box",
+  layersData = {},
+  activeLayerId,
+}) => {
   const mountRef = useRef(null);
   const sceneRef = useRef(null);
   const rendererRef = useRef(null);
   const cameraRef = useRef(null);
   const controlsRef = useRef(null);
-  const meshRef = useRef(null);
-  const [mockupType, setMockupType] = useState("pouch"); // pouch | box | bag
+  const packagingRef = useRef(null); // Store packaging model
+  const animationFrameIdRef = useRef(null); // Store animation frame ID
+  const [mockupType, setMockupType] = useState(
+    packagingType || PACKAGING_TYPES.BOX
+  );
   const [isLoading, setIsLoading] = useState(true);
 
+  // Sync mockupType with packagingType prop changes
   useEffect(() => {
-    if (!mountRef.current) return;
+    if (packagingType && packagingType !== mockupType) {
+      console.log(
+        "MockupPanel: Syncing packaging type from",
+        mockupType,
+        "to",
+        packagingType
+      );
+      setMockupType(packagingType);
+    }
+  }, [packagingType, mockupType]);
+
+  useEffect(() => {
+    if (!mountRef.current) {
+      console.warn("MockupPanel: mountRef not ready");
+      return;
+    }
+
+    console.log("MockupPanel: Initializing 3D scene with type:", mockupType);
+    const currentMount = mountRef.current;
 
     // Scene setup
     const scene = new THREE.Scene();
@@ -41,7 +70,7 @@ const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    mountRef.current.appendChild(renderer.domElement);
+    currentMount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
     // Lights
@@ -67,10 +96,11 @@ const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
 
     // Create mockup geometry
     createMockup(scene, mockupType);
+    console.log("MockupPanel: Created mockup model");
 
     // Animation loop
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationFrameIdRef.current = requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
     };
@@ -89,84 +119,120 @@ const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
     window.addEventListener("resize", handleResize);
 
     setIsLoading(false);
+    console.log("MockupPanel: 3D scene initialized successfully");
 
     // Cleanup
     return () => {
+      console.log("MockupPanel: Cleaning up 3D scene");
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+      }
       window.removeEventListener("resize", handleResize);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (currentMount && renderer.domElement) {
+        currentMount.removeChild(renderer.domElement);
       }
       renderer.dispose();
       scene.clear();
     };
   }, [mockupType]);
 
-  // Update texture from canvas
+  // Update texture from canvas - apply specific layer to specific model face
   useEffect(() => {
-    if (!canvasRef?.current || !meshRef.current) return;
+    if (!canvasRef?.current || !packagingRef.current) {
+      console.log(
+        "MockupPanel: Skipping texture update - canvasRef or packagingRef not ready",
+        {
+          hasCanvasRef: !!canvasRef?.current,
+          hasPackagingRef: !!packagingRef.current,
+        }
+      );
+      return;
+    }
 
-    const updateTexture = () => {
-      const fabricCanvas = canvasRef.current.getCanvas();
-      if (!fabricCanvas) return;
+    console.log(
+      "MockupPanel: Setting up texture updates for layer:",
+      activeLayerId
+    );
 
-      // Export canvas as image
-      const dataURL = fabricCanvas.toDataURL({ format: "png", quality: 1 });
+    const updateTexture = async () => {
+      // Add null check inside updateTexture
+      if (!canvasRef?.current) {
+        console.warn("MockupPanel: canvasRef is null in updateTexture");
+        return;
+      }
 
+      if (!canvasRef.current.exportLayerAsImage) {
+        console.warn(
+          "MockupPanel: exportLayerAsImage not available, using current canvas"
+        );
+        const fabricCanvas = canvasRef.current.getCanvas();
+        if (!fabricCanvas) return;
+
+        const dataURL = fabricCanvas.toDataURL({ format: "png", quality: 1 });
+        applyTextureToModel(dataURL);
+        return;
+      }
+
+      console.log("MockupPanel: Updating texture from layer:", activeLayerId);
+
+      // Export current active layer as image
+      try {
+        const dataURL = await canvasRef.current.exportLayerAsImage(
+          activeLayerId
+        );
+        if (dataURL) {
+          applyTextureToModel(dataURL);
+        }
+      } catch (error) {
+        console.error("MockupPanel: Error exporting layer:", error);
+      }
+    };
+
+    const applyTextureToModel = (dataURL) => {
       const loader = new THREE.TextureLoader();
       loader.load(dataURL, (texture) => {
-        if (meshRef.current) {
-          meshRef.current.material.map = texture;
-          meshRef.current.material.needsUpdate = true;
+        if (packagingRef.current && packagingRef.current.model) {
+          // Apply texture to the main mesh
+          const mesh = packagingRef.current.model.children[0];
+          if (mesh && mesh.material) {
+            mesh.material.map = texture;
+            mesh.material.needsUpdate = true;
+            console.log(
+              "MockupPanel: Texture applied successfully for layer:",
+              activeLayerId
+            );
+          }
         }
       });
     };
 
     // Initial update
-    updateTexture();
+    setTimeout(updateTexture, 500);
 
     // Update on canvas changes (with debounce)
-    const timer = setInterval(updateTexture, 1000);
+    const timer = setInterval(updateTexture, 2000);
     return () => clearInterval(timer);
-  }, [canvasRef]);
+  }, [canvasRef, layersData, activeLayerId, mockupType]); // Added activeLayerId and mockupType
 
   const createMockup = (scene, type) => {
-    // Remove existing mesh
-    if (meshRef.current) {
-      scene.remove(meshRef.current);
+    console.log("Creating packaging model of type:", type);
+
+    // Remove existing packaging
+    if (packagingRef.current) {
+      scene.remove(packagingRef.current.model);
+      console.log("Removed previous packaging model");
     }
 
-    let geometry;
-    let mesh;
-
-    switch (type) {
-      case "pouch":
-        // Stand-up pouch geometry
-        geometry = createPouchGeometry();
-        break;
-      case "box":
-        // Box geometry
-        geometry = new THREE.BoxGeometry(2, 2.5, 0.8);
-        break;
-      case "bag":
-        // Bag geometry
-        geometry = createBagGeometry();
-        break;
-      default:
-        geometry = new THREE.PlaneGeometry(2, 2.5);
+    // Create new packaging model
+    const packaging = createPackaging(type);
+    if (!packaging || !packaging.model) {
+      console.error("Failed to create packaging model for type:", type);
+      return;
     }
 
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      roughness: 0.7,
-      metalness: 0.1,
-      side: THREE.DoubleSide,
-    });
-
-    mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    scene.add(mesh);
-    meshRef.current = mesh;
+    scene.add(packaging.model);
+    packagingRef.current = packaging;
+    console.log("Added packaging model to scene:", packaging.type);
 
     // Add ground plane
     const groundGeometry = new THREE.PlaneGeometry(10, 10);
@@ -176,37 +242,6 @@ const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
     ground.position.y = -1.5;
     ground.receiveShadow = true;
     scene.add(ground);
-  };
-
-  const createPouchGeometry = () => {
-    // Create a custom pouch shape
-    const shape = new THREE.Shape();
-
-    // Bottom rounded rectangle
-    shape.moveTo(-0.8, -1);
-    shape.lineTo(-0.8, 0.8);
-    shape.quadraticCurveTo(-0.8, 1, -0.6, 1);
-    shape.lineTo(0.6, 1);
-    shape.quadraticCurveTo(0.8, 1, 0.8, 0.8);
-    shape.lineTo(0.8, -1);
-    shape.lineTo(-0.8, -1);
-
-    const extrudeSettings = {
-      steps: 2,
-      depth: 0.3,
-      bevelEnabled: true,
-      bevelThickness: 0.05,
-      bevelSize: 0.05,
-      bevelSegments: 3,
-    };
-
-    return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  };
-
-  const createBagGeometry = () => {
-    // Simple bag shape
-    const geometry = new THREE.BoxGeometry(2, 2.5, 1);
-    return geometry;
   };
 
   const handleResetView = () => {
@@ -245,41 +280,54 @@ const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
         <div className="flex gap-2">
           <Button
             size="sm"
-            variant={mockupType === "pouch" ? "solid" : "flat"}
-            color={mockupType === "pouch" ? "success" : "default"}
-            onClick={() => setMockupType("pouch")}
+            variant={mockupType === PACKAGING_TYPES.CUP ? "solid" : "flat"}
+            color={mockupType === PACKAGING_TYPES.CUP ? "success" : "default"}
+            onClick={() => setMockupType(PACKAGING_TYPES.CUP)}
             className="flex-1"
           >
-            Túi đứng
+            Cốc ly
           </Button>
           <Button
             size="sm"
-            variant={mockupType === "box" ? "solid" : "flat"}
-            color={mockupType === "box" ? "success" : "default"}
-            onClick={() => setMockupType("box")}
+            variant={mockupType === PACKAGING_TYPES.BAG ? "solid" : "flat"}
+            color={mockupType === PACKAGING_TYPES.BAG ? "success" : "default"}
+            onClick={() => setMockupType(PACKAGING_TYPES.BAG)}
+            className="flex-1"
+          >
+            Túi giấy
+          </Button>
+          <Button
+            size="sm"
+            variant={mockupType === PACKAGING_TYPES.BOX ? "solid" : "flat"}
+            color={mockupType === PACKAGING_TYPES.BOX ? "success" : "default"}
+            onClick={() => setMockupType(PACKAGING_TYPES.BOX)}
             className="flex-1"
           >
             Hộp
           </Button>
           <Button
             size="sm"
-            variant={mockupType === "bag" ? "solid" : "flat"}
-            color={mockupType === "bag" ? "success" : "default"}
-            onClick={() => setMockupType("bag")}
+            variant={mockupType === PACKAGING_TYPES.POUCH ? "solid" : "flat"}
+            color={mockupType === PACKAGING_TYPES.POUCH ? "success" : "default"}
+            onClick={() => setMockupType(PACKAGING_TYPES.POUCH)}
             className="flex-1"
           >
-            Túi xách
+            Túi đứng
           </Button>
         </div>
 
         {/* 3D View */}
-        <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+        <div className="relative w-full h-80 bg-gray-100 rounded-lg overflow-hidden">
           {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center z-10">
               <div className="text-sm text-gray-500">Đang tải 3D...</div>
             </div>
           )}
-          <div ref={mountRef} className="w-full h-full" />
+          <div
+            ref={mountRef}
+            className="w-full h-full"
+            style={{ minHeight: "320px" }}
+          />
         </div>
 
         {/* Controls */}
@@ -333,27 +381,35 @@ const MockupPanel = ({ canvasRef, embedded = false, zoom = 100 }) => {
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-white rounded-lg shadow-lg p-2">
         <Button
           size="sm"
-          variant={mockupType === "pouch" ? "solid" : "flat"}
-          color={mockupType === "pouch" ? "success" : "default"}
-          onClick={() => setMockupType("pouch")}
+          variant={mockupType === PACKAGING_TYPES.CUP ? "solid" : "flat"}
+          color={mockupType === PACKAGING_TYPES.CUP ? "success" : "default"}
+          onClick={() => setMockupType(PACKAGING_TYPES.CUP)}
         >
-          Túi đứng
+          Cốc ly
         </Button>
         <Button
           size="sm"
-          variant={mockupType === "box" ? "solid" : "flat"}
-          color={mockupType === "box" ? "success" : "default"}
-          onClick={() => setMockupType("box")}
+          variant={mockupType === PACKAGING_TYPES.BAG ? "solid" : "flat"}
+          color={mockupType === PACKAGING_TYPES.BAG ? "success" : "default"}
+          onClick={() => setMockupType(PACKAGING_TYPES.BAG)}
+        >
+          Túi giấy
+        </Button>
+        <Button
+          size="sm"
+          variant={mockupType === PACKAGING_TYPES.BOX ? "solid" : "flat"}
+          color={mockupType === PACKAGING_TYPES.BOX ? "success" : "default"}
+          onClick={() => setMockupType(PACKAGING_TYPES.BOX)}
         >
           Hộp
         </Button>
         <Button
           size="sm"
-          variant={mockupType === "bag" ? "solid" : "flat"}
-          color={mockupType === "bag" ? "success" : "default"}
-          onClick={() => setMockupType("bag")}
+          variant={mockupType === PACKAGING_TYPES.POUCH ? "solid" : "flat"}
+          color={mockupType === PACKAGING_TYPES.POUCH ? "success" : "default"}
+          onClick={() => setMockupType(PACKAGING_TYPES.POUCH)}
         >
-          Túi xách
+          Túi đứng
         </Button>
       </div>
     </div>

@@ -66,6 +66,7 @@ function AppLayout() {
 
   const location = useLocation();
   const isMessages = location.pathname.startsWith("/messages");
+  const isCustomize = location.pathname.startsWith("/thiet-ke");
 
   // If it's a messages page, render a special full-screen layout
   if (isMessages) {
@@ -76,6 +77,18 @@ function AppLayout() {
           {/* The MessagesLayout component is now the element of the route */}
           <MessagesLayout />
         </main>
+      </div>
+    );
+  }
+
+  // If it's a customize page, render full-screen without Header/Footer
+  if (isCustomize) {
+    return (
+      <div className="h-screen flex flex-col">
+        <main className="flex-1">
+          <AppRoutes />
+        </main>
+        {/* No Footer for customize page */}
       </div>
     );
   }
@@ -134,22 +147,8 @@ function AppRoutes() {
       <Route path="/testpage" element={<Pagetest />} />
 
       {/* Customize/Design Routes */}
-      <Route
-        path="/thiet-ke"
-        element={
-          <ProtectedRoute>
-            <CustomizePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/thiet-ke/:id"
-        element={
-          <ProtectedRoute>
-            <CustomizePage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/thiet-ke" element={<CustomizePage />} />
+      <Route path="/thiet-ke/:id" element={<CustomizePage />} />
 
       {/* Old chat routes (if still needed) */}
       <Route path="/conversations" element={<ConversationsPage />} />

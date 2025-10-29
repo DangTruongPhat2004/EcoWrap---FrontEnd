@@ -15,15 +15,19 @@ import CanvasEditor from "../../components/customize/CanvasEditor";
 import ThanhPhanPanel from "../../components/customize/ThanhPhanPanel";
 import MauPanel from "../../components/customize/MauPanel";
 import MockupPanel from "../../components/customize/MockupPanel";
+import DrawingTools from "../../components/customize/DrawingTools";
+import AssetsPanel from "../../components/customize/AssetsPanel";
+import { LayerMinimapPanel } from "../../components/customize/LayerMinimap";
 import DesignSidebar from "../../components/customize/DesignSidebar";
 import designApi from "../../services/designApi";
+import { PACKAGING_LAYERS } from "../../components/customize/PackagingModels";
 
 const CustomizePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const canvasRef = useRef(null);
 
-  const [activeTab, setActiveTab] = useState("thanhphan"); // thanhphan | mau | mockup
+  const [activeTab, setActiveTab] = useState("layers"); // layers | thanhphan | mau | mockup
   const [design, setDesign] = useState(null);
   const [etag, setEtag] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +35,19 @@ const CustomizePage = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [showMockup, setShowMockup] = useState(false);
+
+  // Packaging and layer state
+  const [packagingType, setPackagingType] = useState("box");
+  const [activeLayerId, setActiveLayerId] = useState(null);
+  const [completedLayers, setCompletedLayers] = useState([]);
+
+  // Initialize first layer when packaging type changes
+  useEffect(() => {
+    const layers = PACKAGING_LAYERS[packagingType];
+    if (layers && layers.length > 0 && !activeLayerId) {
+      setActiveLayerId(layers[0].id);
+    }
+  }, [packagingType, activeLayerId]);
 
   // History for undo/redo
   const [canUndo, setCanUndo] = useState(false);
@@ -115,15 +132,19 @@ const CustomizePage = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const canvasData = canvasRef.current.exportDesign();
+      // Get all layers data
+      const allLayers = canvasRef.current.exportAllLayers();
       const thumbnail = await canvasRef.current.exportThumbnail();
 
       const designData = {
         title: design.title,
-        designData: JSON.stringify(canvasData),
+        designData: JSON.stringify({
+          packagingType,
+          layers: allLayers,
+        }),
         thumbnailUrl: thumbnail,
         status: "draft",
-        usedAssets: canvasData.usedAssets || [],
+        usedAssets: [],
         tags: design.tags || [],
       };
 
@@ -163,6 +184,28 @@ const CustomizePage = () => {
     }
   };
 
+  const handlePackagingTypeChange = (newType) => {
+    setPackagingType(newType);
+    const layers = PACKAGING_LAYERS[newType];
+    if (layers && layers.length > 0) {
+      setActiveLayerId(layers[0].id);
+    }
+  };
+
+  const handleLayerSelect = (layerId) => {
+    setActiveLayerId(layerId);
+    // Don't automatically switch tabs - let user decide
+  };
+
+  const handleCanvasChange = () => {
+    setHasUnsavedChanges(true);
+    // Update completed layers
+    if (canvasRef.current) {
+      const completed = canvasRef.current.getCompletedLayers();
+      setCompletedLayers(completed);
+    }
+  };
+
   const handleApply = async () => {
     await handleSave();
     toast.success("Đã áp dụng thiết kế");
@@ -186,10 +229,6 @@ const CustomizePage = () => {
       canvasRef.current.redo();
       setHasUnsavedChanges(true);
     }
-  };
-
-  const handleCanvasChange = () => {
-    setHasUnsavedChanges(true);
   };
 
   const handleHistoryChange = (canUndoState, canRedoState) => {
@@ -227,6 +266,7 @@ const CustomizePage = () => {
             variant="light"
             isDisabled={!canUndo}
             onClick={handleUndo}
+            title="Hoàn tác (Ctrl+Z)"
           >
             <RotateCcw className="w-4 h-4" />
           </Button>
@@ -235,6 +275,7 @@ const CustomizePage = () => {
             variant="light"
             isDisabled={!canRedo}
             onClick={handleRedo}
+            title="Làm lại (Ctrl+Shift+Z)"
           >
             <Redo className="w-4 h-4" />
           </Button>
@@ -261,6 +302,20 @@ const CustomizePage = () => {
 
           <div className="w-px h-6 bg-gray-300 mx-2" />
 
+          {/* Auto-save indicator */}
+          {hasUnsavedChanges && (
+            <span className="text-xs text-amber-600 flex items-center gap-1">
+              <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              Đang lưu tự động...
+            </span>
+          )}
+          {!hasUnsavedChanges && design?.id && (
+            <span className="text-xs text-green-600 flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-500 rounded-full" />
+              Đã lưu
+            </span>
+          )}
+
           {/* Actions */}
           <Button
             color="default"
@@ -269,7 +324,7 @@ const CustomizePage = () => {
             onClick={handleSave}
             isLoading={isSaving}
           >
-            Lưu bản nháp
+            Lưu ngay
           </Button>
           <Button
             color="success"
@@ -277,7 +332,7 @@ const CustomizePage = () => {
             onClick={handleApply}
             isLoading={isSaving}
           >
-            Đã áp dụng
+            Áp dụng
           </Button>
           <Button
             color="success"
@@ -328,13 +383,22 @@ const CustomizePage = () => {
           {/* Canvas or Mockup View */}
           <div className="flex-1 flex items-center justify-center p-8">
             {showMockup ? (
-              <MockupPanel canvasRef={canvasRef} zoom={zoom} />
+              <MockupPanel
+                key={`mockup-${packagingType}-${showMockup}`}
+                canvasRef={canvasRef}
+                zoom={zoom}
+                packagingType={packagingType}
+                activeLayerId={activeLayerId}
+              />
             ) : (
               <CanvasEditor
                 ref={canvasRef}
                 zoom={zoom}
                 onChange={handleCanvasChange}
                 onHistoryChange={handleHistoryChange}
+                activeLayerId={activeLayerId}
+                designId={design?.id || id}
+                packagingType={packagingType}
               />
             )}
           </div>
@@ -342,15 +406,31 @@ const CustomizePage = () => {
           {/* Bottom Info */}
           <div className="bg-white border-t border-gray-200 px-6 py-3 flex items-center justify-center">
             <p className="text-sm text-gray-600">
-              Kéo các chi tiết từ thanh công cụ vào đây để bắt đầu thiết kế
+              {activeLayerId
+                ? `Đang chỉnh sửa: ${
+                    PACKAGING_LAYERS[packagingType]?.find(
+                      (l) => l.id === activeLayerId
+                    )?.name
+                  }`
+                : "Chọn một lớp để bắt đầu thiết kế"}
             </p>
           </div>
         </div>
 
         {/* Right Panel */}
-        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        <div className="w-90 bg-white border-l border-gray-200 flex flex-col">
           {/* Tabs */}
           <div className="flex border-b border-gray-200">
+            <button
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === "layers"
+                  ? "text-green-600 border-b-2 border-green-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => setActiveTab("layers")}
+            >
+              Lớp
+            </button>
             <button
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === "thanhphan"
@@ -359,7 +439,7 @@ const CustomizePage = () => {
               }`}
               onClick={() => setActiveTab("thanhphan")}
             >
-              Thành phần
+              Phần tử
             </button>
             <button
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
@@ -373,57 +453,65 @@ const CustomizePage = () => {
             </button>
             <button
               className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === "drawing"
+                  ? "text-green-600 border-b-2 border-green-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => setActiveTab("drawing")}
+            >
+              Vẽ
+            </button>
+            <button
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === "assets"
+                  ? "text-green-600 border-b-2 border-green-600"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+              onClick={() => setActiveTab("assets")}
+            >
+              Hình ảnh
+            </button>
+            <button
+              className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
                 activeTab === "mockup"
                   ? "text-green-600 border-b-2 border-green-600"
                   : "text-gray-600 hover:text-gray-900"
               }`}
               onClick={() => setActiveTab("mockup")}
             >
-              Mockup
+              3D
             </button>
           </div>
 
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto">
+            {activeTab === "layers" && (
+              <LayerMinimapPanel
+                packagingType={packagingType}
+                onPackagingTypeChange={handlePackagingTypeChange}
+                layers={PACKAGING_LAYERS[packagingType] || []}
+                activeLayerId={activeLayerId}
+                onLayerSelect={handleLayerSelect}
+                completedLayers={completedLayers}
+              />
+            )}
             {activeTab === "thanhphan" && (
               <ThanhPhanPanel canvasRef={canvasRef} />
             )}
             {activeTab === "mau" && <MauPanel canvasRef={canvasRef} />}
+            {activeTab === "drawing" && <DrawingTools canvasRef={canvasRef} />}
+            {activeTab === "assets" && <AssetsPanel canvasRef={canvasRef} />}
             {activeTab === "mockup" && (
-              <MockupPanel canvasRef={canvasRef} embedded />
+              <MockupPanel
+                canvasRef={canvasRef}
+                embedded
+                packagingType={packagingType}
+                activeLayerId={activeLayerId}
+              />
             )}
           </div>
         </div>
       </div>
-
-      {/* Welcome Modal */}
-      {design && !design.id && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md">
-            <h2 className="text-xl font-semibold mb-4">
-              Chào mừng đến với EcoWrap!
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Kéo thả các chi tiết từ thanh công cụ vào canvas để bắt đầu tạo
-              bao bì của bạn.
-            </p>
-            <Button
-              color="success"
-              className="w-full"
-              onClick={() => setDesign({ ...design, id: "temp" })}
-            >
-              Xem hướng dẫn
-            </Button>
-            <Button
-              variant="light"
-              className="w-full mt-2"
-              onClick={() => setDesign({ ...design, id: "temp" })}
-            >
-              Bỏ qua
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
