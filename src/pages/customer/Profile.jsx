@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import {
-  getUserById,
+  getMyProfile,
   updateUser,
   changePassword,
 } from "../../services/userApi";
@@ -56,7 +56,7 @@ const Profile = () => {
 
       try {
         setLoading(true);
-        const response = await getUserById(user.userId);
+        const response = await getMyProfile();
 
         if (response.success && response.data) {
           const userData = {

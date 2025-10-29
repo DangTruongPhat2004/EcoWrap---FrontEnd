@@ -13,8 +13,13 @@ export const getAllSellers = async () => {
 
 // Get seller by ID (Admin only)
 export const getSellerById = async (id) => {
-  const response = await apiClient.get(`/api/seller/${id}`);
-  return response.data;
+  try {
+    const response = await apiClient.get(`/api/seller/${id}`);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Error fetching seller by ID:", error);
+    return { success: false, data: null, error: error.message };
+  }
 };
 
 // Get current seller info (for logged-in seller)
