@@ -354,14 +354,14 @@ const AdminDashboard = () => {
 
         {/* Pie Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Top Sellers Donut Chart */}
+          {/* User Distribution Pie Chart - USING BACKEND DATA */}
           <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900 mb-6">
-              🏆 Top Seller Theo Doanh Số
+            <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <Users className="w-5 h-5 text-blue-600" />
+              Phân Bố Người Dùng
             </h2>
             <div className="flex items-center justify-center mb-6">
               <svg width="180" height="180" viewBox="0 0 200 200">
-                {/* Donut chart with shadow effect */}
                 <defs>
                   <filter id="shadow">
                     <feDropShadow
@@ -372,6 +372,193 @@ const AdminDashboard = () => {
                     />
                   </filter>
                 </defs>
+                {/* Calculate percentages from backend data */}
+                {(() => {
+                  const total = stats.totalUsers || 1;
+                  const customerPercent = (stats.totalCustomers / total) * 100;
+                  const sellerPercent = (stats.totalSellers / total) * 100;
+                  const customerAngle = (customerPercent / 100) * 360;
+                  const sellerAngle = (sellerPercent / 100) * 360;
+
+                  return (
+                    <>
+                      {/* Customers slice */}
+                      <path
+                        d={`M 100 100 L 100 20 A 80 80 0 ${
+                          customerAngle > 180 ? 1 : 0
+                        } 1 ${
+                          100 + 80 * Math.sin((customerAngle * Math.PI) / 180)
+                        } ${
+                          100 - 80 * Math.cos((customerAngle * Math.PI) / 180)
+                        } Z`}
+                        fill="#3B82F6"
+                        stroke="white"
+                        strokeWidth="3"
+                        filter="url(#shadow)"
+                      />
+                      {/* Sellers slice */}
+                      <path
+                        d={`M 100 100 L ${
+                          100 + 80 * Math.sin((customerAngle * Math.PI) / 180)
+                        } ${
+                          100 - 80 * Math.cos((customerAngle * Math.PI) / 180)
+                        } A 80 80 0 ${sellerAngle > 180 ? 1 : 0} 1 ${
+                          100 +
+                          80 *
+                            Math.sin(
+                              ((customerAngle + sellerAngle) * Math.PI) / 180
+                            )
+                        } ${
+                          100 -
+                          80 *
+                            Math.cos(
+                              ((customerAngle + sellerAngle) * Math.PI) / 180
+                            )
+                        } Z`}
+                        fill="#10B981"
+                        stroke="white"
+                        strokeWidth="3"
+                        filter="url(#shadow)"
+                      />
+                    </>
+                  );
+                })()}
+                <circle cx="100" cy="100" r="45" fill="white" />
+                <text
+                  x="100"
+                  y="95"
+                  textAnchor="middle"
+                  className="text-2xl font-bold"
+                  fill="#1F2937"
+                >
+                  {formatNumber(stats.totalUsers)}
+                </text>
+                <text
+                  x="100"
+                  y="115"
+                  textAnchor="middle"
+                  className="text-xs"
+                  fill="#6B7280"
+                >
+                  Tổng số
+                </text>
+              </svg>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Khách hàng</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {formatNumber(stats.totalCustomers)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(
+                      (stats.totalCustomers / (stats.totalUsers || 1)) *
+                      100
+                    ).toFixed(1)}
+                    %
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                  <span className="text-sm text-gray-600">Nhà cung cấp</span>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {formatNumber(stats.totalSellers)}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {(
+                      (stats.totalSellers / (stats.totalUsers || 1)) *
+                      100
+                    ).toFixed(1)}
+                    %
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rating Distribution Chart - USING BACKEND DATA */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+              Đánh Giá Nền Tảng
+            </h2>
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <svg width="180" height="180" viewBox="0 0 200 200">
+                  <defs>
+                    <linearGradient
+                      id="ratingGradient"
+                      x1="0%"
+                      y1="0%"
+                      x2="0%"
+                      y2="100%"
+                    >
+                      <stop offset="0%" stopColor="#FCD34D" />
+                      <stop offset="100%" stopColor="#F59E0B" />
+                    </linearGradient>
+                  </defs>
+                  <circle
+                    cx="100"
+                    cy="100"
+                    r="80"
+                    fill="url(#ratingGradient)"
+                    stroke="white"
+                    strokeWidth="3"
+                    filter="url(#shadow)"
+                  />
+                  <circle cx="100" cy="100" r="45" fill="white" />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="text-4xl font-bold text-gray-900">
+                    {stats.platformRating.toFixed(1)}
+                  </div>
+                  <div className="flex gap-0.5 mt-1">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        size={14}
+                        className={
+                          s <= Math.round(stats.platformRating)
+                            ? "text-yellow-400 fill-yellow-400"
+                            : "text-gray-300"
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2 bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Tổng đánh giá</span>
+                <span className="font-semibold text-gray-900">
+                  {formatNumber(stats.totalFeedbacks)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-600">Điểm trung bình</span>
+                <span className="font-semibold text-yellow-600">
+                  {stats.platformRating.toFixed(2)}/5.0
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Sellers Donut Chart */}
+          <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">
+              🏆 Top Seller Theo Doanh Số
+            </h2>
+            <div className="flex items-center justify-center mb-6">
+              <svg width="180" height="180" viewBox="0 0 200 200">
                 <circle
                   cx="100"
                   cy="100"

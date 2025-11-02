@@ -14,7 +14,8 @@ import {
   Avatar,
   Chip,
 } from "@nextui-org/react";
-import { Search, ShoppingCart } from "lucide-react";
+import { Search, ShoppingCart, MessageCircle, X, Star } from "lucide-react";
+import { useAuthStore } from "../store/authStore";
 import bannerImg from "../assets/banner.png";
 import tuigiay from "../assets/tuigiay.png";
 import cocLy from "../assets/cocly.png";
@@ -36,9 +37,11 @@ import ClientLogoMarquee from "../components/marquee/ClientLogoMarquee";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [openDropdown, setOpenDropdown] = React.useState(null);
   const [visibleSections, setVisibleSections] = React.useState({});
   const [searchValue, setSearchValue] = React.useState("");
+  const [showFeedbackPrompt, setShowFeedbackPrompt] = React.useState(false);
 
   const logos = [
     {
@@ -875,6 +878,83 @@ const Home = () => {
             </div>
           </div>
         </section>
+      </div>
+
+      {/* Floating Feedback Button - Positioned to avoid chatbot overlap (bottom-left) */}
+      <div className="fixed bottom-6 left-5 z-40">
+        {!showFeedbackPrompt ? (
+          <button
+            onClick={() => setShowFeedbackPrompt(true)}
+            className="group bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-full p-4 shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3 hover:pl-6"
+          >
+            <span className="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-300 whitespace-nowrap font-medium">
+              Đánh giá nền tảng
+            </span>
+            <MessageCircle size={24} className="animate-pulse" />
+          </button>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-80 animate-in slide-in-from-bottom-4">
+            <div className="bg-gradient-to-r from-emerald-600 to-green-600 text-white p-4 rounded-t-2xl flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Star className="w-5 h-5 fill-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-base">Đánh giá EcoWrap</h3>
+                  <p className="text-xs text-emerald-100">
+                    Chia sẻ trải nghiệm của bạn
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowFeedbackPrompt(false)}
+                className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 mb-4 text-sm leading-relaxed">
+                Giúp chúng tôi cải thiện dịch vụ bằng cách chia sẻ ý kiến của
+                bạn về nền tảng EcoWrap. Mỗi đánh giá đều rất quý giá!
+              </p>
+              <div className="space-y-3">
+                {user || localStorage.getItem("token") ? (
+                  <>
+                    <button
+                      onClick={() => navigate("/customer/feedback")}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <Star size={18} className="fill-white" />
+                      Đánh giá ngay
+                    </button>
+                    <button
+                      onClick={() => setShowFeedbackPrompt(false)}
+                      className="w-full px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
+                    >
+                      Để sau
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => navigate("/login")}
+                      className="w-full px-4 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg transition-all"
+                    >
+                      Đăng nhập để đánh giá
+                    </button>
+                    <button
+                      onClick={() => setShowFeedbackPrompt(false)}
+                      className="w-full px-4 py-2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
+                    >
+                      Đóng
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

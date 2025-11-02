@@ -30,6 +30,12 @@ const CustomerSidebar = () => {
       icon: ClipboardList,
       path: "/customer/orders",
     },
+    {
+      id: "feedback",
+      label: "Đánh Giá Của Tôi",
+      icon: History,
+      path: "/customer/feedback",
+    },
   ];
 
   return (

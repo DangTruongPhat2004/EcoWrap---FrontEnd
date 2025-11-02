@@ -10,6 +10,7 @@ import {
   Shield,
   LogOut,
   User,
+  MessageSquare,
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
@@ -58,6 +59,12 @@ const AdminSidebar = () => {
       label: "Quản lí người dùng",
       icon: Users,
       path: "/admin/users",
+    },
+    {
+      id: "feedback",
+      label: "Quản lí đánh giá",
+      icon: MessageSquare,
+      path: "/admin/feedback",
     },
     {
       id: "settings",
