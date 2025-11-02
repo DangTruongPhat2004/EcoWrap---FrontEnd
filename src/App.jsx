@@ -22,6 +22,8 @@ import {
   OrderManagement,
   OrderDetailAdmin,
   CategoryManagement,
+  FeedbackManagement,
+  MyFeedback,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProfile from "./pages/vendor/VendorProfile";
@@ -164,6 +166,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="feedback" element={<MyFeedback />} />
           {/* Add other nested account routes here */}
         </Route>
         <Route
@@ -178,6 +181,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="feedback" element={<MyFeedback />} />
           {/* Add other nested customer routes here */}
         </Route>
         <Route
@@ -197,6 +201,7 @@ function App() {
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:orderId" element={<OrderDetailAdmin />} />
           <Route path="categories" element={<CategoryManagement />} />
+          <Route path="feedback" element={<FeedbackManagement />} />
           {/* Add other nested admin routes here */}
         </Route>
         <Route

@@ -74,12 +74,15 @@ const AdminDashboard = () => {
       const mergedStats = {
         ...statsData,
         totalUsers: dashboardMetrics.totalVerifiedUsers || statsData.totalUsers,
-        totalCustomers: dashboardMetrics.totalCustomer || statsData.totalCustomers,
+        totalCustomers:
+          dashboardMetrics.totalCustomer || statsData.totalCustomers,
         totalSellers: dashboardMetrics.totalSeller || statsData.totalSellers,
-        platformRating: dashboardMetrics.averageRating || statsData.platformRating,
+        platformRating:
+          dashboardMetrics.averageRating || statsData.platformRating,
         totalRevenue: dashboardMetrics.totalRevenue || statsData.totalRevenue,
         totalFeedbacks: dashboardMetrics.totalFeedbacks,
-        totalSuccessfulTransactions: dashboardMetrics.totalSuccessfulTransactions,
+        totalSuccessfulTransactions:
+          dashboardMetrics.totalSuccessfulTransactions,
       };
 
       setStats(mergedStats);

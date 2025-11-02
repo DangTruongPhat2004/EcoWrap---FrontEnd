@@ -22,6 +22,10 @@ export { default as UserManagement } from "./admin/UserManagement";
 export { default as OrderManagement } from "./admin/OrderManagement";
 export { default as OrderDetailAdmin } from "./admin/OrderDetailAdmin";
 export { default as CategoryManagement } from "./admin/CategoryManagement";
+export { default as FeedbackManagement } from "./admin/FeedbackManagement";
+
+// Customer pages
+export { default as MyFeedback } from "./customer/MyFeedback";
 
 // Order pages
 export { default as OrderSuccessPage } from "./order/OrderSuccessPage";
