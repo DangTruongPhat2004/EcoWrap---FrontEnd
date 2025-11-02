@@ -16,6 +16,7 @@ import {
   getTopSellers,
   getActiveUsers,
   getNewProducts,
+  getDashboardMetrics,
 } from "../../services/adminApi";
 
 const AdminDashboard = () => {
@@ -30,6 +31,8 @@ const AdminDashboard = () => {
     commission: 0,
     avgDailyTransactions: 0,
     avgWeeklyTransactions: 0,
+    totalFeedbacks: 0,
+    totalSuccessfulTransactions: 0,
   });
   const [revenueData, setRevenueData] = useState([]);
   const [orderData, setOrderData] = useState([]);
@@ -50,6 +53,7 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       const [
+        dashboardMetrics,
         statsData,
         usersData,
         revenueStatsData,
@@ -57,6 +61,7 @@ const AdminDashboard = () => {
         activeUsersData,
         newProductsData,
       ] = await Promise.all([
+        getDashboardMetrics(),
         getAdminDashboardStats(timeRange),
         getUsersStats(timeRange),
         getRevenueStats(timeRange),
@@ -65,7 +70,19 @@ const AdminDashboard = () => {
         getNewProducts(),
       ]);
 
-      setStats(statsData);
+      // Merge backend metrics with mock data
+      const mergedStats = {
+        ...statsData,
+        totalUsers: dashboardMetrics.totalVerifiedUsers || statsData.totalUsers,
+        totalCustomers: dashboardMetrics.totalCustomer || statsData.totalCustomers,
+        totalSellers: dashboardMetrics.totalSeller || statsData.totalSellers,
+        platformRating: dashboardMetrics.averageRating || statsData.platformRating,
+        totalRevenue: dashboardMetrics.totalRevenue || statsData.totalRevenue,
+        totalFeedbacks: dashboardMetrics.totalFeedbacks,
+        totalSuccessfulTransactions: dashboardMetrics.totalSuccessfulTransactions,
+      };
+
+      setStats(mergedStats);
       setRevenueData(revenueStatsData.revenue);
       setOrderData(revenueStatsData.orders);
       setTopSellers(topSellersData);
@@ -176,7 +193,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           <StatCard
             icon={Users}
             label="Tổng người dùng"
@@ -191,25 +208,41 @@ const AdminDashboard = () => {
             icon={Star}
             label="Đánh giá nền tảng"
             value={stats.platformRating.toFixed(1)}
-            subValue="Trung bình từ người dùng"
+            subValue={`${formatNumber(stats.totalFeedbacks)} đánh giá`}
             color="bg-yellow-500"
             trend={5}
           />
           <StatCard
             icon={DollarSign}
-            label="Doanh thu (Hoa hồng)"
-            value={formatCurrency(stats.commission)}
-            subValue={`Tổng: ${formatCurrency(stats.totalRevenue)}`}
+            label="Doanh thu"
+            value={formatCurrency(stats.totalRevenue)}
+            subValue="Tổng doanh thu hệ thống"
             color="bg-green-600"
             trend={18}
           />
           <StatCard
             icon={ShoppingBag}
+            label="Giao dịch thành công"
+            value={formatNumber(stats.totalSuccessfulTransactions)}
+            subValue="Tổng số giao dịch"
+            color="bg-purple-600"
+            trend={8}
+          />
+          <StatCard
+            icon={UserPlus}
+            label="Người dùng đã xác thực"
+            value={formatNumber(stats.totalUsers)}
+            subValue="Đã xác thực email"
+            color="bg-indigo-600"
+            trend={15}
+          />
+          <StatCard
+            icon={Calendar}
             label="Giao dịch TB"
             value={formatNumber(stats.avgDailyTransactions)}
             subValue={`${formatNumber(stats.avgWeeklyTransactions)}/tuần`}
-            color="bg-purple-600"
-            trend={8}
+            color="bg-red-600"
+            trend={6}
           />
         </div>
 

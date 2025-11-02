@@ -1,6 +1,26 @@
 // Admin Dashboard API Service
 // Placeholder functions for admin statistics and data
 
+import apiClient from "./apiClient";
+
+/**
+ * Get dashboard metrics from backend API
+ * @returns {Promise<Object>} Dashboard metrics
+ */
+export const getDashboardMetrics = async () => {
+  try {
+    const response = await apiClient.get("/Dashboard");
+    if (response.data.Success) {
+      return response.data.Data;
+    } else {
+      throw new Error(response.data.Message || "Failed to fetch dashboard metrics");
+    }
+  } catch (error) {
+    console.error("Error fetching dashboard metrics:", error);
+    throw error;
+  }
+};
+
 /**
  * Get overall dashboard statistics
  * @param {string} timeRange - Time range filter (day, week, month, year)

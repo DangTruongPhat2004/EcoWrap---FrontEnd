@@ -36,7 +36,6 @@ export default function RegisterForm({
     phone: "",
     email: "",
     password: "",
-    remember: false,
   });
   const [touched, setTouched] = React.useState({
     lastName: false,
@@ -363,37 +362,6 @@ export default function RegisterForm({
                       </p>
                     </div>
                   )}
-                </div>
-
-                {/* Remember + Quên MK */}
-                <div className="flex items-center justify-between pt-2">
-                  <label className="flex items-center gap-2 text-sm text-[#6B7280] cursor-pointer select-none">
-                    <Checkbox
-                      name="remember"
-                      isSelected={form.remember}
-                      onValueChange={(v) =>
-                        setForm((f) => ({ ...f, remember: v }))
-                      }
-                      color="success"
-                      size="sm"
-                      classNames={{
-                        base: "m-0 p-0",
-                        wrapper:
-                          "after:bg-emerald-500 after:text-white border-gray-300",
-                        icon: "text-white",
-                      }}
-                    />
-                    <span>Ghi nhớ đăng nhập</span>
-                  </label>
-
-                  <Link
-                    href="#"
-                    color="success"
-                    size="sm"
-                    className="text-emerald-600 hover:text-emerald-700 font-medium"
-                  >
-                    Quên mật khẩu?
-                  </Link>
                 </div>
 
                 {/* Submit */}
