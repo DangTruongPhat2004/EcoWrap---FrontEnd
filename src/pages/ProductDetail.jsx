@@ -6,6 +6,7 @@ import {
   calculateSellerStats,
 } from "../services/productApi";
 import { addCartItem } from "../services/cartApi";
+import ChatButton from "../components/chat/ChatButton"; // Chat button import
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -23,6 +24,36 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [showCertificatePreview, setShowCertificatePreview] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
+
+  // FIXED: Get authentication from localStorage correctly
+  const authToken = localStorage.getItem("token"); // Your app uses 'token' not 'authToken'
+  const userString = localStorage.getItem("user");
+  let currentUserId = null;
+  let currentUser = null;
+
+  // Parse user data to get userId
+  // NEW CODE (CORRECT):
+  if (userString) {
+    try {
+      const userResponse = JSON.parse(userString);
+
+      // Your user object is wrapped in {data: {...}, message: null, success: true}
+      if (userResponse.data) {
+        currentUser = userResponse.data;
+        currentUserId = currentUser.userId || currentUser.id;
+      } else {
+        // Fallback if the structure is different
+        currentUserId = userResponse.userId || userResponse.id;
+      }
+
+      console.log("Extracted userId:", currentUserId);
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+    }
+  }
+
+  console.log("Auth Token:", authToken ? "Present" : "Missing");
+  console.log("Current User ID:", currentUserId);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -51,14 +82,13 @@ const ProductDetail = () => {
           // Fetch related products (products in the same category)
           const related = allProducts
             .filter((p) => p.id !== id && p.category === productData.category)
-            .slice(0, 4); // Limit to 4 related products
+            .slice(0, 4);
           setRelatedProducts(related);
         } catch (relatedErr) {
           console.warn(
             "Could not fetch related products or seller stats:",
             relatedErr
           );
-          // Continue without related products and use basic seller stats
           setRelatedProducts([]);
         }
 
@@ -84,7 +114,7 @@ const ProductDetail = () => {
 
     if (showCertificatePreview) {
       document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden"; // Prevent background scrolling
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
@@ -137,14 +167,9 @@ const ProductDetail = () => {
 
       await addCartItem(formData);
 
-      // Dispatch cart updated event to refresh cart count in header
       window.dispatchEvent(new CustomEvent("cart:updated"));
 
-      // Show success notification
       alert(`Đã thêm ${quantity} ${product.name} vào giỏ hàng!`);
-
-      // Optionally redirect to cart page
-      // navigate("/cart");
     } catch (error) {
       console.error("Error adding to cart:", error);
       const errorMsg =
@@ -190,7 +215,7 @@ const ProductDetail = () => {
 
   return (
     <div className="max-w-[1080px] mx-auto px-4 py-6">
-      {/* Breadcrumb */}
+      {/* Breadcrumb - KEEPING YOUR ORIGINAL CODE */}
       <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-8">
         <Link to="/" className="hover:text-green-600">
           Trang chủ
@@ -823,7 +848,7 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Action Buttons - Right Side */}
+          {/* Action Buttons - Right Side - REPLACE THIS SECTION */}
           <div className="flex items-center space-x-3">
             <button
               onClick={() =>
@@ -863,39 +888,69 @@ const ProductDetail = () => {
               </svg>
               Xem cửa hàng
             </button>
-            <button className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center">
-              <svg
-                width="17"
-                height="16"
-                viewBox="0 0 17 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="mr-2"
+
+            {/* REPLACE THE OLD "Liên hệ" BUTTON WITH CHATBUTTON */}
+            {currentUserId && authToken && product.seller && (
+              <ChatButton
+                product={{
+                  ...product,
+                  sellerId: product.seller.sellerId || product.seller.id,
+                  productName: product.name || product.productName,
+                  seller: {
+                    companyName:
+                      product.seller.companyName ||
+                      product.seller.user?.fullName,
+                  },
+                }}
+                currentUserId={parseInt(currentUserId)}
+                authToken={authToken}
+              />
+            )}
+            {/* If not logged in, show login message */}
+            {(!currentUserId || !authToken) && (
+              <button
+                onClick={() => {
+                  alert("Vui lòng đăng nhập để liên hệ với người bán");
+                  navigate("/login");
+                }}
+                className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center"
               >
-                <g clipPath="url(#clip0_466_628)">
-                  <g clipPath="url(#clip1_466_628)">
-                    <path
-                      d="M2.60938 0C1.50625 0 0.609375 0.896875 0.609375 2V11C0.609375 12.1031 1.50625 13 2.60938 13H5.60938V15.5C5.60938 15.6906 5.71563 15.8625 5.88438 15.9469C6.05312 16.0312 6.25625 16.0125 6.40938 15.9L10.275 13H14.6094C15.7125 13 16.6094 12.1031 16.6094 11V2C16.6094 0.896875 15.7125 0 14.6094 0H2.60938Z"
-                      fill="#374151"
-                    />
+                <svg
+                  width="17"
+                  height="16"
+                  viewBox="0 0 17 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-2"
+                >
+                  <g clipPath="url(#clip0_466_628)">
+                    <g clipPath="url(#clip1_466_628)">
+                      <path
+                        d="M2.60938 0C1.50625 0 0.609375 0.896875 0.609375 2V11C0.609375 12.1031 1.50625 13 2.60938 13H5.60938V15.5C5.60938 15.6906 5.71563 15.8625 5.88438 15.9469C6.05312 16.0312 6.25625 16.0125 6.40938 15.9L10.275 13H14.6094C15.7125 13 16.6094 12.1031 16.6094 11V2C16.6094 0.896875 15.7125 0 14.6094 0H2.60938Z"
+                        fill="#374151"
+                      />
+                    </g>
                   </g>
-                </g>
-                <defs>
-                  <clipPath id="clip0_466_628">
-                    <rect
-                      width="16"
-                      height="16"
-                      fill="white"
-                      transform="translate(0.609375)"
-                    />
-                  </clipPath>
-                  <clipPath id="clip1_466_628">
-                    <path d="M0.609375 0H16.6094V16H0.609375V0Z" fill="white" />
-                  </clipPath>
-                </defs>
-              </svg>
-              Liên hệ
-            </button>
+                  <defs>
+                    <clipPath id="clip0_466_628">
+                      <rect
+                        width="16"
+                        height="16"
+                        fill="white"
+                        transform="translate(0.609375)"
+                      />
+                    </clipPath>
+                    <clipPath id="clip1_466_628">
+                      <path
+                        d="M0.609375 0H16.6094V16H0.609375V0Z"
+                        fill="white"
+                      />
+                    </clipPath>
+                  </defs>
+                </svg>
+                Liên hệ
+              </button>
+            )}
           </div>
         </div>
 
@@ -937,7 +992,7 @@ const ProductDetail = () => {
         )}
       </div>
 
-      {/* Related Products */}
+      {/* Related Products - KEEP EVERYTHING BELOW THIS THE SAME */}
       <div className="mt-8">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-gray-900">
