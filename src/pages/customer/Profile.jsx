@@ -68,28 +68,45 @@ const Profile = () => {
       }
     } catch {}
 
-    // 2) Resolve userId from store, localStorage, or token then fetch
+    // 2) Resolve userId from multiple sources then fetch
     const resolveAndFetch = async () => {
       try {
         setLoading(true);
-        let userId = user?.userId;
-        if (!userId) {
-          const raw = localStorage.getItem("user");
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            userId = parsed?.userId;
-          }
+
+        // Try to get userId from multiple sources (order matters)
+        let userId = null;
+
+        // First try: from zustand store
+        if (user?.userId) {
+          userId = user.userId;
         }
+
+        // Second try: from localStorage
+        if (!userId) {
+          try {
+            const raw = localStorage.getItem("user");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              userId = parsed?.userId;
+            }
+          } catch {}
+        }
+
+        // Third try: from JWT token
         if (!userId) {
           const token = localStorage.getItem("token");
-          userId = getUserIdFromToken(token);
+          if (token) {
+            userId = getUserIdFromToken(token);
+          }
         }
 
         if (!userId) {
+          console.error("Could not resolve userId from any source");
           setLoading(false);
           return;
         }
 
+        console.log("Fetching profile for userId:", userId);
         const response = await getUserById(userId);
         const r = response?.data ?? response; // accept plain object or {data}
         if (r) {
@@ -104,13 +121,14 @@ const Profile = () => {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
+        toast.error("Không thể tải thông tin người dùng");
       } finally {
         setLoading(false);
       }
     };
 
     resolveAndFetch();
-  }, [user]);
+  }, []); // Remove 'user' dependency to prevent re-fetching on every render
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -121,7 +139,23 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!user?.userId) {
+    // Get userId from multiple sources
+    let userId = user?.userId;
+    if (!userId) {
+      try {
+        const raw = localStorage.getItem("user");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          userId = parsed?.userId;
+        }
+      } catch {}
+    }
+    if (!userId) {
+      const token = localStorage.getItem("token");
+      userId = getUserIdFromToken(token);
+    }
+
+    if (!userId) {
       toast.error("Không tìm thấy thông tin người dùng");
       return;
     }
@@ -135,7 +169,8 @@ const Profile = () => {
         email: formData.email,
       };
 
-      const response = await updateUser(user.userId, updateData);
+      console.log("Saving profile for userId:", userId);
+      const response = await updateUser(userId, updateData);
 
       // Handle both {success: true} and direct data responses
       if (response?.success !== false) {
@@ -211,12 +246,14 @@ const Profile = () => {
 
     try {
       setIsChangingPassword(true);
+      console.log("Attempting to change password...");
       const response = await changePassword(
         resetPasswordData.oldPassword,
         resetPasswordData.newPassword
       );
 
-      if (response.success) {
+      // Check for success in the response
+      if (response?.Success !== false) {
         toast.success("Đổi mật khẩu thành công!");
         setShowForgotPasswordModal(false);
         setResetPasswordData({
@@ -225,11 +262,18 @@ const Profile = () => {
           confirmPassword: "",
         });
       } else {
-        toast.error(response.message || "Không thể đổi mật khẩu");
+        toast.error(
+          response.Message || response.message || "Không thể đổi mật khẩu"
+        );
       }
     } catch (error) {
       console.error("Error changing password:", error);
-      toast.error("Đã xảy ra lỗi khi đổi mật khẩu");
+      const errMsg =
+        error?.response?.data?.Message ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Đã xảy ra lỗi khi đổi mật khẩu";
+      toast.error(errMsg);
     } finally {
       setIsChangingPassword(false);
     }

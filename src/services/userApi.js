@@ -85,13 +85,15 @@ export async function deleteUser(userId) {
  */
 export async function changePassword(oldPassword, newPassword) {
   try {
+    // Backend expects OldPassword and NewPassword with capital letters
     const response = await api.post("api/Users/change-password", {
-      oldPassword,
-      newPassword,
+      OldPassword: oldPassword,
+      NewPassword: newPassword,
     });
     return response.data;
   } catch (error) {
     console.error("Error changing password:", error);
+    console.error("Error response:", error?.response?.data);
     throw error;
   }
 }
