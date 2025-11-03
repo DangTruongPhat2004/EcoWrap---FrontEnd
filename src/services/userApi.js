@@ -35,7 +35,28 @@ export async function getUserById(userId) {
  */
 export async function updateUser(userId, userData) {
   try {
-    const response = await api.put(`api/Users/${userId}`, userData);
+    // Backend expects multipart/form-data
+    const formData = new FormData();
+
+    // Append all user data fields
+    if (userData.userName !== undefined)
+      formData.append("UserName", userData.userName);
+    if (userData.fullName !== undefined)
+      formData.append("FullName", userData.fullName);
+    if (userData.phoneNumber !== undefined)
+      formData.append("PhoneNumber", userData.phoneNumber);
+    if (userData.email !== undefined) formData.append("Email", userData.email);
+
+    // If there's a profile picture file, append it
+    if (userData.profilePicture instanceof File) {
+      formData.append("ProfilePicture", userData.profilePicture);
+    }
+
+    const response = await api.put(`api/Users/${userId}`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);

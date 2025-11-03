@@ -96,12 +96,15 @@ export const getRegistrationsByStatus = async (status) => {
  */
 export const approveRegistration = async (registrationId) => {
   try {
+    // Backend expects PUT /api/SellerRegistration/approve/{id} with no body
     const response = await apiClient.put(
-      `/api/SellerRegistration/approve/${registrationId}`
+      `/api/SellerRegistration/approve/${registrationId}`,
+      null // Explicitly send null body
     );
     return response.data;
   } catch (error) {
     console.error("Error approving registration:", error);
+    console.error("Error details:", error.response?.data);
     throw error;
   }
 };
@@ -114,9 +117,10 @@ export const approveRegistration = async (registrationId) => {
  */
 export const adminRejectRegistration = async (registrationId, reason) => {
   try {
+    // Backend expects { Reason: "..." } with capital R
     const response = await apiClient.put(
       `/api/SellerRegistration/reject/${registrationId}`,
-      { reason }
+      { Reason: reason }
     );
     return response.data;
   } catch (error) {

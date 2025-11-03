@@ -137,16 +137,39 @@ const Profile = () => {
 
       const response = await updateUser(user.userId, updateData);
 
-      if (response.success) {
+      // Handle both {success: true} and direct data responses
+      if (response?.success !== false) {
         toast.success("Cập nhật thông tin thành công!");
         setOriginalData(formData);
         setIsEditing(false);
+
+        // Update localStorage user data
+        try {
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...storedUser,
+              userName: formData.username,
+              username: formData.username,
+              fullName: formData.fullName,
+              phoneNumber: formData.phone,
+              email: formData.email,
+            })
+          );
+        } catch (e) {
+          console.error("Failed to update localStorage:", e);
+        }
       } else {
         toast.error(response.message || "Không thể cập nhật thông tin");
       }
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Đã xảy ra lỗi khi cập nhật thông tin");
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Đã xảy ra lỗi khi cập nhật thông tin";
+      toast.error(errMsg);
     } finally {
       setIsSaving(false);
     }
