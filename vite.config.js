@@ -5,6 +5,23 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      // Proxy all API routes to backend during development
+      "/api": {
+        target: "https://localhost:7077",
+        changeOrigin: true,
+        secure: false, // dev cert tự ký → để false
+      },
+      // Routes without /api prefix (Dashboard, Feedback, etc.)
+      "/Dashboard": {
+        target: "https://localhost:7077",
+        changeOrigin: true,
+        secure: false,
+      },
+      "/Feedback": {
+        target: "https://localhost:7077",
+        changeOrigin: true,
+        secure: false,
+      },
       // mọi request bắt đầu bằng /ai sẽ được forward sang backend
       "/ai": {
         target: "https://localhost:7077", // đổi đúng port HTTPS backend của bạn

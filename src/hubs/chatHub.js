@@ -6,7 +6,7 @@ import * as signalR from "@microsoft/signalr";
 const connection = createConnection();
 
 function createConnection() {
-  const baseUrl = "https://localhost:7077"; // Hoặc lấy từ biến môi trường
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || "https://localhost:7077"; // Use environment variable
 
   function getLsToken() {
     try {
