@@ -59,20 +59,8 @@ export async function updateUser(userId, userData) {
     }
 
     // Let axios set Content-Type automatically for FormData (with boundary)
-    // Try PUT first, if 405 persists, backend might need IIS configuration
-    try {
-      const response = await api.put(`/api/Users/${userId}`, formData);
-      return response.data;
-    } catch (error) {
-      // If PUT fails with 405, log detailed info
-      if (error?.response?.status === 405) {
-        console.error(
-          "PUT request blocked. Check if IIS WebDAV is interfering."
-        );
-        console.error("Backend URL:", `/api/Users/${userId}`);
-      }
-      throw error;
-    }
+    const response = await api.put(`/api/Users/${userId}`, formData);
+    return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
     console.error("Error response:", error?.response?.data);
