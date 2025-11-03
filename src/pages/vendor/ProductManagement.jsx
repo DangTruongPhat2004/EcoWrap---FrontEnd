@@ -10,9 +10,12 @@ import {
   Button,
   Input,
   Pagination,
+  Switch,
 } from "@heroui/react";
 import { Plus, Search, AlertTriangle } from "lucide-react";
-import { getMyProducts } from "../../services/productApi";
+import { getMyProducts, updateProduct } from "../../services/productApi";
+import { getAllCategories } from "../../services/categoryApi";
+import toast from "react-hot-toast";
 
 const ProductManagement = () => {
   const navigate = useNavigate();
@@ -20,18 +23,23 @@ const ProductManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
 
-  // Fetch products from API
+  // Fetch products and categories from API
   const fetchProducts = async () => {
     setIsDataLoading(true);
     setDataError(null);
     try {
-      const response = await getMyProducts();
-      setProducts(response);
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        getMyProducts(),
+        getAllCategories(),
+      ]);
+      setProducts(productsResponse);
+      setCategories(categoriesResponse);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching data:", error);
       setDataError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
     } finally {
       setIsDataLoading(false);
@@ -42,6 +50,44 @@ const ProductManagement = () => {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Get category name by ID
+  const getCategoryName = (categoryId) => {
+    const category = categories.find((cat) => cat.categoryId === categoryId);
+    return category?.categoryName || "Chưa phân loại";
+  };
+
+  // Handle active toggle
+  const handleToggleActive = async (product, newActiveStatus) => {
+    try {
+      const formData = new FormData();
+      formData.append("ProductId", product.productId);
+      formData.append("ProductName", product.productName);
+      formData.append("Description", product.description || "");
+      formData.append("Price", product.price);
+      formData.append("WeightGram", product.weightGram || 0);
+      formData.append("CategoryId", product.categoryId);
+      formData.append("IsActive", newActiveStatus);
+
+      await updateProduct(product.productId, formData);
+
+      // Update local state
+      setProducts(
+        products.map((p) =>
+          p.productId === product.productId
+            ? { ...p, isActive: newActiveStatus }
+            : p
+        )
+      );
+
+      toast.success(
+        newActiveStatus ? "Đã kích hoạt sản phẩm" : "Đã tắt sản phẩm"
+      );
+    } catch (error) {
+      console.error("Error updating product status:", error);
+      toast.error("Không thể cập nhật trạng thái sản phẩm");
+    }
+  };
 
   // Filter products based on search term
   const filteredProducts = products.filter(
@@ -150,9 +196,9 @@ const ProductManagement = () => {
             <TableColumn className="text-gray-700 font-semibold">
               Giá
             </TableColumn>
-            {/* <TableColumn className="text-gray-700 font-semibold">
-              Trạng Thái
-            </TableColumn> */}
+            <TableColumn className="text-gray-700 font-semibold">
+              Hoạt Động
+            </TableColumn>
           </TableHeader>
           <TableBody
             emptyContent={
@@ -196,7 +242,7 @@ const ProductManagement = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {product.category || "Chưa có"}
+                    {getCategoryName(product.categoryId)}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -212,24 +258,17 @@ const ProductManagement = () => {
                     })}
                   </span>
                 </TableCell>
-                {/* <TableCell>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      product.productStatus === "In stock"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {product.productStatus === "In stock"
-                      ? "Còn hàng"
-                      : "Hết hàng"}
-                  </span>
-                </TableCell>
                 <TableCell>
-                  <span className="text-sm font-mono text-gray-600">
-                    #{product.id}
-                  </span>
-                </TableCell> */}
+                  <Switch
+                    isSelected={product.isActive ?? true}
+                    onValueChange={(checked) =>
+                      handleToggleActive(product, checked)
+                    }
+                    color="success"
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

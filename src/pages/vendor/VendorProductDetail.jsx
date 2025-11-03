@@ -75,7 +75,13 @@ const VendorProductDetail = () => {
         ]);
 
         setProduct(productData);
-        if (categoriesResponse.success && categoriesResponse.data) {
+
+        // Handle both response formats: array or {success, data}
+        if (Array.isArray(categoriesResponse)) {
+          setCategories(categoriesResponse);
+        } else if (categoriesResponse.success && categoriesResponse.data) {
+          setCategories(categoriesResponse.data);
+        } else if (categoriesResponse.data) {
           setCategories(categoriesResponse.data);
         }
 
@@ -91,7 +97,8 @@ const VendorProductDetail = () => {
           productPrice: productData.productPrice || 0,
           weightGram: productData.weightGram || 0,
           materialType: productData.materialType || "",
-          categoryId: productData.categoryId || "",
+          categoryId:
+            productData.category?.categoryId || productData.categoryId || "",
           // Files are handled separately
         });
       } catch (err) {
@@ -173,7 +180,7 @@ const VendorProductDetail = () => {
         productPrice: product.productPrice || 0,
         weightGram: product.weightGram || 0,
         materialType: product.materialType || "",
-        categoryId: product.categoryId || "",
+        categoryId: product.category?.categoryId || product.categoryId || "",
       });
       // Reset file states
       setImageFile(null);
@@ -239,16 +246,27 @@ const VendorProductDetail = () => {
     setIsUpdating(true);
     const updateFormData = new FormData();
 
-    // Append all text fields from formData
-    for (const key in formData) {
-      updateFormData.append(key, formData[key]);
-    }
+    // Append all fields with PascalCase for backend (C# convention)
+    updateFormData.append("ProductId", formData.productId);
+    updateFormData.append("ProductName", formData.productName);
+    updateFormData.append(
+      "ProductDescription",
+      formData.productDescription || ""
+    );
+    updateFormData.append("Unit", formData.unit);
+    updateFormData.append("Size", formData.size);
+    updateFormData.append("InkType", formData.inkType);
+    updateFormData.append("PrintProcess", formData.printProcess);
+    updateFormData.append("ProductPrice", formData.productPrice);
+    updateFormData.append("WeightGram", formData.weightGram);
+    updateFormData.append("MaterialType", formData.materialType);
+    updateFormData.append("CategoryId", formData.categoryId);
 
     // Append files if they have been changed
-    if (imageFile) updateFormData.append("imageFile", imageFile);
+    if (imageFile) updateFormData.append("ImageFile", imageFile);
     if (certificateFile)
-      updateFormData.append("certificateFile", certificateFile);
-    if (designFile) updateFormData.append("designFile", designFile);
+      updateFormData.append("CertificateFile", certificateFile);
+    if (designFile) updateFormData.append("DesignFile", designFile);
 
     try {
       onUpdateConfirmOpenChange(); // Đóng modal xác nhận

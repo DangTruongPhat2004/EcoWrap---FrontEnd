@@ -63,7 +63,12 @@ const AddProduct = () => {
     const fetchCategories = async () => {
       try {
         const response = await getAllCategories();
-        if (response.success && response.data) {
+        // Handle both response formats: array or {success, data}
+        if (Array.isArray(response)) {
+          setCategories(response);
+        } else if (response.success && response.data) {
+          setCategories(response.data);
+        } else if (response.data) {
           setCategories(response.data);
         }
       } catch (error) {
@@ -139,14 +144,26 @@ const AddProduct = () => {
     setIsCreating(true);
     const createFormData = new FormData();
 
-    for (const key in formData) {
-      createFormData.append(key, formData[key]);
-    }
+    // Append all fields with PascalCase for backend (C# convention)
+    createFormData.append("ProductId", formData.productId);
+    createFormData.append("ProductName", formData.productName);
+    createFormData.append(
+      "ProductDescription",
+      formData.productDescription || ""
+    );
+    createFormData.append("Unit", formData.unit);
+    createFormData.append("Size", formData.size);
+    createFormData.append("InkType", formData.inkType);
+    createFormData.append("PrintProcess", formData.printProcess);
+    createFormData.append("ProductPrice", formData.productPrice);
+    createFormData.append("WeightGram", formData.weightGram);
+    createFormData.append("MaterialType", formData.materialType);
+    createFormData.append("CategoryId", formData.categoryId);
 
-    if (imageFile) createFormData.append("imageFile", imageFile);
+    if (imageFile) createFormData.append("ImageFile", imageFile);
     if (certificateFile)
-      createFormData.append("certificateFile", certificateFile);
-    if (designFile) createFormData.append("designFile", designFile);
+      createFormData.append("CertificateFile", certificateFile);
+    if (designFile) createFormData.append("DesignFile", designFile);
 
     try {
       await createProduct(createFormData);

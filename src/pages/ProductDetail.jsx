@@ -49,8 +49,13 @@ const ProductDetail = () => {
           }
 
           // Fetch related products (products in the same category)
+          const productCategoryId =
+            productData.category?.categoryId || productData.categoryId;
           const related = allProducts
-            .filter((p) => p.id !== id && p.category === productData.category)
+            .filter((p) => {
+              const pCategoryId = p.category?.categoryId || p.categoryId;
+              return p.id !== id && pCategoryId === productCategoryId;
+            })
             .slice(0, 4); // Limit to 4 related products
           setRelatedProducts(related);
         } catch (relatedErr) {
@@ -200,19 +205,22 @@ const ProductDetail = () => {
           Sản phẩm
         </Link>
         <span>/</span>
-        {product.category && (
+        {(product.category?.categoryName || product.category) && (
           <>
             <Link
               to={`/products?category=${
-                typeof product.category === "string"
+                product.category?.categoryName
+                  ? product.category.categoryName.toLowerCase()
+                  : typeof product.category === "string"
                   ? product.category.toLowerCase()
                   : product.category
               }`}
               className="hover:text-green-600"
             >
-              {typeof product.category === "string"
-                ? product.category
-                : "Bao bì thân thiện môi trường"}
+              {product.category?.categoryName ||
+                (typeof product.category === "string"
+                  ? product.category
+                  : "Bao bì thân thiện môi trường")}
             </Link>
             <span>/</span>
           </>

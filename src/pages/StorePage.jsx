@@ -21,6 +21,11 @@ export default function StorePage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Get current user info
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUserRole = currentUser?.role || "";
+  const currentUserId = currentUser?.userId;
+
   useEffect(() => {
     fetchStoreData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -145,13 +150,19 @@ export default function StorePage() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-3">
-                    <Button
-                      color="default"
-                      variant="bordered"
-                      startContent={<MessageCircle size={18} />}
-                    >
-                      Chat ngay
-                    </Button>
+                    {/* Hide chat button if seller viewing their own shop */}
+                    {!(
+                      currentUserRole === "Seller" &&
+                      seller.userId === currentUserId
+                    ) && (
+                      <Button
+                        color="default"
+                        variant="bordered"
+                        startContent={<MessageCircle size={18} />}
+                      >
+                        Chat ngay
+                      </Button>
+                    )}
                     <Button color="primary" startContent={<Store size={18} />}>
                       Theo dõi
                     </Button>

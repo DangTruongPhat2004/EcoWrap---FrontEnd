@@ -26,8 +26,7 @@ import {
   MyFeedback,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
-import VendorProfile from "./pages/vendor/VendorProfile";
-import VendorUserProfile from "./pages/vendor/VendorUserProfile";
+import VendorSettings from "./pages/vendor/VendorSettings";
 import WarehouseManagement from "./pages/vendor/WarehouseManagement";
 import VendorProductDetail from "./pages/vendor/VendorProductDetail";
 import AddProduct from "./pages/vendor/AddProduct";
@@ -215,8 +214,7 @@ function App() {
         >
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
-          <Route path="profile" element={<VendorProfile />} />
-          <Route path="account" element={<VendorUserProfile />} />
+          <Route path="settings" element={<VendorSettings />} />
           <Route path="warehouses" element={<WarehouseManagement />} />
           <Route path="products" element={<ProductManagement />} />
           <Route path="products/new" element={<AddProduct />} />

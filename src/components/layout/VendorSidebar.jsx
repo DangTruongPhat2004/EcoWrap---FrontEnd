@@ -71,10 +71,10 @@ const VendorSidebar = () => {
       submenu: [],
     },
     {
-      id: "profile",
+      id: "settings",
       label: "Cài Đặt",
       icon: Settings,
-      path: "/vendor/profile",
+      path: "/vendor/settings",
       submenu: [],
     },
   ];
