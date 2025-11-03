@@ -29,9 +29,11 @@ const MyFeedback = () => {
     setLoading(true);
     try {
       const data = await getMyFeedback();
-      setFeedback(data);
-      if (data) {
-        setFormData({ comment: data.comment, rating: data.rating });
+      // API returns an array, get the first item
+      const feedbackItem = Array.isArray(data) && data.length > 0 ? data[0] : null;
+      setFeedback(feedbackItem);
+      if (feedbackItem) {
+        setFormData({ comment: feedbackItem.comment, rating: feedbackItem.rating });
       }
     } catch (err) {
       console.error("Error fetching feedback:", err);
