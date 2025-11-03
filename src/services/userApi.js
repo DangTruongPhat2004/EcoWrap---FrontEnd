@@ -7,7 +7,7 @@ import api from "./apiClient";
  */
 export async function getAllUsers() {
   try {
-    const response = await api.get("api/Users");
+    const response = await api.get("/api/Users");
     return response.data;
   } catch (error) {
     console.error("Error fetching users:", error);
@@ -21,7 +21,7 @@ export async function getAllUsers() {
  */
 export async function getUserById(userId) {
   try {
-    const response = await api.get(`api/Users/${userId}`);
+    const response = await api.get(`/api/Users/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -52,7 +52,7 @@ export async function updateUser(userId, userData) {
       formData.append("ProfilePicture", userData.profilePicture);
     }
 
-    const response = await api.put(`api/Users/${userId}`, formData, {
+    const response = await api.put(`/api/Users/${userId}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -71,7 +71,7 @@ export async function updateUser(userId, userData) {
  */
 export async function deleteUser(userId) {
   try {
-    const response = await api.delete(`api/Users/${userId}`);
+    const response = await api.delete(`/api/Users/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting user:", error);
@@ -86,7 +86,7 @@ export async function deleteUser(userId) {
 export async function changePassword(oldPassword, newPassword) {
   try {
     // Backend expects OldPassword and NewPassword with capital letters
-    const response = await api.post("api/Users/change-password", {
+    const response = await api.post("/api/Users/change-password", {
       OldPassword: oldPassword,
       NewPassword: newPassword,
     });

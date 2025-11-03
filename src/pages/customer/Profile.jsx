@@ -109,10 +109,10 @@ const Profile = () => {
         console.log("Fetching profile for userId:", userId);
         const response = await getUserById(userId);
         console.log("Profile response:", response);
-        
+
         // Handle both { data: {...} } and direct {...} response formats
         const r = response?.data || response?.Data || response;
-        
+
         if (r) {
           const userData = {
             username: r.userName || r.username || "",
@@ -123,19 +123,22 @@ const Profile = () => {
           console.log("Setting profile data:", userData);
           setFormData(userData);
           setOriginalData(userData);
-          
+
           // Also update localStorage to ensure it has the latest data
           try {
             const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-            localStorage.setItem("user", JSON.stringify({
-              ...storedUser,
-              userId: r.userId || storedUser.userId,
-              userName: userData.username,
-              username: userData.username,
-              fullName: userData.fullName,
-              phoneNumber: userData.phone,
-              email: userData.email,
-            }));
+            localStorage.setItem(
+              "user",
+              JSON.stringify({
+                ...storedUser,
+                userId: r.userId || storedUser.userId,
+                userName: userData.username,
+                username: userData.username,
+                fullName: userData.fullName,
+                phoneNumber: userData.phone,
+                email: userData.email,
+              })
+            );
           } catch (e) {
             console.error("Failed to update localStorage:", e);
           }
@@ -190,13 +193,22 @@ const Profile = () => {
         email: formData.email,
       };
 
-      console.log("Saving profile for userId:", userId, "with data:", updateData);
+      console.log(
+        "Saving profile for userId:",
+        userId,
+        "with data:",
+        updateData
+      );
       const response = await updateUser(userId, updateData);
       console.log("Update response:", response);
 
       // Response structure: { success: true, data: {...}, message: "..." }
       if (response?.success !== false && response?.Success !== false) {
-        toast.success(response?.message || response?.Message || "Cập nhật thông tin thành công!");
+        toast.success(
+          response?.message ||
+            response?.Message ||
+            "Cập nhật thông tin thành công!"
+        );
         setOriginalData(formData);
         setIsEditing(false);
 
@@ -220,7 +232,11 @@ const Profile = () => {
           console.error("Failed to update localStorage:", e);
         }
       } else {
-        toast.error(response?.message || response?.Message || "Không thể cập nhật thông tin");
+        toast.error(
+          response?.message ||
+            response?.Message ||
+            "Không thể cập nhật thông tin"
+        );
       }
     } catch (error) {
       console.error("Error updating user:", error);
