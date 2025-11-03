@@ -27,6 +27,8 @@ const transformProduct = (product) => {
           id: product.seller.sellerId,
           companyName: product.seller.companyName,
           address: product.seller.address,
+          companyImage: product.seller.companyImage || null,
+          companyBanner: product.seller.companyBanner || null,
           // Use product count from seller's products array if available
           productCount: product.seller.products?.length || 0,
           // For now, we'll need to calculate ratings per-seller by fetching all products
@@ -145,6 +147,38 @@ export const getMyProducts = async () => {
   } catch (error) {
     console.error("Error fetching my products:", error);
     throw error;
+  }
+};
+
+/**
+ * Get products by seller ID
+ * @param {string|number} sellerId - The seller ID
+ * @returns {Promise} Object with success flag and data
+ */
+export const getProductsBySeller = async (sellerId) => {
+  try {
+    // Get all products and filter by seller
+    const response = await apiClient.get("/api/Product");
+    const allProducts = response.data;
+
+    if (!Array.isArray(allProducts)) {
+      return { success: true, data: [] };
+    }
+
+    // Filter products by seller ID
+    const sellerProducts = allProducts.filter(
+      (product) =>
+        product.sellerId === parseInt(sellerId) ||
+        product.seller?.sellerId === parseInt(sellerId)
+    );
+
+    return {
+      success: true,
+      data: sellerProducts.map(transformProduct),
+    };
+  } catch (error) {
+    console.error("Error fetching products by seller:", error);
+    return { success: false, data: [], error: error.message };
   }
 };
 

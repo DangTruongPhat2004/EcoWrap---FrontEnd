@@ -6,6 +6,7 @@ export { default as Unauthorized } from "./Unauthorized";
 export { default as Register } from "./Register";
 export { default as Products } from "./Products";
 export { default as ProductDetail } from "./ProductDetail";
+export { default as StorePage } from "./StorePage";
 export { default as VendorDashboard } from "./vendor/VendorDashboard";
 export { default as Profile } from "./customer/Profile";
 export { default as OrdersPage } from "./customer/OrdersPage";
@@ -21,6 +22,10 @@ export { default as UserManagement } from "./admin/UserManagement";
 export { default as OrderManagement } from "./admin/OrderManagement";
 export { default as OrderDetailAdmin } from "./admin/OrderDetailAdmin";
 export { default as CategoryManagement } from "./admin/CategoryManagement";
+export { default as FeedbackManagement } from "./admin/FeedbackManagement";
+
+// Customer pages
+export { default as MyFeedback } from "./customer/MyFeedback";
 
 // Order pages
 export { default as OrderSuccessPage } from "./order/OrderSuccessPage";

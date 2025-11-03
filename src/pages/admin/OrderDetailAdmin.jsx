@@ -13,9 +13,13 @@ import {
   Calendar,
   Hash,
   AlertCircle,
+  CreditCard,
+  Building2,
+  Copy,
+  X,
 } from "lucide-react";
 import {
-  getOrderById,
+  getOrderByIdAdmin,
   confirmPackaging,
   confirmShipment,
   declineOrder,
@@ -30,6 +34,8 @@ const OrderDetailAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [selectedSeller, setSelectedSeller] = useState(null);
 
   useEffect(() => {
     fetchOrderDetail();
@@ -41,14 +47,14 @@ const OrderDetailAdmin = () => {
     setError(null);
 
     try {
-      const response = await getOrderById(orderId);
+      const response = await getOrderByIdAdmin(orderId);
 
       if (response.success && response.data) {
         setOrder(response.data);
       } else {
         setError(
           response.message ||
-            "Không thể tải chi tiết đơn hàng. Backend cần implement GetOrderByIdAsync."
+            "Không thể tải chi tiết đơn hàng. Backend cần implement GetOrderByIdForAdminAsync."
         );
       }
     } catch (err) {
@@ -365,38 +371,90 @@ const OrderDetailAdmin = () => {
               </div>
             </div>
 
-            {/* Order Items */}
+            {/* Order Items - Grouped by Seller */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Package size={20} />
                 Sản phẩm ({order.items?.length || 0})
               </h2>
-              <div className="space-y-4">
-                {order.items?.map((item, index) => (
+              <div className="space-y-6">
+                {groupItemsBySeller(order.items).map((sellerGroup, idx) => (
                   <div
-                    key={index}
-                    className="flex items-center gap-4 pb-4 border-b border-gray-100 last:border-b-0"
+                    key={idx}
+                    className="border border-gray-200 rounded-lg overflow-hidden"
                   >
-                    {item.thumb && (
-                      <img
-                        src={item.thumb}
-                        alt={item.name}
-                        className="w-16 h-16 object-cover rounded-lg border border-gray-200"
-                      />
-                    )}
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{item.name}</h3>
-                      {item.desc && (
-                        <p className="text-sm text-gray-500">{item.desc}</p>
-                      )}
-                      <p className="text-sm text-gray-600 mt-1">
-                        Số lượng: {item.qty} × {formatCurrency(item.price)}
-                      </p>
+                    {/* Seller Header */}
+                    <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 size={16} className="text-blue-600" />
+                        <span className="font-semibold text-gray-900">
+                          {sellerGroup.sellerName || "Nhà bán hàng"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedSeller(sellerGroup);
+                          setShowBankModal(true);
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <CreditCard size={16} />
+                        Thông tin thanh toán
+                      </button>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-900">
-                        {formatCurrency(item.qty * item.price)}
-                      </p>
+
+                    {/* Seller Items */}
+                    <div className="p-4 space-y-3">
+                      {sellerGroup.items.map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-4 pb-3 border-b border-gray-100 last:border-b-0"
+                        >
+                          {item.thumb && (
+                            <img
+                              src={item.thumb}
+                              alt={item.name}
+                              className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-medium text-gray-900">
+                              {item.name}
+                            </h3>
+                            {item.desc && (
+                              <p className="text-sm text-gray-500">
+                                {item.desc}
+                              </p>
+                            )}
+                            <p className="text-sm text-gray-600 mt-1">
+                              Số lượng: {item.qty} ×{" "}
+                              {formatCurrency(item.price)}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">
+                              {formatCurrency(item.qty * item.price)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Seller Total */}
+                    <div className="bg-gray-50 px-4 py-3 border-t border-gray-200 flex justify-end">
+                      <div className="text-right">
+                        <span className="text-sm text-gray-600 mr-3">
+                          Tổng cộng:
+                        </span>
+                        <span className="text-lg font-bold text-blue-600">
+                          {formatCurrency(
+                            sellerGroup.items.reduce(
+                              (sum, item) => sum + item.price * item.qty,
+                              0
+                            )
+                          )}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -509,9 +567,228 @@ const OrderDetailAdmin = () => {
             </div>
           </div>
         </div>
+
+        {/* Bank Info Modal */}
+        {showBankModal && selectedSeller && (
+          <BankInfoModal
+            seller={selectedSeller}
+            onClose={() => {
+              setShowBankModal(false);
+              setSelectedSeller(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
 };
+
+// Helper function to group items by seller
+function groupItemsBySeller(items) {
+  if (!items || items.length === 0) return [];
+
+  const grouped = items.reduce((acc, item) => {
+    const sellerId = item.sellerId || "unknown";
+    const sellerName = item.sellerName || "Nhà bán hàng";
+
+    if (!acc[sellerId]) {
+      acc[sellerId] = {
+        sellerId,
+        sellerName,
+        bankAccountNumber: item.bankAccountNumber,
+        bankName: item.bankName,
+        accountHolderName: item.accountHolderName,
+        bankBranch: item.bankBranch,
+        qrcodeImage: item.qrcodeImage,
+        email: item.sellerEmail,
+        phone: item.sellerPhone,
+        items: [],
+      };
+    }
+
+    acc[sellerId].items.push(item);
+    return acc;
+  }, {});
+
+  return Object.values(grouped);
+}
+
+// Bank Info Modal Component
+function BankInfoModal({ seller, onClose }) {
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Đã sao chép!");
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">
+              Thông tin thanh toán
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              {seller.sellerName || "Nhà bán hàng"}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X size={20} className="text-gray-500" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* QR Code */}
+          {seller.qrcodeImage && (
+            <div className="flex justify-center">
+              <div className="bg-white p-4 rounded-lg border-2 border-gray-200 shadow-sm">
+                <img
+                  src={seller.qrcodeImage}
+                  alt="QR Code thanh toán"
+                  className="w-64 h-64 object-contain"
+                />
+                <p className="text-center text-sm text-gray-600 mt-2">
+                  Quét mã để thanh toán
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Bank Details */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+              <Building2 size={18} className="text-blue-600" />
+              Chi tiết tài khoản ngân hàng
+            </h3>
+
+            {seller.bankName && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Ngân hàng</p>
+                    <p className="font-semibold text-gray-900">
+                      {seller.bankName}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {seller.accountHolderName && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Chủ tài khoản</p>
+                    <p className="font-semibold text-gray-900">
+                      {seller.accountHolderName}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(seller.accountHolderName)}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                    title="Sao chép"
+                  >
+                    <Copy size={16} className="text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {seller.bankAccountNumber && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Số tài khoản</p>
+                    <p className="font-mono font-semibold text-gray-900 text-lg">
+                      {seller.bankAccountNumber}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(seller.bankAccountNumber)}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
+                    title="Sao chép"
+                  >
+                    <Copy size={16} className="text-gray-600" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {seller.bankBranch && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Chi nhánh</p>
+                    <p className="font-semibold text-gray-900">
+                      {seller.bankBranch}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Contact Info */}
+            {(seller.email || seller.phone) && (
+              <div className="border-t border-gray-200 pt-4 mt-4">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Thông tin liên hệ
+                </h4>
+                <div className="space-y-2">
+                  {seller.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail size={16} className="text-gray-500" />
+                      <span className="text-gray-700">{seller.email}</span>
+                    </div>
+                  )}
+                  {seller.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone size={16} className="text-gray-500" />
+                      <span className="text-gray-700">{seller.phone}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Order Total for this Seller */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-blue-900">
+                  Tổng tiền cần chuyển:
+                </span>
+                <span className="text-xl font-bold text-blue-600">
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(
+                    seller.items.reduce(
+                      (sum, item) => sum + item.price * item.qty,
+                      0
+                    )
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default OrderDetailAdmin;

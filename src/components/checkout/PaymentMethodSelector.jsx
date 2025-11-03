@@ -89,50 +89,12 @@ export default function PaymentMethodSelector({
 }) {
   const options = [
     {
-      key: "vnpay",
+      key: "payos",
       node: (
         <OptionContent
-          badge={<BadgeIcon className="bg-[#2563eb]">VP</BadgeIcon>}
-          title="VNPAY"
-          desc="Thanh toán nhanh qua ứng dụng VNPAY"
-        />
-      ),
-    },
-    {
-      key: "momo",
-      node: (
-        <OptionContent
-          badge={<BadgeIcon className="bg-[#ec4899]">M</BadgeIcon>}
-          title="MoMo"
-          desc="Thanh toán tiện lợi qua ví MoMo"
-        />
-      ),
-    },
-    {
-      key: "bank",
-      node: (
-        <OptionContent
-          badge={
-            <BadgeIcon className="bg-[#8b5cf6]">
-              <Landmark className="w-4 h-4" />
-            </BadgeIcon>
-          }
-          title="Chuyển khoản ngân hàng"
-          desc="Ngân hàng Vietcombank • STK: 123456789"
-        />
-      ),
-    },
-    {
-      key: "cod",
-      node: (
-        <OptionContent
-          badge={
-            <BadgeIcon className="bg-[#10b981]">
-              <Banknote className="w-4 h-4" />
-            </BadgeIcon>
-          }
-          title="Thanh toán khi nhận hàng (COD)"
-          desc="Áp dụng trong nội thành hoặc đơn đủ điều kiện"
+          badge={<BadgeIcon className="bg-[#2563eb]">PO</BadgeIcon>}
+          title="PayOS"
+          desc="Thanh toán qua QR Code - Hỗ trợ tất cả ngân hàng"
         />
       ),
     },

@@ -3,7 +3,7 @@ import apiClient from "./apiClient";
 // Get all categories
 export const getAllCategories = async () => {
   try {
-    const response = await apiClient.get("/category");
+    const response = await apiClient.get("/api/category");
     return response.data;
   } catch (error) {
     console.error("Error fetching categories:", error);
@@ -14,7 +14,7 @@ export const getAllCategories = async () => {
 // Get category by ID
 export const getCategoryById = async (id) => {
   try {
-    const response = await apiClient.get(`/category/${id}`);
+    const response = await apiClient.get(`/api/category/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching category:", error);
@@ -25,7 +25,7 @@ export const getCategoryById = async (id) => {
 // Create new category
 export const createCategory = async (categoryData) => {
   try {
-    const response = await apiClient.post("/category", categoryData);
+    const response = await apiClient.post("/api/category", categoryData);
     return response.data;
   } catch (error) {
     console.error("Error creating category:", error);
@@ -37,7 +37,7 @@ export const createCategory = async (categoryData) => {
 export const updateCategory = async (categoryData) => {
   try {
     const response = await apiClient.put(
-      `/category/${categoryData.categoryId}`,
+      `/api/category/${categoryData.categoryId}`,
       categoryData
     );
     return response.data;
@@ -50,7 +50,7 @@ export const updateCategory = async (categoryData) => {
 // Delete category
 export const deleteCategory = async (id) => {
   try {
-    const response = await apiClient.delete(`/category/${id}`);
+    const response = await apiClient.delete(`/api/category/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error deleting category:", error);

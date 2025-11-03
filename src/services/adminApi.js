@@ -1,15 +1,72 @@
 // Admin Dashboard API Service
 // Placeholder functions for admin statistics and data
 
+import apiClient from "./apiClient";
+
+/**
+ * Get dashboard metrics from backend API
+ * @returns {Promise<Object>} Dashboard metrics
+ */
+export const getDashboardMetrics = async () => {
+  try {
+    const response = await apiClient.get("/Dashboard");
+    if (response.data.Success) {
+      return response.data.Data;
+    } else {
+      throw new Error(
+        response.data.Message || "Failed to fetch dashboard metrics"
+      );
+    }
+  } catch (error) {
+    console.error("Error fetching dashboard metrics:", error);
+    throw error;
+  }
+};
+
+/**
+ * Get all feedback for admin management
+ * @returns {Promise<Array>} Array of feedback objects
+ */
+export const getAllFeedback = async () => {
+  try {
+    const response = await apiClient.get("/Feedback/admin/all");
+    if (response.data.Success) {
+      return response.data.Data;
+    } else {
+      throw new Error(response.data.Message || "Failed to fetch feedback");
+    }
+  } catch (error) {
+    console.error("Error fetching feedback:", error);
+    throw error;
+  }
+};
+
+/**
+ * Delete a feedback by admin
+ * @param {number} feedbackId - ID of the feedback to delete
+ * @returns {Promise<Object>} Success response
+ */
+export const deleteFeedback = async (feedbackId) => {
+  try {
+    const response = await apiClient.delete(`/Feedback/admin/${feedbackId}`);
+    if (response.data.Success) {
+      return response.data;
+    } else {
+      throw new Error(response.data.Message || "Failed to delete feedback");
+    }
+  } catch (error) {
+    console.error("Error deleting feedback:", error);
+    throw error;
+  }
+};
+
 /**
  * Get overall dashboard statistics
  * @param {string} timeRange - Time range filter (day, week, month, year)
  * @returns {Promise<Object>} Dashboard statistics
  */
 export const getAdminDashboardStats = async (timeRange) => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/dashboard/stats?timeRange=month
-
+  // Mock data for additional stats not provided by backend
   return new Promise((resolve) => {
     setTimeout(() => {
       const mockData = {
@@ -48,8 +105,7 @@ export const getAdminDashboardStats = async (timeRange) => {
  * @returns {Promise<Object>} Users statistics with breakdown
  */
 export const getUsersStats = async (timeRange) => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/users/stats?timeRange=month
+  // Mock data for user activity stats
   console.log("Fetching user stats for:", timeRange);
 
   return new Promise((resolve) => {
@@ -79,8 +135,7 @@ export const getUsersStats = async (timeRange) => {
  * @returns {Promise<Object>} Revenue data for charts
  */
 export const getRevenueStats = async (timeRange) => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/revenue/stats?timeRange=month
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -165,8 +220,7 @@ export const getRevenueStats = async (timeRange) => {
  * @returns {Promise<Array>} Top sellers data
  */
 export const getTopSellers = async () => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/sellers/top
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -185,8 +239,7 @@ export const getTopSellers = async () => {
  * @returns {Promise<Array>} Active users
  */
 export const getActiveUsers = async () => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/users/active
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -225,8 +278,7 @@ export const getActiveUsers = async () => {
  * @returns {Promise<Array>} New products
  */
 export const getNewProducts = async () => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/products/pending
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -262,8 +314,7 @@ export const getNewProducts = async () => {
  * @returns {Promise<Object>} Platform rating breakdown
  */
 export const getPlatformRating = async (timeRange) => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/rating?timeRange=month
+  // Mock data - replace with actual API when backend is ready
   console.log("Fetching platform rating for:", timeRange);
 
   return new Promise((resolve) => {
@@ -293,8 +344,7 @@ export const getPlatformRating = async (timeRange) => {
  * @returns {Promise<Object>} Transaction stats
  */
 export const getTransactionStats = async (timeRange) => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/transactions/stats?timeRange=month
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -318,8 +368,7 @@ export const getTransactionStats = async (timeRange) => {
  * @returns {Promise<Blob>} Report file
  */
 export const exportDashboardReport = async (timeRange, format = "pdf") => {
-  // TODO: Replace with actual API call
-  // Example: POST /api/admin/reports/export
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -334,8 +383,7 @@ export const exportDashboardReport = async (timeRange, format = "pdf") => {
  * @returns {Promise<Array>} User registration data
  */
 export const getUserRegistrations = async (timeRange) => {
-  // TODO: Replace with actual API call
-  // Example: GET /api/admin/users/registrations?timeRange=month
+  // Mock data - replace with actual API when backend is ready
 
   return new Promise((resolve) => {
     setTimeout(() => {

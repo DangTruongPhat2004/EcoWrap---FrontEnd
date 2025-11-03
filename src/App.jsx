@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
-import DashboardLayout from "./components/layout/DashboardLayout";
 import RoleBasedLayout from "./components/layout/RoleBasedLayout";
 import {
   Home,
@@ -23,6 +22,8 @@ import {
   OrderManagement,
   OrderDetailAdmin,
   CategoryManagement,
+  FeedbackManagement,
+  MyFeedback,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
 import VendorProfile from "./pages/vendor/VendorProfile";
@@ -56,6 +57,7 @@ import ConversationsPage from "./pages/ConversationsPage";
 import ChatPage from "./pages/ChatPage";
 import MessagesLayout from "./pages/MessagesLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import StorePage from "./pages/StorePage";
 
 // This component now acts as the main layout wrapper.
 // It uses the location to decide which layout to render.
@@ -115,6 +117,7 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/products" element={<Products />} />
       <Route path="/products/:id" element={<ProductDetail />} />
+      <Route path="/store/:sellerId" element={<StorePage />} />
       <Route path="/cart" element={<CartPage />} />
       <Route path="/checkout" element={<CheckoutPage />} />
       <Route path="/bank-transfer" element={<BankTransferPage />} />
@@ -161,6 +164,9 @@ function App() {
         >
           <Route index element={<Profile />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="orders" element={<OrdersPage />} />
+          <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="feedback" element={<MyFeedback />} />
           {/* Add other nested account routes here */}
         </Route>
         <Route
@@ -175,6 +181,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="feedback" element={<MyFeedback />} />
           {/* Add other nested customer routes here */}
         </Route>
         <Route
@@ -187,19 +194,21 @@ function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="settings" element={<Profile />} />
           <Route path="approvals" element={<VendorApprovals />} />
           <Route path="approvals/:id" element={<VendorApprovalDetail />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:orderId" element={<OrderDetailAdmin />} />
           <Route path="categories" element={<CategoryManagement />} />
+          <Route path="feedback" element={<FeedbackManagement />} />
           {/* Add other nested admin routes here */}
         </Route>
         <Route
           path="/vendor/*"
           element={
             <ProtectedRoute requiredRole="Seller">
-              <DashboardLayout />
+              <RoleBasedLayout />
             </ProtectedRoute>
           }
         >

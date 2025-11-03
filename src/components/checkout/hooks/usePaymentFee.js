@@ -6,12 +6,15 @@ export default function usePaymentFee({
   region = "HCM",
   subtotal = 0,
 }) {
-  // Quy ước demo: COD có phụ phí, Bank/Ví/Thẻ 0đ. Ngoại thành COD đắt hơn.
+  // PayOS: miễn phí thanh toán qua QR code
   let fee = 0;
   let label = "Phụ phí thanh toán";
   let note = "";
 
-  if (method === "cod") {
+  if (method === "payos") {
+    fee = 0;
+    note = "Miễn phí thanh toán qua PayOS";
+  } else if (method === "cod") {
     fee = region === "HCM" ? 10000 : 20000; // đ
     note = region === "HCM" ? "COD nội thành" : "COD ngoại thành";
   } else if (method === "bank") {
@@ -23,7 +26,7 @@ export default function usePaymentFee({
   }
 
   // Có thể thêm ưu đãi theo ngưỡng subtotal
-  // if (subtotal > 1000000 && method === 'vnpay') { fee = -20000; note = 'VNPAY ưu đãi -20k'; }
+  // if (subtotal > 1000000 && method === 'payos') { fee = -20000; note = 'PayOS ưu đãi -20k'; }
 
   return { fee, label, note };
 }

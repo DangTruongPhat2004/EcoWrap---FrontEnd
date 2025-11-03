@@ -3,7 +3,7 @@ import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { Package, Truck, CheckCircle, XCircle, Clock, Eye } from "lucide-react";
 import {
-  getMyOrders,
+  getAllOrdersAdmin,
   getOrderStatusLabel,
   getOrderStatusColor,
 } from "../../services/orderApi";
@@ -20,18 +20,14 @@ const OrderManagement = () => {
     setError(null);
 
     try {
-      // Note: Backend needs to implement admin endpoint to get ALL orders
-      // For now, using the user endpoint (will show 501 error if not implemented)
+      // Use admin endpoint to get ALL orders
       const params = statusFilter !== "all" ? { status: statusFilter } : {};
-      const response = await getMyOrders(params);
+      const response = await getAllOrdersAdmin(params);
 
       if (response.success && response.data) {
         setOrders(response.data);
       } else {
-        setError(
-          response.message ||
-            "Không thể tải danh sách đơn hàng. Backend cần implement endpoint admin."
-        );
+        setError(response.message || "Không thể tải danh sách đơn hàng.");
         setOrders([]);
       }
     } catch (err) {
@@ -209,10 +205,6 @@ const OrderManagement = () => {
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-800">{error}</p>
-            <p className="text-sm text-red-600 mt-1">
-              Backend cần implement endpoint GET /api/admin/orders để hiển thị
-              tất cả đơn hàng.
-            </p>
           </div>
         )}
 
@@ -268,10 +260,11 @@ const OrderManagement = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          {order.customerName || "N/A"}
+                          {order.customerName ||
+                            `Khách hàng #${order.customerId}`}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {order.customerEmail || "N/A"}
+                          {order.customerEmail || "Email chưa có"}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

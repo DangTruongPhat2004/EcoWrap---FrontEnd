@@ -84,68 +84,21 @@ export default function ShippingMethodSelector({
 }) {
   const options = [
     {
-      key: "standard",
-      fee: region === "HCM" ? 20000 : 40000,
+      key: "ghtk",
+      fee: region === "HCM" ? 25000 : 45000,
       eta: "2–4 ngày",
       node: (
         <MethodRow
           icon={<Truck className="w-4 h-4" />}
-          title="Tiêu chuẩn"
-          desc="Toàn quốc, giao bởi đối tác vận chuyển"
+          title="GHTK - Giao Hàng Tiết Kiệm"
+          desc="Giao hàng toàn quốc - Đơn vị vận chuyển chính thức"
           right={
             <div className="text-sm">
               <div className="font-semibold text-gray-900">
-                {region === "HCM" ? "20.000đ" : "40.000đ"}
+                {region === "HCM" ? "25.000đ" : "45.000đ"}
               </div>
               <div className="text-xs text-gray-500">
-                {"ETA " + (region === "HCM" ? "2–3" : "3–4") + " ngày"}
-              </div>
-            </div>
-          }
-        />
-      ),
-    },
-    {
-      key: "express",
-      fee: region === "HCM" ? 40000 : 70000,
-      eta: "Trong 24–48h",
-      node: (
-        <MethodRow
-          icon={<Package className="w-4 h-4" />}
-          title="Nhanh"
-          desc="Ưu tiên xử lý & giao nhanh"
-          right={
-            <div className="text-sm">
-              <div className="font-semibold text-gray-900">
-                {region === "HCM" ? "40.000đ" : "70.000đ"}
-              </div>
-              <div className="text-xs text-gray-500">ETA 1–2 ngày</div>
-            </div>
-          }
-        />
-      ),
-    },
-    {
-      key: "insta",
-      fee: region === "HCM" ? 30000 : null,
-      eta: "Trong ngày (nội thành)",
-      disabled: region !== "HCM",
-      node: (
-        <MethodRow
-          icon={<Bike className="w-4 h-4" />}
-          title="Giao trong ngày"
-          desc={
-            region === "HCM"
-              ? "Áp dụng nội thành TP.HCM"
-              : "Chỉ hỗ trợ tại TP.HCM"
-          }
-          right={
-            <div className="text-sm">
-              <div className="font-semibold text-gray-900">
-                {region === "HCM" ? "30.000đ" : "—"}
-              </div>
-              <div className="text-xs text-gray-500">
-                {region === "HCM" ? "ETA 2–6 giờ" : "Không khả dụng"}
+                {"ETA " + (region === "HCM" ? "2–3" : "3–5") + " ngày"}
               </div>
             </div>
           }

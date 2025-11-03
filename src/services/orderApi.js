@@ -72,6 +72,8 @@ export const getOrderById = async (orderId) => {
             qty: item.quantity,
             price: item.pricePerItem,
             designFile: item.designFile,
+            sellerId: item.sellerId,
+            sellerName: item.sellerName,
           })) || [],
       };
 
@@ -84,14 +86,7 @@ export const getOrderById = async (orderId) => {
 
     return response.data;
   } catch (error) {
-    if (error.response?.status === 501) {
-      console.error("Backend GetOrderByIdAsync not implemented yet");
-      return {
-        success: false,
-        message:
-          "Chức năng xem chi tiết đơn hàng chưa được backend triển khai.",
-      };
-    }
+    console.error("Error fetching order by ID:", error);
     throw error;
   }
 };
@@ -118,6 +113,106 @@ export const getMyOrders = async (params = {}) => {
         data: [],
         message:
           "Chức năng lấy danh sách đơn hàng chưa được backend triển khai. Backend cần implement GetAllOrderAsync trong OrderService.",
+      };
+    }
+    throw error;
+  }
+};
+
+/**
+ * Admin: Get order by ID with seller bank details
+ * @param {number} orderId - Order ID to fetch
+ * @returns {Promise} Order details with seller payment information
+ */
+export const getOrderByIdAdmin = async (orderId) => {
+  try {
+    const response = await apiClient.get(`/api/Order/${orderId}`);
+
+    // Backend returns: { success, message, data: AdminOrderDetailResponse }
+    if (response.data.success && response.data.data) {
+      const backendData = response.data.data;
+
+      // Transform backend structure to frontend structure
+      const transformedData = {
+        orderId: backendData.orderId,
+        code: backendData.orderId?.toString(),
+        orderStatus: backendData.orderStatus,
+        createdAt: backendData.createdDate,
+        updatedAt: backendData.updatedDate,
+        totalPrice: backendData.totalPrice,
+        totalAmount: backendData.totalAmount,
+
+        // Customer info
+        customerId: backendData.customerId,
+        customerName: backendData.customerName,
+        customerEmail: backendData.customerEmail,
+        customerPhone: backendData.customerPhone,
+
+        // Shipping address
+        shippingAddress: backendData.shippingAddress,
+        shippingWard: backendData.shippingWard,
+        shippingDistrict: backendData.shippingDistrict,
+        shippingProvince: backendData.shippingProvince,
+        shippingHamlet: backendData.shippingHamlet,
+
+        // Shipping info
+        transportUnit: backendData.transportUnit,
+        shippingCode: backendData.shippingCode,
+
+        // Transform items with seller bank info
+        items:
+          backendData.items?.map((item) => ({
+            id: item.cartItemId,
+            productId: item.productId,
+            name: item.productName,
+            thumb: item.productImageUrl,
+            desc: item.designFile ? "Có thiết kế tùy chỉnh" : "",
+            qty: item.quantity,
+            price: item.pricePerItem,
+            designFile: item.designFile,
+            sellerId: item.sellerId,
+            sellerName: item.sellerCompanyName,
+            bankAccountNumber: item.sellerBankAccountNumber,
+            bankName: item.sellerBankName,
+            accountHolderName: item.sellerAccountHolderName,
+            bankBranch: item.sellerBankBranch,
+            qrcodeImage: item.sellerQRCodeImage,
+            sellerEmail: item.sellerUserEmail,
+            sellerPhone: item.sellerUserPhone,
+          })) || [],
+      };
+
+      return {
+        success: true,
+        message: response.data.message,
+        data: transformedData,
+      };
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching admin order by ID:", error);
+    throw error;
+  }
+};
+
+/**
+ * Admin: Get all orders in the system
+ * @param {Object} params - Query parameters
+ * @param {string} params.status - Filter by status (optional)
+ * @returns {Promise} List of all orders
+ */
+export const getAllOrdersAdmin = async (params = {}) => {
+  try {
+    const response = await apiClient.get("/api/Order/all", { params });
+    return response.data;
+  } catch (error) {
+    if (error.response?.status === 501 || error.response?.status === 404) {
+      console.error("Backend GetAllOrdersAdminAsync not implemented yet");
+      return {
+        success: false,
+        data: [],
+        message: "Chức năng lấy tất cả đơn hàng chưa được backend triển khai.",
       };
     }
     throw error;
@@ -181,7 +276,7 @@ export const declineOrder = async (orderId) => {
  */
 export const getOrderStatusLabel = (status) => {
   const statusLabels = {
-    Pending: "Chờ xác nhận",
+    Pending: "Chờ thanh toán",
     Packaging: "Đang đóng gói",
     Shipping: "Đang giao hàng",
     Completed: "Hoàn thành",
@@ -198,12 +293,12 @@ export const getOrderStatusLabel = (status) => {
  */
 export const getOrderStatusColor = (status) => {
   const statusColors = {
-    Pending: "text-yellow-600 bg-yellow-50",
-    Packaging: "text-blue-600 bg-blue-50",
-    Shipping: "text-purple-600 bg-purple-50",
-    Completed: "text-green-600 bg-green-50",
-    Canceled: "text-red-600 bg-red-50",
-    Declined: "text-gray-600 bg-gray-50",
+    Pending: "text-orange-700 bg-orange-50 border-orange-200",
+    Packaging: "text-blue-700 bg-blue-50 border-blue-200",
+    Shipping: "text-purple-700 bg-purple-50 border-purple-200",
+    Completed: "text-green-700 bg-green-50 border-green-200",
+    Canceled: "text-red-700 bg-red-50 border-red-200",
+    Declined: "text-gray-700 bg-gray-50 border-gray-200",
   };
-  return statusColors[status] || "text-gray-600 bg-gray-50";
+  return statusColors[status] || "text-gray-700 bg-gray-50 border-gray-200";
 };

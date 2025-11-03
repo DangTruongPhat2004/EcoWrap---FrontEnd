@@ -20,7 +20,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(100);
+  const [quantity, setQuantity] = useState(1);
   const [showCertificatePreview, setShowCertificatePreview] = useState(false);
   const [addingToCart, setAddingToCart] = useState(false);
 
@@ -636,64 +636,80 @@ const ProductDetail = () => {
 
             {/* Quantity Input */}
             <div className="flex items-center space-x-4 mb-6">
-              {/* Decrement Buttons */}
-              <div className="flex items-center border border-gray-300 rounded-lg">
-                <button
-                  onClick={() => handleQuantityChange(quantity - 100)}
-                  className="px-2 py-2 text-gray-600 hover:bg-red-50 hover:text-red-600 bg-white border-0 text-sm font-medium transition-colors"
-                  disabled={quantity <= 100}
-                  title="Giảm 100"
-                >
-                  -100
-                </button>
-                <div className="w-px h-6 bg-gray-300"></div>
-                <button
-                  onClick={() => handleQuantityChange(quantity - 10)}
-                  className="px-2 py-2 text-gray-600 hover:bg-red-50 hover:text-red-600 bg-white border-0 text-sm font-medium transition-colors"
-                  disabled={quantity <= 100}
-                  title="Giảm 10"
-                >
-                  -10
-                </button>
-              </div>
+              {/* Decrement Button */}
+              <button
+                onClick={() => handleQuantityChange(quantity - 1)}
+                className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:bg-red-50 hover:text-red-600 hover:border-red-300 bg-white text-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={quantity <= 1}
+                title="Giảm 1"
+              >
+                −
+              </button>
 
               {/* Quantity Input */}
-              <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50">
+              <div className="flex items-center border border-gray-300 rounded-lg bg-gray-50 hover:border-green-500 focus-within:border-green-500 focus-within:ring-2 focus-within:ring-green-200 transition-all">
                 <input
                   type="number"
                   value={quantity}
-                  onChange={(e) =>
-                    handleQuantityChange(parseInt(e.target.value) || 100)
-                  }
-                  className="w-20 px-3 py-2 text-center border-0 focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white font-semibold text-sm bg-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                  min="100"
-                  step="10"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty input for better UX when typing
+                    if (value === "") {
+                      setQuantity("");
+                    } else {
+                      handleQuantityChange(parseInt(value) || 1);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Ensure valid number on blur
+                    if (e.target.value === "" || parseInt(e.target.value) < 1) {
+                      setQuantity(1);
+                    }
+                  }}
+                  className="w-24 px-3 py-2 text-center border-0 focus:outline-none font-semibold text-base bg-transparent [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  min="1"
+                  placeholder="1"
                 />
               </div>
 
-              {/* Increment Buttons */}
-              <div className="flex items-center border border-gray-300 rounded-lg">
+              {/* Increment Button */}
+              <button
+                onClick={() => handleQuantityChange(quantity + 1)}
+                className="w-10 h-10 flex items-center justify-center border border-gray-300 rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-600 hover:border-green-300 bg-white text-lg font-medium transition-colors"
+                title="Tăng 1"
+              >
+                +
+              </button>
+
+              {/* Quick Add Buttons */}
+              <div className="flex items-center gap-2 ml-2">
                 <button
                   onClick={() => handleQuantityChange(quantity + 10)}
-                  className="px-2 py-2 text-gray-600 hover:bg-green-50 hover:text-green-600 bg-white border-0 text-sm font-medium transition-colors"
-                  title="Tăng 10"
+                  className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+                  title="Thêm 10"
                 >
                   +10
                 </button>
-                <div className="w-px h-6 bg-gray-300"></div>
+                <button
+                  onClick={() => handleQuantityChange(quantity + 50)}
+                  className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+                  title="Thêm 50"
+                >
+                  +50
+                </button>
                 <button
                   onClick={() => handleQuantityChange(quantity + 100)}
-                  className="px-2 py-2 text-gray-600 hover:bg-green-50 hover:text-green-600 bg-white border-0 text-sm font-medium transition-colors"
-                  title="Tăng 100"
+                  className="px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-colors"
+                  title="Thêm 100"
                 >
                   +100
                 </button>
               </div>
-
-              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                Tối thiểu: 100 chiếc
-              </span>
             </div>
+
+            <p className="text-xs text-gray-500 italic">
+              Nhập số lượng bất kỳ hoặc dùng các nút để điều chỉnh nhanh
+            </p>
           </div>
 
           {/* Action Buttons */}
@@ -765,9 +781,13 @@ const ProductDetail = () => {
               className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden"
               style={{ backgroundColor: "#F5F1EA" }}
             >
-              {product.seller?.user?.profilePicture ? (
+              {product.seller?.companyImage ||
+              product.seller?.user?.profilePicture ? (
                 <img
-                  src={product.seller.user.profilePicture}
+                  src={
+                    product.seller?.companyImage ||
+                    product.seller.user.profilePicture
+                  }
                   alt={
                     product.seller.companyName || product.seller.user.fullName
                   }
@@ -805,7 +825,12 @@ const ProductDetail = () => {
 
           {/* Action Buttons - Right Side */}
           <div className="flex items-center space-x-3">
-            <button className="bg-white border border-green-600 text-green-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors flex items-center">
+            <button
+              onClick={() =>
+                product.seller?.id && navigate(`/store/${product.seller.id}`)
+              }
+              className="bg-white border border-green-600 text-green-600 px-6 py-2 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors flex items-center"
+            >
               <svg
                 width="19"
                 height="16"
