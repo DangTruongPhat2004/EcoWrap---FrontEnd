@@ -35,12 +35,12 @@ export async function getUserById(userId) {
  */
 export async function updateUser(userId, userData) {
   try {
-    // Backend expects multipart/form-data
+    // Backend expects multipart/form-data with these exact field names (case-sensitive)
     const formData = new FormData();
 
-    // Append all user data fields
+    // Backend UpdateUserRequest expects: Username, Email, FullName, PhoneNumber, ProfilePicture
     if (userData.userName !== undefined)
-      formData.append("UserName", userData.userName);
+      formData.append("Username", userData.userName); // Note: "Username" not "UserName"
     if (userData.fullName !== undefined)
       formData.append("FullName", userData.fullName);
     if (userData.phoneNumber !== undefined)
@@ -60,6 +60,7 @@ export async function updateUser(userId, userData) {
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);
+    console.error("Error response:", error?.response?.data);
     throw error;
   }
 }
