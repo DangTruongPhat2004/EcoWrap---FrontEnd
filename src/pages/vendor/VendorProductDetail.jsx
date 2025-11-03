@@ -5,6 +5,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "../../services/productApi";
+import { getAllCategories } from "../../services/categoryApi";
 import {
   Button,
   Input,
@@ -15,6 +16,8 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import {
   ArrowLeft,
@@ -46,6 +49,7 @@ const VendorProductDetail = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({});
+  const [categories, setCategories] = useState([]);
   const {
     isOpen: isUpdateConfirmOpen,
     onOpenChange: onUpdateConfirmOpenChange,
@@ -61,12 +65,20 @@ const VendorProductDetail = () => {
   const [designFile, setDesignFile] = useState(null);
 
   useEffect(() => {
-    const fetchProductData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const productData = await getProductById(id);
+        const [productData, categoriesResponse] = await Promise.all([
+          getProductById(id),
+          getAllCategories(),
+        ]);
+
         setProduct(productData);
+        if (categoriesResponse.success && categoriesResponse.data) {
+          setCategories(categoriesResponse.data);
+        }
+
         // Initialize form data for editing
         setFormData({
           productId: productData.productId || "",
@@ -91,7 +103,7 @@ const VendorProductDetail = () => {
       }
     };
 
-    fetchProductData();
+    fetchData();
   }, [id]);
 
   const formatPrice = (price) => {
@@ -597,18 +609,42 @@ const VendorProductDetail = () => {
                     }}
                   />
                 </DetailItem>
-                <DetailItem label="Loại sản phẩm (ID)">
-                  <Input
+                <DetailItem label="Loại sản phẩm">
+                  <Select
                     name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleInputChange}
+                    selectedKeys={
+                      formData.categoryId
+                        ? [formData.categoryId.toString()]
+                        : []
+                    }
+                    onSelectionChange={(keys) => {
+                      const selectedId = Array.from(keys)[0];
+                      setFormData((prev) => ({
+                        ...prev,
+                        categoryId: selectedId,
+                      }));
+                      if (errors.categoryId) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.categoryId;
+                          return newErrors;
+                        });
+                      }
+                    }}
                     variant="bordered"
                     isInvalid={!!errors.categoryId}
                     errorMessage={errors.categoryId}
+                    placeholder="Chọn loại sản phẩm"
                     classNames={{
-                      inputWrapper: "border border-gray-200",
+                      trigger: "border border-gray-200",
                     }}
-                  />
+                  >
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                        {cat.categoryName}
+                      </SelectItem>
+                    ))}
+                  </Select>
                 </DetailItem>
                 <DetailItem label="Cân nặng (gram)">
                   <Input

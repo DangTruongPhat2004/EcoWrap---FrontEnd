@@ -25,11 +25,8 @@ export const getMySellerInfo = async () => {
 
 // Update seller information (including bank details)
 export const updateSeller = async (formData) => {
-  const response = await apiClient.put("/api/seller", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  // Let axios set Content-Type automatically for FormData (with boundary)
+  const response = await apiClient.put("/api/seller", formData);
   return response.data;
 };
 

@@ -9,7 +9,7 @@ import apiClient from "./apiClient";
  */
 export const getDashboardMetrics = async () => {
   try {
-    const response = await apiClient.get("/Dashboard");
+    const response = await apiClient.get("/api/Dashboard");
     if (response.data.Success) {
       return response.data.Data;
     } else {

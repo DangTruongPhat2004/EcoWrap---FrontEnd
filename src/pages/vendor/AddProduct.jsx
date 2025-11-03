@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createProduct } from "../../services/productApi";
+import { getAllCategories } from "../../services/categoryApi";
 import {
   Button,
   Input,
@@ -11,6 +12,8 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import {
   ArrowLeft,
@@ -32,6 +35,7 @@ const DetailItem = ({ label, children }) => (
 const AddProduct = () => {
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     productId: "",
     productName: "",
@@ -54,6 +58,20 @@ const AddProduct = () => {
   const [imageFile, setImageFile] = useState(null);
   const [certificateFile, setCertificateFile] = useState(null);
   const [designFile, setDesignFile] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getAllCategories();
+        if (response.success && response.data) {
+          setCategories(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const getFileName = (file) => {
     if (!file) return "Chưa có file";
@@ -367,18 +385,37 @@ const AddProduct = () => {
                 }}
               />
             </DetailItem>
-            <DetailItem label="Loại sản phẩm (ID) *">
-              <Input
+            <DetailItem label="Loại sản phẩm *">
+              <Select
                 name="categoryId"
-                value={formData.categoryId}
-                onChange={handleInputChange}
+                selectedKeys={
+                  formData.categoryId ? [formData.categoryId.toString()] : []
+                }
+                onSelectionChange={(keys) => {
+                  const selectedId = Array.from(keys)[0];
+                  setFormData((prev) => ({ ...prev, categoryId: selectedId }));
+                  if (errors.categoryId) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.categoryId;
+                      return newErrors;
+                    });
+                  }
+                }}
                 variant="bordered"
                 isInvalid={!!errors.categoryId}
                 errorMessage={errors.categoryId}
+                placeholder="Chọn loại sản phẩm"
                 classNames={{
-                  inputWrapper: "border border-gray-400",
+                  trigger: "border border-gray-400",
                 }}
-              />
+              >
+                {categories.map((cat) => (
+                  <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                    {cat.categoryName}
+                  </SelectItem>
+                ))}
+              </Select>
             </DetailItem>
             <DetailItem label="Cân nặng (gram) *">
               <Input
