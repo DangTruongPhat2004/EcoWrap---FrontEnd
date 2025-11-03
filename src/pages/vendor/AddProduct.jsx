@@ -406,11 +406,16 @@ const AddProduct = () => {
               <Select
                 name="categoryId"
                 selectedKeys={
-                  formData.categoryId ? [formData.categoryId.toString()] : []
+                  formData.categoryId
+                    ? new Set([formData.categoryId.toString()])
+                    : new Set()
                 }
                 onSelectionChange={(keys) => {
                   const selectedId = Array.from(keys)[0];
-                  setFormData((prev) => ({ ...prev, categoryId: selectedId }));
+                  setFormData((prev) => ({
+                    ...prev,
+                    categoryId: parseInt(selectedId),
+                  }));
                   if (errors.categoryId) {
                     setErrors((prev) => {
                       const newErrors = { ...prev };
@@ -424,14 +429,16 @@ const AddProduct = () => {
                 errorMessage={errors.categoryId}
                 placeholder="Chọn loại sản phẩm"
                 classNames={{
-                  trigger: "border border-gray-400",
+                  trigger: "border border-gray-400 bg-white",
+                  value: "text-gray-900",
                 }}
+                items={categories}
               >
-                {categories.map((cat) => (
-                  <SelectItem key={cat.categoryId} value={cat.categoryId}>
+                {(cat) => (
+                  <SelectItem key={cat.categoryId} textValue={cat.categoryName}>
                     {cat.categoryName}
                   </SelectItem>
-                ))}
+                )}
               </Select>
             </DetailItem>
             <DetailItem label="Cân nặng (gram) *">

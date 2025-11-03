@@ -63,10 +63,24 @@ const ProductManagement = () => {
       const formData = new FormData();
       formData.append("ProductId", product.productId);
       formData.append("ProductName", product.productName);
-      formData.append("Description", product.description || "");
-      formData.append("Price", product.price);
+      formData.append(
+        "ProductDescription",
+        product.productDescription || product.description || ""
+      );
+      formData.append(
+        "ProductPrice",
+        product.productPrice || product.price || 0
+      );
+      formData.append("Unit", product.unit || "");
+      formData.append("Size", product.size || "");
+      formData.append("InkType", product.inkType || "");
+      formData.append("PrintProcess", product.printProcess || "");
+      formData.append("MaterialType", product.materialType || "");
       formData.append("WeightGram", product.weightGram || 0);
-      formData.append("CategoryId", product.categoryId);
+      formData.append(
+        "CategoryId",
+        product.category?.categoryId || product.categoryId || 0
+      );
       formData.append("IsActive", newActiveStatus);
 
       await updateProduct(product.productId, formData);
@@ -90,14 +104,26 @@ const ProductManagement = () => {
   };
 
   // Filter products based on search term
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.category &&
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (product.material &&
-        product.material.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredProducts = products.filter((product) => {
+    const searchLower = searchTerm.toLowerCase();
+    const productName = (
+      product.productName ||
+      product.name ||
+      ""
+    ).toLowerCase();
+    const categoryName = getCategoryName(product.categoryId).toLowerCase();
+    const materialType = (
+      product.materialType ||
+      product.material ||
+      ""
+    ).toLowerCase();
+
+    return (
+      productName.includes(searchLower) ||
+      categoryName.includes(searchLower) ||
+      materialType.includes(searchLower)
+    );
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -252,7 +278,11 @@ const ProductManagement = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {product.price.toLocaleString("vi-VN", {
+                    {(
+                      product.productPrice ||
+                      product.price ||
+                      0
+                    ).toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     })}
