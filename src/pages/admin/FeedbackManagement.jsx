@@ -96,22 +96,22 @@ const FeedbackManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Quản Lý Đánh Giá
+              <h1 className="text-3xl font-bold text-gray-900">
+                Quản lý đánh giá
               </h1>
-              <p className="text-gray-600">
+              <p className="mt-2 text-gray-600">
                 Quản lý tất cả đánh giá của người dùng về nền tảng
               </p>
             </div>
             <button
               onClick={fetchFeedbacks}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <CheckCircle size={18} />
               Làm mới
@@ -120,45 +120,45 @@ const FeedbackManagement = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <MessageSquare className="text-blue-600" size={24} />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Tổng đánh giá</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {feedbacks.length}
                 </p>
               </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Star className="text-yellow-600" size={24} />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Đánh giá trung bình</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {averageRating}/5
                 </p>
               </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Star className="w-6 h-6 text-yellow-600" />
+              </div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <User className="text-green-600" size={24} />
-              </div>
+            <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Người dùng đã đánh giá</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-gray-900 mt-1">
                   {new Set(feedbacks.map((f) => f.userId)).size}
                 </p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <User className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
