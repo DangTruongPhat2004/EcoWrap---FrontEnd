@@ -18,6 +18,7 @@ import {
   useDisclosure,
   Select,
   SelectItem,
+  Switch,
 } from "@heroui/react";
 import {
   ArrowLeft,
@@ -99,6 +100,7 @@ const VendorProductDetail = () => {
           materialType: productData.materialType || "",
           categoryId:
             productData.category?.categoryId || productData.categoryId || "",
+          isActive: productData.isActive ?? true,
           // Files are handled separately
         });
       } catch (err) {
@@ -181,6 +183,7 @@ const VendorProductDetail = () => {
         weightGram: product.weightGram || 0,
         materialType: product.materialType || "",
         categoryId: product.category?.categoryId || product.categoryId || "",
+        isActive: product.isActive ?? true,
       });
       // Reset file states
       setImageFile(null);
@@ -261,6 +264,7 @@ const VendorProductDetail = () => {
     updateFormData.append("WeightGram", formData.weightGram);
     updateFormData.append("MaterialType", formData.materialType);
     updateFormData.append("CategoryId", formData.categoryId);
+    updateFormData.append("IsActive", formData.isActive);
 
     // Append files if they have been changed
     if (imageFile) updateFormData.append("ImageFile", imageFile);
@@ -704,6 +708,33 @@ const VendorProductDetail = () => {
               >
                 {product.productStatus === "In stock" ? "Còn hàng" : "Hết hàng"}
               </span>
+            </DetailItem>
+
+            <DetailItem label="Trạng thái bán hàng">
+              {isEditing ? (
+                <Switch
+                  isSelected={formData.isActive}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, isActive: value })
+                  }
+                  color="success"
+                  size="lg"
+                >
+                  <span className="text-sm font-medium text-gray-900">
+                    {formData.isActive ? "Đang mở bán" : "Đã đóng"}
+                  </span>
+                </Switch>
+              ) : (
+                <span
+                  className={`px-3 py-1 text-sm font-medium rounded-full ${
+                    product.isActive
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {product.isActive ? "Đang mở bán" : "Đã đóng"}
+                </span>
+              )}
             </DetailItem>
 
             {!isEditing && (
