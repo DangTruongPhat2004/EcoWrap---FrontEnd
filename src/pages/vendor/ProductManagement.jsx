@@ -10,12 +10,10 @@ import {
   Button,
   Input,
   Pagination,
-  Switch,
 } from "@heroui/react";
 import { Plus, Search, AlertTriangle } from "lucide-react";
-import { getMyProducts, updateProduct } from "../../services/productApi";
+import { getMyProducts } from "../../services/productApi";
 import { getAllCategories } from "../../services/categoryApi";
-import toast from "react-hot-toast";
 
 const ProductManagement = () => {
   const navigate = useNavigate();
@@ -55,52 +53,6 @@ const ProductManagement = () => {
   const getCategoryName = (categoryId) => {
     const category = categories.find((cat) => cat.categoryId === categoryId);
     return category?.categoryName || "Chưa phân loại";
-  };
-
-  // Handle active toggle
-  const handleToggleActive = async (product, newActiveStatus) => {
-    try {
-      const formData = new FormData();
-      formData.append("ProductId", product.productId);
-      formData.append("ProductName", product.productName);
-      formData.append(
-        "ProductDescription",
-        product.productDescription || product.description || ""
-      );
-      formData.append(
-        "ProductPrice",
-        product.productPrice || product.price || 0
-      );
-      formData.append("Unit", product.unit || "");
-      formData.append("Size", product.size || "");
-      formData.append("InkType", product.inkType || "");
-      formData.append("PrintProcess", product.printProcess || "");
-      formData.append("MaterialType", product.materialType || "");
-      formData.append("WeightGram", product.weightGram || 0);
-      formData.append(
-        "CategoryId",
-        product.category?.categoryId || product.categoryId || 0
-      );
-      formData.append("IsActive", newActiveStatus);
-
-      await updateProduct(product.productId, formData);
-
-      // Update local state
-      setProducts(
-        products.map((p) =>
-          p.productId === product.productId
-            ? { ...p, isActive: newActiveStatus }
-            : p
-        )
-      );
-
-      toast.success(
-        newActiveStatus ? "Đã kích hoạt sản phẩm" : "Đã tắt sản phẩm"
-      );
-    } catch (error) {
-      console.error("Error updating product status:", error);
-      toast.error("Không thể cập nhật trạng thái sản phẩm");
-    }
   };
 
   // Filter products based on search term
@@ -289,15 +241,15 @@ const ProductManagement = () => {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Switch
-                    isSelected={product.isActive ?? true}
-                    onValueChange={(checked) =>
-                      handleToggleActive(product, checked)
-                    }
-                    color="success"
-                    size="sm"
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                  <span
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${
+                      product.isActive ?? true
+                        ? "bg-green-100 text-green-800"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {product.isActive ?? true ? "Đang mở bán" : "Đã đóng"}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}

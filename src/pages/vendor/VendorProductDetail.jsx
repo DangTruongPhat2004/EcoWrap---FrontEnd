@@ -712,18 +712,37 @@ const VendorProductDetail = () => {
 
             <DetailItem label="Trạng thái bán hàng">
               {isEditing ? (
-                <Switch
-                  isSelected={formData.isActive}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, isActive: value })
-                  }
-                  color="success"
-                  size="lg"
-                >
-                  <span className="text-sm font-medium text-gray-900">
-                    {formData.isActive ? "Đang mở bán" : "Đã đóng"}
-                  </span>
-                </Switch>
+                <div className="space-y-2">
+                  <Switch
+                    isSelected={formData.isActive}
+                    onValueChange={(value) => {
+                      // Check if trying to enable selling when out of stock
+                      if (value && product.productStatus !== "In stock") {
+                        alert(
+                          "Không thể mở bán sản phẩm hết hàng. Vui lòng nhập kho trước!"
+                        );
+                        return;
+                      }
+                      setFormData({ ...formData, isActive: value });
+                    }}
+                    color="success"
+                    size="lg"
+                    isDisabled={
+                      product.productStatus !== "In stock" && !formData.isActive
+                    }
+                  >
+                    <span className="text-sm font-medium text-gray-900">
+                      {formData.isActive ? "Đang mở bán" : "Đã đóng"}
+                    </span>
+                  </Switch>
+                  {product.productStatus !== "In stock" &&
+                    !formData.isActive && (
+                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        Sản phẩm hết hàng - Không thể mở bán
+                      </p>
+                    )}
+                </div>
               ) : (
                 <span
                   className={`px-3 py-1 text-sm font-medium rounded-full ${

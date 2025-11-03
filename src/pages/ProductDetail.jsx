@@ -325,37 +325,24 @@ const ProductDetail = () => {
                   /{product.unit || "chiếc"}
                 </span>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center">
-                  <svg
-                    width="13"
-                    height="13"
-                    viewBox="0 0 13 13"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M1.77695 1.34961L0.390625 4.125H6.07812V0.625H2.95273C2.45508 0.625 2.00117 0.906641 1.77695 1.34961ZM6.95312 4.125H12.6406L11.2543 1.34961C11.0301 0.906641 10.5762 0.625 10.0785 0.625H6.95312V4.125ZM12.6406 5H0.390625V11.125C0.390625 12.0902 1.17539 12.875 2.14062 12.875H10.8906C11.8559 12.875 12.6406 12.0902 12.6406 11.125V5Z"
-                      fill="#8D6F47"
-                    />
-                  </svg>
-
-                  <span className="text-sm text-gray-600 ml-2">
-                    {product.inStock || product.productStatus === "In stock"
-                      ? "Còn hàng"
-                      : "Hết hàng"}
-                  </span>
-                </div>
-
-                {/* Active/Inactive Status */}
-                <span
-                  className={`px-3 py-1 text-sm font-medium rounded-full ${
-                    product.isActive
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
+              <div className="flex items-center">
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 13 13"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  {product.isActive ? "Mở bán" : "Đóng"}
+                  <path
+                    d="M1.77695 1.34961L0.390625 4.125H6.07812V0.625H2.95273C2.45508 0.625 2.00117 0.906641 1.77695 1.34961ZM6.95312 4.125H12.6406L11.2543 1.34961C11.0301 0.906641 10.5762 0.625 10.0785 0.625H6.95312V4.125ZM12.6406 5H0.390625V11.125C0.390625 12.0902 1.17539 12.875 2.14062 12.875H10.8906C11.8559 12.875 12.6406 12.0902 12.6406 11.125V5Z"
+                    fill="#8D6F47"
+                  />
+                </svg>
+
+                <span className="text-sm text-gray-600 ml-2">
+                  {product.inStock || product.productStatus === "In stock"
+                    ? "Còn hàng"
+                    : "Hết hàng"}
                 </span>
               </div>
             </div>
