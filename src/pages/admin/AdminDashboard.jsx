@@ -8,6 +8,7 @@ import {
   UserPlus,
   ShoppingBag,
   Filter,
+  UserCheck,
 } from "lucide-react";
 import {
   getAdminDashboardStats,
@@ -15,7 +16,7 @@ import {
   getRevenueStats,
   getTopSellers,
   getActiveUsers,
-  getNewProducts,
+  getPendingVendors,
   getDashboardMetrics,
 } from "../../services/adminApi";
 
@@ -38,7 +39,7 @@ const AdminDashboard = () => {
   const [orderData, setOrderData] = useState([]);
   const [topSellers, setTopSellers] = useState([]);
   const [activeUsers, setActiveUsers] = useState([]);
-  const [newProducts, setNewProducts] = useState([]);
+  const [pendingVendors, setPendingVendors] = useState([]);
   const [userActivity, setUserActivity] = useState({
     active: 65,
     inactive: 35,
@@ -59,7 +60,7 @@ const AdminDashboard = () => {
         revenueStatsData,
         topSellersData,
         activeUsersData,
-        newProductsData,
+        pendingVendorsData,
       ] = await Promise.all([
         getDashboardMetrics(),
         getAdminDashboardStats(timeRange),
@@ -67,7 +68,7 @@ const AdminDashboard = () => {
         getRevenueStats(timeRange),
         getTopSellers(),
         getActiveUsers(),
-        getNewProducts(),
+        getPendingVendors(),
       ]);
 
       // Merge backend metrics with mock data
@@ -90,7 +91,7 @@ const AdminDashboard = () => {
       setOrderData(revenueStatsData.orders);
       setTopSellers(topSellersData);
       setActiveUsers(activeUsersData);
-      setNewProducts(newProductsData);
+      setPendingVendors(pendingVendorsData);
       setUserActivity(usersData.activity);
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -845,15 +846,15 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* New Products Section */}
+        {/* Vendor Approval Section */}
         <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <ShoppingBag className="w-5 h-5 text-orange-600" />
-              Phê Duyệt Sản Phẩm Mới
+              <UserCheck className="w-5 h-5 text-orange-600" />
+              Phê Duyệt Vendor
             </h2>
             <button className="text-sm text-orange-600 hover:text-orange-700 font-medium flex items-center gap-1 hover:bg-orange-50 px-3 py-2 rounded-lg transition-colors">
-              5 sản phẩm chờ duyệt
+              {pendingVendors.length} vendor chờ duyệt
               <svg
                 width="16"
                 height="16"
@@ -876,16 +877,16 @@ const AdminDashboard = () => {
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Sản phẩm
+                    Công ty
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Nhà cung cấp
+                    Người liên hệ
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
+                    Email
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Ngày nộp
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
-                    Carbon Footprint
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">
                     Hành động
@@ -893,52 +894,60 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {newProducts.map((product) => (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {product.name}
+                {pendingVendors.length > 0 ? (
+                  pendingVendors.map((vendor) => (
+                    <tr key={vendor.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                            {vendor.companyName.charAt(0)}
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {product.sku}
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {vendor.companyName}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {vendor.businessType}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 bg-gray-900 rounded flex items-center justify-center text-white text-xs">
-                          {product.supplier.charAt(0)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-sm text-gray-900">
+                          {vendor.contactPerson}
                         </div>
-                        <span className="text-sm text-gray-900">
-                          {product.supplier}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {product.submitDate}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-sm font-medium text-green-600">
-                        {product.carbonFootprint}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <button className="text-green-600 hover:text-green-700 text-sm font-medium hover:bg-green-50 px-3 py-1 rounded transition-colors">
-                        Chi tiết
-                      </button>
+                        <div className="text-xs text-gray-500">
+                          {vendor.phone}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {vendor.email}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {vendor.submitDate}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button className="text-green-600 hover:text-green-700 text-sm font-medium hover:bg-green-50 px-3 py-1 rounded transition-colors">
+                            Duyệt
+                          </button>
+                          <button className="text-gray-600 hover:text-gray-700 text-sm font-medium hover:bg-gray-50 px-3 py-1 rounded transition-colors">
+                            Chi tiết
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="5"
+                      className="px-4 py-8 text-center text-gray-500"
+                    >
+                      Không có vendor chờ duyệt
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

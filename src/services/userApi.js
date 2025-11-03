@@ -58,8 +58,13 @@ export async function updateUser(userId, userData) {
       console.log(`  ${key}:`, value);
     }
 
-    // Let axios set Content-Type automatically for FormData (with boundary)
-    const response = await api.put(`/api/Users/${userId}`, formData);
+    // CRITICAL: Delete Content-Type to let browser set multipart/form-data with boundary automatically
+    const response = await api.put(`/api/Users/${userId}`, formData, {
+      headers: {
+        "Content-Type": undefined, // This removes the default application/json header
+      },
+      transformRequest: [(data) => data], // Prevent axios from transforming FormData
+    });
     return response.data;
   } catch (error) {
     console.error("Error updating user:", error);

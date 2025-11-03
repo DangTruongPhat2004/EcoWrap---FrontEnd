@@ -718,6 +718,55 @@ export const getUserManagementStats = async () => {
   }
 };
 
+/**
+ * Get pending vendors for approval
+ * @returns {Promise<Array>} Pending vendors list
+ */
+export const getPendingVendors = async () => {
+  try {
+    const { getAllSellers } = await import("./sellerApi");
+    const response = await getAllSellers();
+
+    const sellers = response?.data || response?.Data || [];
+
+    if (!Array.isArray(sellers) || sellers.length === 0) {
+      return [];
+    }
+
+    // Filter pending sellers
+    const pendingSellers = sellers.filter((seller) => {
+      const status = (seller.status || seller.Status || "").toLowerCase();
+      return (
+        status === "pending" || status === "chờ duyệt" || status === "waiting"
+      );
+    });
+
+    // Return top 5 pending sellers
+    return pendingSellers.slice(0, 5).map((seller) => ({
+      id: seller.sellerId || seller.SellerId,
+      companyName:
+        seller.companyName || seller.CompanyName || "Unknown Company",
+      contactPerson:
+        seller.contactName ||
+        seller.ContactName ||
+        seller.userName ||
+        seller.UserName ||
+        "Unknown",
+      email: seller.email || seller.Email || "",
+      phone: seller.phone || seller.Phone || "",
+      submitDate:
+        seller.createdDate ||
+        seller.CreatedDate ||
+        new Date().toLocaleDateString("vi-VN"),
+      businessType: seller.businessType || seller.BusinessType || "Retail",
+      address: seller.address || seller.Address || "",
+    }));
+  } catch (error) {
+    console.error("Error fetching pending vendors:", error);
+    return [];
+  }
+};
+
 export default {
   getDashboardMetrics,
   getAllFeedback,
@@ -734,4 +783,5 @@ export default {
   getUserRegistrations,
   getOrderManagementStats,
   getUserManagementStats,
+  getPendingVendors,
 };
