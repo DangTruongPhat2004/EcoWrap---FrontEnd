@@ -1,7 +1,7 @@
 import apiClient from "./apiClient";
 
 export const createFeedback = async (feedbackData) => {
-  const response = await apiClient.post("/Feedback", feedbackData);
+  const response = await apiClient.post("/api/Feedback", feedbackData);
   if (response.data.Success) {
     return response.data;
   }
@@ -9,7 +9,7 @@ export const createFeedback = async (feedbackData) => {
 };
 
 export const getMyFeedback = async () => {
-  const response = await apiClient.get("/Feedback/my-feedback");
+  const response = await apiClient.get("/api/Feedback/my-feedback");
   if (response.data.Success) {
     return response.data.Data;
   }
@@ -18,7 +18,7 @@ export const getMyFeedback = async () => {
 
 export const updateMyFeedback = async (feedbackId, feedbackData) => {
   const response = await apiClient.put(
-    `/Feedback/my-feedback/${feedbackId}`,
+    `/api/Feedback/my-feedback/${feedbackId}`,
     feedbackData
   );
   if (response.data.Success) {
@@ -29,7 +29,7 @@ export const updateMyFeedback = async (feedbackId, feedbackData) => {
 
 export const deleteMyFeedback = async (feedbackId) => {
   const response = await apiClient.delete(
-    `/Feedback/my-feedback/${feedbackId}`
+    `/api/Feedback/my-feedback/${feedbackId}`
   );
   if (response.data.Success) {
     return response.data;
