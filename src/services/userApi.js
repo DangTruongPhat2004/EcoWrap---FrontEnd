@@ -52,12 +52,27 @@ export async function updateUser(userId, userData) {
       formData.append("ProfilePicture", userData.profilePicture);
     }
 
-    const response = await api.put(`/api/Users/${userId}`, formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    return response.data;
+    // Debug: Log FormData contents
+    console.log("Updating user with FormData:");
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+
+    // Let axios set Content-Type automatically for FormData (with boundary)
+    // Try PUT first, if 405 persists, backend might need IIS configuration
+    try {
+      const response = await api.put(`/api/Users/${userId}`, formData);
+      return response.data;
+    } catch (error) {
+      // If PUT fails with 405, log detailed info
+      if (error?.response?.status === 405) {
+        console.error(
+          "PUT request blocked. Check if IIS WebDAV is interfering."
+        );
+        console.error("Backend URL:", `/api/Users/${userId}`);
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("Error updating user:", error);
     console.error("Error response:", error?.response?.data);
