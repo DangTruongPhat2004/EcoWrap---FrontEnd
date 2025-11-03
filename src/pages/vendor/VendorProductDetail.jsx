@@ -713,7 +713,10 @@ const VendorProductDetail = () => {
                 <DetailItem label="Loại mực" value={product.inkType} />
                 <DetailItem label="Quy trình in" value={product.printProcess} />
                 <DetailItem label="Chất liệu" value={product.materialType} />
-                <DetailItem label="Loại sản phẩm" value={product.category} />
+                <DetailItem
+                  label="Loại sản phẩm"
+                  value={product.category?.categoryName || "Chưa phân loại"}
+                />
                 <DetailItem
                   label="Cân nặng (gram)"
                   value={product.weightGram}

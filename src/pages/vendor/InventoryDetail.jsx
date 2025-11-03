@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import inventoryApi from "../../services/inventoryApi";
+import { getAllCategories } from "../../services/categoryApi";
 import {
   Button,
   Modal,
@@ -52,6 +53,7 @@ const InventoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const {
@@ -74,13 +76,23 @@ const InventoryDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updateError, setUpdateError] = useState("");
 
+  // Helper function to get category name by ID
+  const getCategoryName = (categoryId) => {
+    const category = categories.find((cat) => cat.categoryId === categoryId);
+    return category ? category.categoryName : null;
+  };
+
   useEffect(() => {
     const fetchInventoryDetail = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await inventoryApi.getInventoryById(id);
+        const [data, categoriesData] = await Promise.all([
+          inventoryApi.getInventoryById(id),
+          getAllCategories(),
+        ]);
         setItem(data);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setNewQuantity(data.stockQuantity.toString());
       } catch (err) {
         setError(
@@ -276,7 +288,7 @@ const InventoryDetail = () => {
               <DetailItem
                 icon={<Tag className="w-5 h-5" />}
                 label="Loại"
-                value={product?.category?.categoryName || product?.categoryId}
+                value={getCategoryName(product?.categoryId) || "Chưa phân loại"}
               />
               <DetailItem
                 icon={<Scale className="w-5 h-5" />}
