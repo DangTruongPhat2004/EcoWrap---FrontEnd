@@ -332,6 +332,7 @@ const Home = () => {
               </p>
 
               <Button
+                onClick={() => navigate("/products")}
                 className="bg-green-700 text-white hover:bg-green-800 rounded-md h-12 px-8 leading-none
              inline-flex items-center whitespace-nowrap" // ⛔ chặn wrap ở root
                 classNames={{
@@ -846,6 +847,7 @@ const Home = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button
+                onClick={() => navigate("/products")}
                 size="lg"
                 className="font-semibold px-8 text-white bg-green-700 hover:bg-green-800 rounded-md"
                 endContent={<ShoppingCart className="w-4 h-4" />}
