@@ -73,20 +73,14 @@ export default function AddressForm({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch provinces from Vietnam Province API (using HTTPS-compatible vnappmob API)
+  // Fetch provinces from Vietnam Province API (using secure proxy)
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoadingProvinces(true);
       try {
-        const response = await fetch("https://vapi.vnappmob.com/api/province/");
+        const response = await fetch("/api/location/p/");
         const data = await response.json();
-        // Map to common format
-        setProvinces(
-          data.results.map((p) => ({
-            code: p.province_id,
-            name: p.province_name,
-          }))
-        );
+        setProvinces(data);
       } catch (error) {
         console.error("Error fetching provinces:", error);
         toast.error("Không thể tải danh sách tỉnh/thành phố");
@@ -109,16 +103,10 @@ export default function AddressForm({
       setLoadingDistricts(true);
       try {
         const response = await fetch(
-          `https://vapi.vnappmob.com/api/province/district/${v.provinceCode}`
+          `/api/location/p/${v.provinceCode}?depth=2`
         );
         const data = await response.json();
-        // Map to common format
-        setDistricts(
-          data.results.map((d) => ({
-            code: d.district_id,
-            name: d.district_name,
-          }))
-        );
+        setDistricts(data.districts || []);
       } catch (error) {
         console.error("Error fetching districts:", error);
         toast.error("Không thể tải danh sách quận/huyện");
@@ -141,16 +129,10 @@ export default function AddressForm({
       setLoadingWards(true);
       try {
         const response = await fetch(
-          `https://vapi.vnappmob.com/api/province/ward/${v.districtCode}`
+          `/api/location/d/${v.districtCode}?depth=2`
         );
         const data = await response.json();
-        // Map to common format
-        setWards(
-          data.results.map((w) => ({
-            code: w.ward_id,
-            name: w.ward_name,
-          }))
-        );
+        setWards(data.wards || []);
       } catch (error) {
         console.error("Error fetching wards:", error);
         toast.error("Không thể tải danh sách phường/xã");

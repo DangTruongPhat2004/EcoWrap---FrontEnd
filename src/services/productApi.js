@@ -227,6 +227,38 @@ export const updateProduct = async (productId, formData) => {
 };
 
 /**
+ * Activate a product (set IsActive = true)
+ * @param {string} productId - The product ID to activate
+ * @returns {Promise} Response from the API
+ */
+export const activateProduct = async (productId) => {
+  try {
+    const response = await apiClient.put(`/api/Product/${productId}/activate`);
+    return response.data;
+  } catch (error) {
+    console.error("Error activating product:", error);
+    throw error;
+  }
+};
+
+/**
+ * Deactivate a product (set IsActive = false)
+ * @param {string} productId - The product ID to deactivate
+ * @returns {Promise} Response from the API
+ */
+export const deactivateProduct = async (productId) => {
+  try {
+    const response = await apiClient.put(
+      `/api/Product/${productId}/deactivate`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deactivating product:", error);
+    throw error;
+  }
+};
+
+/**
  * Delete a product (Seller only)
  * @param {string} productId - The product ID to delete
  * @returns {Promise} Response from the API

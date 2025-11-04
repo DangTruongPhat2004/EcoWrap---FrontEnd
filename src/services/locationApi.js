@@ -3,11 +3,11 @@ import axios from "axios";
 
 /**
  * Location API Services for Vietnam provinces, districts, and wards
- * Using: https://provinces.open-api.vn with HTTPS (accepting certificate)
- * Note: Using HTTPS endpoint - browsers will handle certificate issues
+ * Using: Vercel proxy to avoid SSL certificate issues
+ * Proxy routes /api/location/* to provinces.open-api.vn securely
  */
 
-const LOCATION_API_BASE = "https://provinces.open-api.vn/api";
+const LOCATION_API_BASE = "/api/location";
 
 /**
  * Get all provinces in Vietnam

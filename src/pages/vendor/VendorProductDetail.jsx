@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   getProductById,
   updateProduct,
   deleteProduct,
+  activateProduct,
+  deactivateProduct,
 } from "../../services/productApi";
 import { getAllCategories } from "../../services/categoryApi";
 import {
@@ -264,7 +267,7 @@ const VendorProductDetail = () => {
     updateFormData.append("WeightGram", formData.weightGram);
     updateFormData.append("MaterialType", formData.materialType);
     updateFormData.append("CategoryId", formData.categoryId);
-    updateFormData.append("IsActive", formData.isActive ? "true" : "false");
+    // Note: IsActive is handled separately via activate/deactivate endpoints
 
     // Append files if they have been changed
     if (imageFile) updateFormData.append("ImageFile", imageFile);
@@ -715,7 +718,7 @@ const VendorProductDetail = () => {
                 <div className="space-y-2">
                   <Switch
                     isSelected={formData.isActive}
-                    onValueChange={(value) => {
+                    onValueChange={async (value) => {
                       // Check if trying to enable selling when out of stock
                       if (value && product.productStatus !== "In stock") {
                         alert(
@@ -723,7 +726,30 @@ const VendorProductDetail = () => {
                         );
                         return;
                       }
-                      setFormData({ ...formData, isActive: value });
+
+                      try {
+                        // Call activate/deactivate API immediately
+                        if (value) {
+                          await activateProduct(id);
+                          toast.success("Đã mở bán sản phẩm");
+                        } else {
+                          await deactivateProduct(id);
+                          toast.success("Đã đóng bán sản phẩm");
+                        }
+
+                        // Update local state
+                        setFormData({ ...formData, isActive: value });
+
+                        // Refresh product data to get latest state
+                        const refreshedProduct = await getProductById(id);
+                        setProduct(refreshedProduct);
+                      } catch (error) {
+                        console.error(
+                          "Error toggling product active status:",
+                          error
+                        );
+                        toast.error("Không thể thay đổi trạng thái bán hàng");
+                      }
                     }}
                     color="success"
                     size="lg"
