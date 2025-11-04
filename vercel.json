@@ -1,13 +1,17 @@
 {
   "functions": {
-    "api/location.js": {
+    "api/location.mjs": {
       "memory": 1024,
       "maxDuration": 10
+    },
+    "api/proxy.mjs": {
+      "memory": 1024,
+      "maxDuration": 30
     }
   },
   "rewrites": [
     {
-      "source": "/api/(?!location)(.+)",
+      "source": "/api/(?!location|proxy)(.+)",
       "destination": "http://14.225.205.215/api/$1"
     },
     {
