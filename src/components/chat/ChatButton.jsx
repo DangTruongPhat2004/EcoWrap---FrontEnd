@@ -1,10 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatService from "../../services/chatService";
 
 const ChatButton = ({ product, currentUserId, authToken }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isCustomer, setIsCustomer] = useState(null); // null = checking, true = customer, false = not customer
+
+  // Check user role on component mount
+  useEffect(() => {
+    const checkUserRole = async () => {
+      if (!authToken || !currentUserId) {
+        setIsCustomer(null);
+        return;
+      }
+
+      try {
+        const chatService = new ChatService(authToken);
+        const userInfo = await chatService.getUserInfo(currentUserId);
+        setIsCustomer(userInfo.roleId === 2);
+      } catch (error) {
+        console.error("Error checking user role:", error);
+        setIsCustomer(null);
+      }
+    };
+
+    checkUserRole();
+  }, [authToken, currentUserId]);
 
   const handleContactClick = async () => {
     console.log("=== CHAT BUTTON CLICKED ===");
@@ -53,25 +75,14 @@ const ChatButton = ({ product, currentUserId, authToken }) => {
     try {
       const chatService = new ChatService(authToken);
 
-      // Get current user info to verify role
-      console.log("5. Fetching user info");
-      const userInfo = await chatService.getUserInfo(currentUserId);
-      console.log("6. User info:", userInfo);
-
-      if (userInfo.roleId !== 2) {
-        alert("Chỉ khách hàng mới có thể liên hệ với người bán");
-        setIsLoading(false);
-        return;
-      }
-
       // Create or get conversation
-      console.log("7. Creating conversation");
+      console.log("5. Creating conversation");
       const conversation = await chatService.createConversation(
         sellerId,
         currentUserId
       );
 
-      console.log("8. Conversation created:", conversation);
+      console.log("6. Conversation created:", conversation);
 
       // Redirect to messages page with conversation selected
       navigate(`/messages?conversation=${conversation.id}`);
@@ -92,10 +103,15 @@ const ChatButton = ({ product, currentUserId, authToken }) => {
     }
   };
 
+  // Hide button if user is not a customer (roleId !== 2)
+  if (isCustomer === false) {
+    return null;
+  }
+
   return (
     <button
       onClick={handleContactClick}
-      disabled={isLoading}
+      disabled={isLoading || isCustomer === null}
       className={`
         flex items-center gap-2 px-6 py-2
         bg-white border border-gray-300 text-gray-700
