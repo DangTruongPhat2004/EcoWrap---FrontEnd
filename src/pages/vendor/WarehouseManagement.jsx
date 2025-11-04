@@ -263,7 +263,12 @@ const WarehouseManagement = () => {
   const handleAddWarehouse = () => {
     setModalMode("add");
     const phoneNumber = userInfo?.phoneNumber || "";
-    console.log("Auto-filling phone number:", phoneNumber, "from userInfo:", userInfo);
+    console.log(
+      "Auto-filling phone number:",
+      phoneNumber,
+      "from userInfo:",
+      userInfo
+    );
     setFormData({
       warehouseName: "",
       address: "",

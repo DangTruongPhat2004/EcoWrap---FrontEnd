@@ -20,7 +20,8 @@ const transformProduct = (product) => {
     material: product.materialType,
     images: product.imageFile ? [product.imageFile] : [],
     inStock: product.productStatus === "In stock",
-    category: product.category?.name || product.categoryId,
+    // Keep the full category object, don't overwrite it
+    categoryName: product.category?.categoryName || "Chưa phân loại",
     // Add seller information
     seller: product.seller
       ? {
