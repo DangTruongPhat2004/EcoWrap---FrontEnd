@@ -11,10 +11,6 @@
   },
   "rewrites": [
     {
-      "source": "/api/(?!location|proxy)(.+)",
-      "destination": "http://14.225.205.215/api/$1"
-    },
-    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
