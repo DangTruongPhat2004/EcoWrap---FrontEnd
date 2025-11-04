@@ -41,17 +41,19 @@ const MessagesPage = () => {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
-  const [sellerCompanyNames, setSellerCompanyNames] = useState({}); // Cache for seller company names
-  const [customerNames, setCustomerNames] = useState({}); // Cache for customer names
-  const [productsCache, setProductsCache] = useState({}); // Cache for product data
+  const [sellerCompanyNames, setSellerCompanyNames] = useState({});
+  const [customerNames, setCustomerNames] = useState({});
+  const [productsCache, setProductsCache] = useState({});
+  const [unreadCounts, setUnreadCounts] = useState({}); // Track unread messages per conversation
 
   // Refs
   const messagesEndRef = useRef(null);
   const chatServiceRef = useRef(null);
   const pollingIntervalRef = useRef(null);
   const lastMessageIdRef = useRef(null);
-  const isFetchingRef = useRef(false); // Prevent duplicate requests
+  const isFetchingRef = useRef(false);
   const componentMountedRef = useRef(true);
+  const conversationListPollingRef = useRef(null);
 
   // Initialize chat service
   useEffect(() => {
@@ -65,14 +67,28 @@ const MessagesPage = () => {
 
     return () => {
       componentMountedRef.current = false;
+      if (conversationListPollingRef.current) {
+        clearInterval(conversationListPollingRef.current);
+      }
     };
   }, [authToken, currentUserId, navigate]);
 
-  // Fetch conversations on mount
+  // Fetch conversations on mount and poll for updates
   useEffect(() => {
     if (chatServiceRef.current) {
       fetchConversations();
+
+      // Poll conversation list every 10 seconds to catch new messages
+      conversationListPollingRef.current = setInterval(() => {
+        fetchConversations(true); // Silent fetch
+      }, 10000);
     }
+
+    return () => {
+      if (conversationListPollingRef.current) {
+        clearInterval(conversationListPollingRef.current);
+      }
+    };
   }, []);
 
   // Fetch seller company name from product API
@@ -91,17 +107,12 @@ const MessagesPage = () => {
   // Fetch customer name from User API
   const fetchCustomerName = useCallback(async (userId) => {
     try {
-      console.log("🔄 Fetching customer data for userId:", userId);
       const response = await getUserById(userId);
-      console.log("✅ API Response:", response);
-      // Handle response structure: response.data or response directly
       const userData = response.data || response;
-      console.log("✅ Fetched customer data:", userData);
       const name = userData.fullName || userData.username;
-      console.log("✅ Extracted name:", name);
       return name;
     } catch (error) {
-      console.error("❌ Error fetching customer name:", error);
+      console.error("Error fetching customer name:", error);
     }
     return null;
   }, []);
@@ -109,14 +120,11 @@ const MessagesPage = () => {
   // Fetch seller company name from Seller API by sellerId
   const fetchSellerCompanyNameBySellerId = useCallback(async (sellerId) => {
     try {
-      console.log("🔄 Fetching seller data for sellerId:", sellerId);
       const response = await getSellerById(sellerId);
-      console.log("✅ Seller API Response:", response);
       const companyName = response.companyName;
-      console.log("✅ Extracted company name:", companyName);
       return companyName;
     } catch (error) {
-      console.error("❌ Error fetching seller company name:", error);
+      console.error("Error fetching seller company name:", error);
     }
     return null;
   }, []);
@@ -132,15 +140,12 @@ const MessagesPage = () => {
         if (otherParticipant) {
           const userId = otherParticipant.userId;
 
-          // Fetch seller company name if participant is a seller
           if (
             otherParticipant.role === "Seller" &&
             !sellerCompanyNames[userId]
           ) {
-            console.log("🔄 Auto-fetching seller for userId:", userId);
             fetchSellerCompanyNameBySellerId(userId).then((companyName) => {
               if (companyName) {
-                console.log("✅ Auto-fetched company name:", companyName);
                 setSellerCompanyNames((prev) => ({
                   ...prev,
                   [userId]: companyName,
@@ -149,7 +154,6 @@ const MessagesPage = () => {
             });
           }
 
-          // Fetch customer name if participant is a customer
           if (
             (otherParticipant.role === "Customer" ||
               otherParticipant.role === "Buyer") &&
@@ -189,7 +193,7 @@ const MessagesPage = () => {
     }
   }, [searchParams, conversations]);
 
-  // Auto-scroll to bottom (only when new messages)
+  // Auto-scroll to bottom
   const scrollToBottom = useCallback(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -215,11 +219,33 @@ const MessagesPage = () => {
     }
   };
 
-  // Fetch all conversations
-  const fetchConversations = async () => {
-    if (isFetchingRef.current) return; // Prevent duplicate requests
+  // Calculate unread messages for a conversation
+  const calculateUnreadCount = (conversation) => {
+    if (!conversation.lastMessage) return 0;
 
-    setLoading(true);
+    // If the last message was sent by the current user, no unread
+    if (conversation.lastMessage.senderId === currentUserId) {
+      return 0;
+    }
+
+    // If there's a read status in the conversation data
+    if (conversation.unreadCount !== undefined) {
+      return conversation.unreadCount;
+    }
+
+    // If last message is from another user and conversation is not selected, mark as unread
+    if (selectedConversation?.id !== conversation.id) {
+      return conversation.hasUnread ? 1 : 0;
+    }
+
+    return 0;
+  };
+
+  // Fetch all conversations
+  const fetchConversations = async (silent = false) => {
+    if (isFetchingRef.current) return;
+
+    if (!silent) setLoading(true);
     isFetchingRef.current = true;
 
     try {
@@ -238,19 +264,80 @@ const MessagesPage = () => {
       );
 
       if (componentMountedRef.current) {
+        // Calculate unread counts
+        const newUnreadCounts = {};
+        conversationsWithProducts.forEach((conv) => {
+          const unreadCount = calculateUnreadCount(conv);
+          if (unreadCount > 0) {
+            newUnreadCounts[conv.id] = unreadCount;
+          }
+        });
+
+        setUnreadCounts(newUnreadCounts);
         setConversations(conversationsWithProducts);
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
     } finally {
       if (componentMountedRef.current) {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
       isFetchingRef.current = false;
     }
   };
 
-  // Optimized fetch messages - only updates if there are new messages
+  // Update conversation in list after sending a message
+  const updateConversationAfterMessage = useCallback(
+    (conversationId, messageBody, timestamp, senderId) => {
+      setConversations((prevConversations) => {
+        return prevConversations
+          .map((conv) => {
+            if (conv.id === conversationId) {
+              return {
+                ...conv,
+                lastMessagePreview: messageBody,
+                lastMessageAt: timestamp,
+                lastMessage: {
+                  body: messageBody,
+                  createdAt: timestamp,
+                  senderId: senderId,
+                },
+              };
+            }
+            return conv;
+          })
+          .sort((a, b) => {
+            const dateA = new Date(a.lastMessageAt || 0);
+            const dateB = new Date(b.lastMessageAt || 0);
+            return dateB - dateA;
+          });
+      });
+
+      // Clear unread count for current user's sent messages
+      if (senderId === currentUserId) {
+        setUnreadCounts((prev) => {
+          const updated = { ...prev };
+          delete updated[conversationId];
+          return updated;
+        });
+      }
+    },
+    [currentUserId]
+  );
+
+  // Mark conversation as read
+  const markConversationAsRead = useCallback((conversationId) => {
+    setUnreadCounts((prev) => {
+      const updated = { ...prev };
+      delete updated[conversationId];
+      return updated;
+    });
+
+    // TODO: Call API to mark messages as read on the server
+    // await chatServiceRef.current.markAsRead(conversationId);
+  }, []);
+
+  // Optimized fetch messages
   const fetchMessages = useCallback(
     async (conversationId, silent = false) => {
       if (!conversationId || isFetchingRef.current) return;
@@ -265,12 +352,10 @@ const MessagesPage = () => {
 
         if (!componentMountedRef.current) return;
 
-        // Sort messages by createdAt ascending (oldest first)
         const sortedMessages = [...messagesList].sort((a, b) => {
           return new Date(a.createdAt) - new Date(b.createdAt);
         });
 
-        // Only update if there are new messages
         const latestMessageId =
           sortedMessages.length > 0
             ? sortedMessages[sortedMessages.length - 1].id
@@ -280,7 +365,6 @@ const MessagesPage = () => {
           setMessages(sortedMessages);
           lastMessageIdRef.current = latestMessageId;
 
-          // Only scroll if new messages were added
           if (sortedMessages.length > messages.length) {
             setTimeout(scrollToBottom, 100);
           }
@@ -300,13 +384,11 @@ const MessagesPage = () => {
   // Handle conversation selection
   const handleSelectConversation = useCallback(
     async (conversation) => {
-      // Stop previous polling
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
 
-      // Fetch product if not already loaded
       let updatedConversation = conversation;
       if (conversation.productId && !conversation.product) {
         const product = await fetchProductDetails(conversation.productId);
@@ -318,16 +400,17 @@ const MessagesPage = () => {
       setMessages([]);
       lastMessageIdRef.current = null;
 
-      // Initial fetch
+      // Mark as read
+      markConversationAsRead(conversation.id);
+
       await fetchMessages(conversation.id, false);
 
-      // Start optimized polling (5 seconds interval - more reasonable)
       setIsPolling(true);
       pollingIntervalRef.current = setInterval(() => {
-        fetchMessages(conversation.id, true); // Silent fetch
-      }, 5000); // 5 seconds - reduced from 2 seconds
+        fetchMessages(conversation.id, true);
+      }, 5000);
     },
-    [fetchMessages, setSearchParams]
+    [fetchMessages, setSearchParams, markConversationAsRead]
   );
 
   // Cleanup polling on unmount or conversation change
@@ -347,10 +430,12 @@ const MessagesPage = () => {
     if (!newMessage.trim() || !selectedConversation || isSending) return;
 
     setIsSending(true);
+    const messageBody = newMessage.trim();
+    const timestamp = new Date().toISOString();
 
     try {
       const messageData = {
-        body: newMessage.trim(),
+        body: messageBody,
         contentType: "text",
         clientId: `web-${Date.now()}`,
       };
@@ -362,8 +447,14 @@ const MessagesPage = () => {
 
       setNewMessage("");
 
-      // Immediately fetch new messages after sending (bypass the polling interval)
-      lastMessageIdRef.current = null; // Force update
+      updateConversationAfterMessage(
+        selectedConversation.id,
+        messageBody,
+        timestamp,
+        currentUserId
+      );
+
+      lastMessageIdRef.current = null;
       await fetchMessages(selectedConversation.id, true);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -384,25 +475,14 @@ const MessagesPage = () => {
         return "Người dùng";
       }
 
-      // If the other participant is a Seller, get company name from cache or fetch it
       if (otherParticipant.role === "Seller") {
-        console.log("👔 DEBUG - Participant is a Seller");
         const userId = otherParticipant.userId;
-        console.log("👔 DEBUG - Seller userId:", userId);
 
-        // Check cache first
         if (sellerCompanyNames[userId]) {
-          console.log("✅ DEBUG - Found in cache:", sellerCompanyNames[userId]);
           return sellerCompanyNames[userId];
         }
 
-        // Check if company name is in the conversation data
         if (conversation.product?.seller?.companyName) {
-          console.log(
-            "✅ DEBUG - Found in conversation.product:",
-            conversation.product.seller.companyName
-          );
-          // Cache it
           setSellerCompanyNames((prev) => ({
             ...prev,
             [userId]: conversation.product.seller.companyName,
@@ -410,11 +490,8 @@ const MessagesPage = () => {
           return conversation.product.seller.companyName;
         }
 
-        // NEW: Fetch from Seller API using userId (which is the sellerId)
-        console.log("🔄 DEBUG - Fetching from Seller API for userId:", userId);
         fetchSellerCompanyNameBySellerId(userId).then((companyName) => {
           if (companyName) {
-            console.log("✅ DEBUG - Fetched company name:", companyName);
             setSellerCompanyNames((prev) => ({
               ...prev,
               [userId]: companyName,
@@ -422,39 +499,26 @@ const MessagesPage = () => {
           }
         });
 
-        // Fallback to participant data while fetching
         if (otherParticipant.fullName) {
-          console.log(
-            "⚠️ DEBUG - Using fallback fullName:",
-            otherParticipant.fullName
-          );
           return otherParticipant.fullName;
         }
         if (otherParticipant.username) {
-          console.log(
-            "⚠️ DEBUG - Using fallback username:",
-            otherParticipant.username
-          );
           return otherParticipant.username;
         }
 
-        console.log("⚠️ DEBUG - Using default 'Người bán'");
         return "Người bán";
       }
 
-      // If the other participant is a Customer, get name from cache or fetch it
       if (
         otherParticipant.role === "Buyer" ||
         otherParticipant.role === "Customer"
       ) {
         const userId = otherParticipant.userId;
 
-        // Check cache first
         if (customerNames[userId]) {
           return customerNames[userId];
         }
 
-        // Try to fetch from API if not cached
         fetchCustomerName(userId).then((name) => {
           if (name) {
             setCustomerNames((prev) => ({
@@ -464,7 +528,6 @@ const MessagesPage = () => {
           }
         });
 
-        // Try to get from localStorage (only if it matches this user)
         try {
           const userString = localStorage.getItem("user");
 
@@ -475,23 +538,16 @@ const MessagesPage = () => {
               const storedUserId =
                 userResponse.data.userId || userResponse.data.id;
 
-              // Only use localStorage data if it matches the other participant
               if (storedUserId === otherParticipant.userId) {
                 const name =
                   userResponse.data.fullName || userResponse.data.username;
                 return name || "Khách hàng";
-              } else {
-                console.log(
-                  "LocalStorage user does not match other participant"
-                );
               }
             }
           }
         } catch (error) {
           console.error("Error parsing user from localStorage:", error);
         }
-
-        // Fallback to participant data
 
         if (otherParticipant.user?.fullName) {
           return otherParticipant.user.fullName;
@@ -508,7 +564,6 @@ const MessagesPage = () => {
         return "Khách hàng";
       }
 
-      // Default fallback
       return otherParticipant.role || "Người dùng";
     },
     [
@@ -518,6 +573,29 @@ const MessagesPage = () => {
       fetchSellerCompanyNameBySellerId,
       fetchCustomerName,
     ]
+  );
+
+  // Get message preview with sender name
+  const getMessagePreview = useCallback(
+    (conversation) => {
+      if (!conversation.lastMessagePreview) {
+        return "Chưa có tin nhắn";
+      }
+
+      const lastMessage = conversation.lastMessage;
+      const isOwnMessage = lastMessage?.senderId === currentUserId;
+
+      const preview = conversation.lastMessagePreview;
+      const truncated =
+        preview.length > 40 ? preview.substring(0, 40) + "..." : preview;
+
+      if (isOwnMessage) {
+        return `Bạn: ${truncated}`;
+      }
+
+      return truncated;
+    },
+    [currentUserId]
   );
 
   // Close conversation
@@ -592,31 +670,58 @@ const MessagesPage = () => {
                 </p>
               </div>
             ) : (
-              conversations.map((conversation) => (
-                <button
-                  key={conversation.id}
-                  onClick={() => handleSelectConversation(conversation)}
-                  className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 text-left transition-colors ${
-                    selectedConversation?.id === conversation.id
-                      ? "bg-green-50 border-l-4 border-l-green-500"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-1">
-                    <h3 className="font-semibold text-gray-900 text-sm">
-                      {getOtherParticipant(conversation)}
-                    </h3>
-                    {conversation.lastMessageAt && (
-                      <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
-                        {getRelativeTimeHanoi(conversation.lastMessageAt)}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 truncate">
-                    {conversation.lastMessagePreview || "Chưa có tin nhắn"}
-                  </p>
-                </button>
-              ))
+              conversations.map((conversation) => {
+                const unreadCount = unreadCounts[conversation.id] || 0;
+                const hasUnread = unreadCount > 0;
+                const isSelected = selectedConversation?.id === conversation.id;
+
+                return (
+                  <button
+                    key={conversation.id}
+                    onClick={() => handleSelectConversation(conversation)}
+                    className={`w-full p-4 border-b border-gray-100 hover:bg-gray-50 text-left transition-all relative ${
+                      isSelected
+                        ? "bg-green-50 border-l-4 border-l-green-500"
+                        : hasUnread
+                        ? "bg-blue-50"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-1">
+                      <h3
+                        className={`text-sm ${
+                          hasUnread
+                            ? "font-bold text-gray-900"
+                            : "font-semibold text-gray-900"
+                        }`}
+                      >
+                        {getOtherParticipant(conversation)}
+                      </h3>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        {conversation.lastMessageAt && (
+                          <span className="text-xs text-gray-500">
+                            {getRelativeTimeHanoi(conversation.lastMessageAt)}
+                          </span>
+                        )}
+                        {hasUnread && (
+                          <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-green-500 rounded-full">
+                            {unreadCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p
+                      className={`text-sm truncate ${
+                        hasUnread
+                          ? "font-semibold text-gray-900"
+                          : "text-gray-600"
+                      }`}
+                    >
+                      {getMessagePreview(conversation)}
+                    </p>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
@@ -714,7 +819,7 @@ const MessagesPage = () => {
                         index === 0 ||
                         new Date(message.createdAt).getTime() -
                           new Date(messages[index - 1].createdAt).getTime() >
-                          300000; // 5 minutes
+                          300000;
 
                       return (
                         <React.Fragment key={message.id}>
@@ -743,8 +848,8 @@ const MessagesPage = () => {
                                 {message.body}
                               </p>
                             </div>
-                            {!showTimeLabel && (
-                              <span className="text-xs text-gray-400 mt-0.5 px-1">
+                            <div className="flex items-center gap-1 mt-0.5 px-1">
+                              <span className="text-xs text-gray-400">
                                 {new Date(message.createdAt).toLocaleTimeString(
                                   "vi-VN",
                                   {
@@ -755,7 +860,20 @@ const MessagesPage = () => {
                                   }
                                 )}
                               </span>
-                            )}
+                              {isOwnMessage && (
+                                <svg
+                                  className="w-4 h-4 text-gray-400"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </div>
                           </div>
                         </React.Fragment>
                       );

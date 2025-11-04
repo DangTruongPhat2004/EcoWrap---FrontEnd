@@ -369,9 +369,9 @@ function Header() {
             </svg>
           </Button>
 
-          {/* Notification */}
+          {/* Messages */}
           <Badge
-            content="3"
+            content="1"
             color="danger"
             size="sm"
             classNames={{
@@ -384,26 +384,19 @@ function Header() {
               isIconOnly
               variant="light"
               radius="full"
-              className="w-11 h-11 bg-[rgba(168,213,186,0.2)] hover:bg-[rgba(168,213,186,0.3)] transition-colors"
-              aria-label="Thông báo"
+              className="w-11 h-11 bg-[rgba(168,213,186,0.2)] hover:bg-[rgba(168,213,186,0.3)] transition-colors cursor-pointer"
+              aria-label="Tin nhắn"
+              onClick={() => navigate("/messages")}
             >
               <svg
                 className="w-5 h-5 text-[#027534]"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                fill="currentColor"
+                viewBox="0 0 20 20"
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="m13.73 21a2 2 0 0 1-3.46 0"
+                  fillRule="evenodd"
+                  d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                  clipRule="evenodd"
                 />
               </svg>
             </Button>
