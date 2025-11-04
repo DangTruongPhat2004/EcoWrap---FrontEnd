@@ -15,8 +15,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Select,
-  SelectItem,
 } from "@heroui/react";
 import {
   Plus,
@@ -28,11 +26,6 @@ import {
 } from "lucide-react";
 import warehouseApi from "../../services/warehouseApi";
 import { getUserById } from "../../services/userApi";
-import {
-  getProvinces,
-  getDistrictsByProvince,
-  getWardsByDistrict,
-} from "../../services/locationApi";
 
 const WarehouseManagement = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -71,12 +64,6 @@ const WarehouseManagement = () => {
   });
   const [errors, setErrors] = useState({});
 
-  // Location data from open API
-  const [provinces, setProvinces] = useState([]);
-  const [districts, setDistricts] = useState([]);
-  const [wards, setWards] = useState([]);
-  const [loadingLocations, setLoadingLocations] = useState(false);
-
   // Fetch warehouses from API
   const fetchWarehouses = async () => {
     setIsDataLoading(true);
@@ -91,64 +78,6 @@ const WarehouseManagement = () => {
       setIsDataLoading(false);
     }
   };
-
-  // Fetch provinces on component mount
-  React.useEffect(() => {
-    const fetchProvinces = async () => {
-      try {
-        setLoadingLocations(true);
-        const data = await getProvinces();
-        setProvinces(data);
-      } catch (error) {
-        console.error("Error loading provinces:", error);
-      } finally {
-        setLoadingLocations(false);
-      }
-    };
-    fetchProvinces();
-  }, []);
-
-  // Fetch districts when province changes
-  React.useEffect(() => {
-    const fetchDistricts = async () => {
-      if (!formData.provinceId) {
-        setDistricts([]);
-        return;
-      }
-      try {
-        setLoadingLocations(true);
-        const data = await getDistrictsByProvince(formData.provinceId);
-        setDistricts(data);
-      } catch (error) {
-        console.error("Error loading districts:", error);
-        setDistricts([]);
-      } finally {
-        setLoadingLocations(false);
-      }
-    };
-    fetchDistricts();
-  }, [formData.provinceId]);
-
-  // Fetch wards when district changes
-  React.useEffect(() => {
-    const fetchWards = async () => {
-      if (!formData.districtId) {
-        setWards([]);
-        return;
-      }
-      try {
-        setLoadingLocations(true);
-        const data = await getWardsByDistrict(formData.districtId);
-        setWards(data);
-      } catch (error) {
-        console.error("Error loading wards:", error);
-        setWards([]);
-      } finally {
-        setLoadingLocations(false);
-      }
-    };
-    fetchWards();
-  }, [formData.districtId]);
 
   // Initialize warehouses with API data
   React.useEffect(() => {
@@ -709,40 +638,19 @@ const WarehouseManagement = () => {
                         <label className="text-sm font-medium text-gray-700 block">
                           Tỉnh/Thành Phố <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          placeholder="Chọn tỉnh/thành phố"
+                        <Input
+                          placeholder="Nhập tỉnh/thành phố"
                           variant="bordered"
-                          selectedKeys={
-                            formData.provinceId
-                              ? [formData.provinceId.toString()]
-                              : []
-                          }
-                          onSelectionChange={(keys) =>
-                            handleInputChange(
-                              "provinceId",
-                              Array.from(keys)[0] || ""
-                            )
+                          value={formData.provinceId}
+                          onChange={(e) =>
+                            handleInputChange("provinceId", e.target.value)
                           }
                           isInvalid={!!errors.provinceId}
                           errorMessage={errors.provinceId}
-                          isLoading={loadingLocations && provinces.length === 0}
                           classNames={{
-                            trigger: "text-sm bg-white",
-                            popoverContent:
-                              "bg-white border border-gray-200 shadow-lg z-50",
-                            listbox: "bg-white",
-                            listboxWrapper: "bg-white",
+                            input: "text-sm",
                           }}
-                        >
-                          {provinces.map((province) => (
-                            <SelectItem
-                              key={province.code.toString()}
-                              value={province.code.toString()}
-                            >
-                              {province.name}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        />
                       </div>
                     </div>
 
@@ -752,45 +660,19 @@ const WarehouseManagement = () => {
                         <label className="text-sm font-medium text-gray-700 block">
                           Quận/Huyện <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          placeholder="Chọn quận/huyện"
+                        <Input
+                          placeholder="Nhập quận/huyện"
                           variant="bordered"
-                          selectedKeys={
-                            formData.districtId
-                              ? [formData.districtId.toString()]
-                              : []
-                          }
-                          onSelectionChange={(keys) =>
-                            handleInputChange(
-                              "districtId",
-                              Array.from(keys)[0] || ""
-                            )
+                          value={formData.districtId}
+                          onChange={(e) =>
+                            handleInputChange("districtId", e.target.value)
                           }
                           isInvalid={!!errors.districtId}
                           errorMessage={errors.districtId}
-                          isDisabled={!formData.provinceId}
-                          isLoading={
-                            loadingLocations &&
-                            formData.provinceId &&
-                            districts.length === 0
-                          }
                           classNames={{
-                            trigger: "text-sm bg-white",
-                            popoverContent:
-                              "bg-white border border-gray-200 shadow-lg z-50",
-                            listbox: "bg-white",
-                            listboxWrapper: "bg-white",
+                            input: "text-sm",
                           }}
-                        >
-                          {districts.map((district) => (
-                            <SelectItem
-                              key={district.code.toString()}
-                              value={district.code.toString()}
-                            >
-                              {district.name}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        />
                       </div>
                     </div>
 
@@ -800,43 +682,19 @@ const WarehouseManagement = () => {
                         <label className="text-sm font-medium text-gray-700 block">
                           Phường/Xã <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          placeholder="Chọn phường/xã"
+                        <Input
+                          placeholder="Nhập phường/xã"
                           variant="bordered"
-                          selectedKeys={
-                            formData.wardId ? [formData.wardId.toString()] : []
-                          }
-                          onSelectionChange={(keys) =>
-                            handleInputChange(
-                              "wardId",
-                              Array.from(keys)[0] || ""
-                            )
+                          value={formData.wardId}
+                          onChange={(e) =>
+                            handleInputChange("wardId", e.target.value)
                           }
                           isInvalid={!!errors.wardId}
                           errorMessage={errors.wardId}
-                          isDisabled={!formData.districtId}
-                          isLoading={
-                            loadingLocations &&
-                            formData.districtId &&
-                            wards.length === 0
-                          }
                           classNames={{
-                            trigger: "text-sm bg-white",
-                            popoverContent:
-                              "bg-white border border-gray-200 shadow-lg z-50",
-                            listbox: "bg-white",
-                            listboxWrapper: "bg-white",
+                            input: "text-sm",
                           }}
-                        >
-                          {wards.map((ward) => (
-                            <SelectItem
-                              key={ward.code.toString()}
-                              value={ward.code.toString()}
-                            >
-                              {ward.name}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        />
                       </div>
                     </div>
                   </div>
@@ -910,16 +768,8 @@ const WarehouseManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Vị trí:</span>{" "}
-                      {
-                        provinces.find((p) => p.id === formData.provinceId)
-                          ?.name
-                      }{" "}
-                      -{" "}
-                      {
-                        districts.find((d) => d.id === formData.districtId)
-                          ?.name
-                      }{" "}
-                      - {wards.find((w) => w.id === formData.wardId)?.name}
+                      {formData.provinceId} - {formData.districtId} -{" "}
+                      {formData.wardId}
                     </div>
                   </div>
                 </div>
@@ -984,16 +834,8 @@ const WarehouseManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Vị trí:</span>{" "}
-                      {
-                        provinces.find((p) => p.id === formData.provinceId)
-                          ?.name
-                      }{" "}
-                      -{" "}
-                      {
-                        districts.find((d) => d.id === formData.districtId)
-                          ?.name
-                      }{" "}
-                      - {wards.find((w) => w.id === formData.wardId)?.name}
+                      {formData.provinceId} - {formData.districtId} -{" "}
+                      {formData.wardId}
                     </div>
                   </div>
                 </div>
