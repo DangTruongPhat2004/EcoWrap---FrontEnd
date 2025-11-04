@@ -46,13 +46,16 @@ export default function AddressForm({
         if (!userId) return;
 
         const userData = await getUserById(userId);
+        console.log("User data fetched for autofill:", userData);
 
-        // Only autofill if form is empty and component is still mounted
-        if (!v.fullName && !userDataLoaded && isMounted) {
+        // Autofill if form is empty and component is still mounted
+        if (isMounted && !userDataLoaded) {
           const autofillData = {
-            fullName: userData.fullName || "",
-            phone: userData.phoneNumber || "",
+            fullName: userData.data?.fullName || userData.fullName || "",
+            phone: userData.data?.phoneNumber || userData.phoneNumber || "",
           };
+
+          console.log("Autofilling address form with:", autofillData);
 
           // Merge autofill data with existing values
           onChange?.({ ...v, ...autofillData });
@@ -70,12 +73,12 @@ export default function AddressForm({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch provinces from Vietnam Province Open API
+  // Fetch provinces from Vietnam Province Open API (using HTTP to avoid SSL cert issues)
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoadingProvinces(true);
       try {
-        const response = await fetch("https://provinces.open-api.vn/api/p/");
+        const response = await fetch("http://provinces.open-api.vn/api/p/");
         const data = await response.json();
         setProvinces(data.map((p) => ({ code: p.code, name: p.name })));
       } catch (error) {
@@ -100,7 +103,7 @@ export default function AddressForm({
       setLoadingDistricts(true);
       try {
         const response = await fetch(
-          `https://provinces.open-api.vn/api/p/${v.provinceCode}?depth=2`
+          `http://provinces.open-api.vn/api/p/${v.provinceCode}?depth=2`
         );
         const data = await response.json();
         setDistricts(
@@ -128,7 +131,7 @@ export default function AddressForm({
       setLoadingWards(true);
       try {
         const response = await fetch(
-          `https://provinces.open-api.vn/api/d/${v.districtCode}?depth=2`
+          `http://provinces.open-api.vn/api/d/${v.districtCode}?depth=2`
         );
         const data = await response.json();
         setWards(data.wards.map((w) => ({ code: w.code, name: w.name })));

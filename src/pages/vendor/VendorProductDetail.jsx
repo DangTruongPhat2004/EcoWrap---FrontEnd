@@ -264,7 +264,7 @@ const VendorProductDetail = () => {
     updateFormData.append("WeightGram", formData.weightGram);
     updateFormData.append("MaterialType", formData.materialType);
     updateFormData.append("CategoryId", formData.categoryId);
-    updateFormData.append("IsActive", formData.isActive);
+    updateFormData.append("IsActive", formData.isActive ? "true" : "false");
 
     // Append files if they have been changed
     if (imageFile) updateFormData.append("ImageFile", imageFile);

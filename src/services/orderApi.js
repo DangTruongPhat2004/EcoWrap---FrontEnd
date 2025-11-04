@@ -120,6 +120,79 @@ export const getMyOrders = async (params = {}) => {
 };
 
 /**
+ * Customer: Get order detail by ID (for customer only)
+ * This endpoint is specifically for customers to view their own order details
+ * @param {number} orderId - Order ID to fetch
+ * @returns {Promise} Order details
+ */
+export const getMyOrderDetail = async (orderId) => {
+  try {
+    const response = await apiClient.get(
+      `/api/order/my-orders/detail/${orderId}`
+    );
+
+    // Backend returns: { success, message, data: OrderDetailResponse }
+    if (response.data.success && response.data.data) {
+      const backendData = response.data.data;
+
+      // Transform backend structure to frontend structure
+      const transformedData = {
+        orderId: backendData.orderId,
+        code: backendData.orderId?.toString(),
+        orderStatus: backendData.orderStatus,
+        createdAt: backendData.createdDate,
+        updatedAt: backendData.updatedDate,
+        totalPrice: backendData.totalPrice,
+        totalAmount: backendData.totalAmount,
+
+        // Customer info
+        customerId: backendData.customerId,
+        customerName: backendData.customerName,
+        customerEmail: backendData.customerEmail,
+        customerPhone: backendData.customerPhone,
+
+        // Shipping address
+        shippingAddress: backendData.shippingAddress,
+        shippingWard: backendData.shippingWard,
+        shippingDistrict: backendData.shippingDistrict,
+        shippingProvince: backendData.shippingProvince,
+        shippingHamlet: backendData.shippingHamlet,
+
+        // Shipping info
+        transportUnit: backendData.transportUnit,
+        shippingCode: backendData.shippingCode,
+
+        // Transform items
+        items:
+          backendData.items?.map((item) => ({
+            id: item.cartItemId,
+            productId: item.productId,
+            name: item.productName,
+            thumb: item.productImageUrl,
+            desc: item.designFile ? "Có thiết kế tùy chỉnh" : "",
+            qty: item.quantity,
+            price: item.pricePerItem,
+            designFile: item.designFile,
+            sellerId: item.sellerId,
+            sellerName: item.sellerName,
+          })) || [],
+      };
+
+      return {
+        success: true,
+        message: response.data.message,
+        data: transformedData,
+      };
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching my order detail:", error);
+    throw error;
+  }
+};
+
+/**
  * Admin: Get order by ID with seller bank details
  * @param {number} orderId - Order ID to fetch
  * @returns {Promise} Order details with seller payment information
