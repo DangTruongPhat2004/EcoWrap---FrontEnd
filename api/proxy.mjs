@@ -24,8 +24,8 @@ export default async function handler(req, res) {
     const path = url.pathname.replace("/api/proxy", "");
     const queryString = url.search;
 
-    // Backend API URL
-    const backendUrl = `http://14.225.205.215/api${path}${queryString}`;
+    // Backend API URL - path already includes /api/ prefix
+    const backendUrl = `http://14.225.205.215${path}${queryString}`;
 
     console.log(`Proxying ${req.method} request to: ${backendUrl}`);
 
