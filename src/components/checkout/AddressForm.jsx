@@ -362,10 +362,10 @@ export default function AddressForm({
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-gray-700">
-              Ấp/Thôn (tuỳ chọn)
+              Ấp/Thôn
             </label>
             <Input
-              placeholder="Nhập ấp/thôn nếu có"
+              placeholder="Nhập ấp/thôn"
               value={v.hamlet || ""}
               onValueChange={(val) => set("hamlet", val)}
               variant="bordered"
