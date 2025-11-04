@@ -273,13 +273,13 @@ export default function StorePage() {
                         <Chip
                           size="sm"
                           color={
-                            product.productStatus === "Available"
+                            product.productStatus === "In stock"
                               ? "success"
                               : "default"
                           }
                           variant="flat"
                         >
-                          {product.productStatus === "Available"
+                          {product.productStatus === "In stock"
                             ? "Còn hàng"
                             : "Hết hàng"}
                         </Chip>
