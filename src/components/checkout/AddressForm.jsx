@@ -73,12 +73,12 @@ export default function AddressForm({
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Fetch provinces from Vietnam Province API (using secure proxy)
+  // Fetch provinces from Vietnam Province API
   useEffect(() => {
     const fetchProvinces = async () => {
       setLoadingProvinces(true);
       try {
-        const response = await fetch("/api/location/p/");
+        const response = await fetch("https://provinces.open-api.vn/api/p/");
         const data = await response.json();
         setProvinces(data);
       } catch (error) {
@@ -103,7 +103,7 @@ export default function AddressForm({
       setLoadingDistricts(true);
       try {
         const response = await fetch(
-          `/api/location/p/${v.provinceCode}?depth=2`
+          `https://provinces.open-api.vn/api/p/${v.provinceCode}?depth=2`
         );
         const data = await response.json();
         setDistricts(data.districts || []);
@@ -129,7 +129,7 @@ export default function AddressForm({
       setLoadingWards(true);
       try {
         const response = await fetch(
-          `/api/location/d/${v.districtCode}?depth=2`
+          `https://provinces.open-api.vn/api/d/${v.districtCode}?depth=2`
         );
         const data = await response.json();
         setWards(data.wards || []);
