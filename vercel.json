@@ -1,11 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/api/location/:path*",
-      "destination": "/api/location"
-    },
-    {
-      "source": "/api/(.*)",
+      "source": "/api/(?!location|proxy)(.+)",
       "destination": "http://14.225.205.215/api/$1"
     },
     {
