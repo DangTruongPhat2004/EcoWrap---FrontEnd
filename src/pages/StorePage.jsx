@@ -192,17 +192,14 @@ export default function StorePage() {
                       />
                     )}
                     {/* Hide follow button if seller viewing their own shop */}
-                    {!(
-                      currentUserRole === "Seller" &&
-                      seller.userId === currentUserId
-                    ) && (
+                    
                       <Button
                         color="primary"
                         startContent={<Store size={18} />}
                       >
                         Theo dõi
                       </Button>
-                    )}
+                   
                   </div>
                 </div>
               </div>
