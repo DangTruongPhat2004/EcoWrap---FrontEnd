@@ -714,72 +714,61 @@ const VendorProductDetail = () => {
             </DetailItem>
 
             <DetailItem label="Trạng thái bán hàng">
-              {isEditing ? (
-                <div className="space-y-2">
-                  <Switch
-                    isSelected={formData.isActive}
-                    onValueChange={async (value) => {
-                      // Check if trying to enable selling when out of stock
-                      if (value && product.productStatus !== "In stock") {
-                        alert(
-                          "Không thể mở bán sản phẩm hết hàng. Vui lòng nhập kho trước!"
-                        );
-                        return;
-                      }
-
-                      try {
-                        // Call activate/deactivate API immediately
-                        if (value) {
-                          await activateProduct(id);
-                          toast.success("Đã mở bán sản phẩm");
-                        } else {
-                          await deactivateProduct(id);
-                          toast.success("Đã đóng bán sản phẩm");
-                        }
-
-                        // Update local state
-                        setFormData({ ...formData, isActive: value });
-
-                        // Refresh product data to get latest state
-                        const refreshedProduct = await getProductById(id);
-                        setProduct(refreshedProduct);
-                      } catch (error) {
-                        console.error(
-                          "Error toggling product active status:",
-                          error
-                        );
-                        toast.error("Không thể thay đổi trạng thái bán hàng");
-                      }
-                    }}
-                    color="success"
-                    size="lg"
-                    isDisabled={
-                      product.productStatus !== "In stock" && !formData.isActive
+              <div className="space-y-2">
+                <Switch
+                  isSelected={product.isActive}
+                  onValueChange={async (value) => {
+                    // Check if trying to enable selling when out of stock
+                    if (value && product.productStatus !== "In stock") {
+                      toast.error(
+                        "Không thể mở bán sản phẩm hết hàng. Vui lòng nhập kho trước!"
+                      );
+                      return;
                     }
-                  >
-                    <span className="text-sm font-medium text-gray-900">
-                      {formData.isActive ? "Đang mở bán" : "Đã đóng"}
-                    </span>
-                  </Switch>
-                  {product.productStatus !== "In stock" &&
-                    !formData.isActive && (
-                      <p className="text-xs text-amber-600 flex items-center gap-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        Sản phẩm hết hàng - Không thể mở bán
-                      </p>
-                    )}
-                </div>
-              ) : (
-                <span
-                  className={`px-3 py-1 text-sm font-medium rounded-full ${
-                    product.isActive
-                      ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-600"
-                  }`}
+
+                    try {
+                      // Call activate/deactivate API immediately
+                      if (value) {
+                        await activateProduct(id);
+                        toast.success("Đã mở bán sản phẩm");
+                      } else {
+                        await deactivateProduct(id);
+                        toast.success("Đã đóng bán sản phẩm");
+                      }
+
+                      // Refresh product data to get latest state
+                      const refreshedProduct = await getProductById(id);
+                      setProduct(refreshedProduct);
+
+                      // Also update formData if in edit mode
+                      if (isEditing) {
+                        setFormData({ ...formData, isActive: value });
+                      }
+                    } catch (error) {
+                      console.error(
+                        "Error toggling product active status:",
+                        error
+                      );
+                      toast.error("Không thể thay đổi trạng thái bán hàng");
+                    }
+                  }}
+                  color="success"
+                  size="lg"
+                  isDisabled={
+                    product.productStatus !== "In stock" && !product.isActive
+                  }
                 >
-                  {product.isActive ? "Đang mở bán" : "Đã đóng"}
-                </span>
-              )}
+                  <span className="text-sm font-medium text-gray-900">
+                    {product.isActive ? "Đang mở bán" : "Đã đóng"}
+                  </span>
+                </Switch>
+                {product.productStatus !== "In stock" && !product.isActive && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Sản phẩm hết hàng - Không thể mở bán
+                  </p>
+                )}
+              </div>
             </DetailItem>
 
             {!isEditing && (

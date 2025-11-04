@@ -1,9 +1,10 @@
+/* eslint-disable */
 /**
  * Vercel Serverless Function to proxy requests to provinces.open-api.vn
  * This avoids SSL certificate issues by handling requests server-side
  */
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Enable CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
@@ -15,11 +16,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get the path after /api/location/
-    const path = req.url.replace("/api/location", "");
+    // Get the query string if any
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    const path = url.pathname.replace("/api/location", "");
+    const queryString = url.search;
 
     // Province API URL (HTTP - no SSL issues server-side)
-    const apiUrl = `http://provinces.open-api.vn/api${path}`;
+    const apiUrl = `http://provinces.open-api.vn/api${path}${queryString}`;
 
     console.log(`Proxying location request to: ${apiUrl}`);
 
@@ -43,4 +46,4 @@ export default async function handler(req, res) {
       message: error.message,
     });
   }
-}
+};
