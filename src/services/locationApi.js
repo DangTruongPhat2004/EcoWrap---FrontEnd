@@ -3,24 +3,20 @@ import axios from "axios";
 
 /**
  * Location API Services for Vietnam provinces, districts, and wards
- * Using alternative API: https://vapi.vnappmob.com (HTTPS compatible)
- * Fallback from provinces.open-api.vn due to SSL certificate issues
+ * Using: https://provinces.open-api.vn with HTTPS (accepting certificate)
+ * Note: Using HTTPS endpoint - browsers will handle certificate issues
  */
 
-const LOCATION_API_BASE = "https://vapi.vnappmob.com/api/province";
+const LOCATION_API_BASE = "https://provinces.open-api.vn/api";
 
 /**
  * Get all provinces in Vietnam
- * @returns {Promise<Array>} List of provinces with {province_id, province_name} format
+ * @returns {Promise<Array>} List of provinces
  */
 export const getProvinces = async () => {
   try {
-    const response = await axios.get(`${LOCATION_API_BASE}/`);
-    // Map to common format: {code, name}
-    return response.data.results.map((p) => ({
-      code: p.province_id,
-      name: p.province_name,
-    }));
+    const response = await axios.get(`${LOCATION_API_BASE}/p/`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching provinces:", error);
     throw error;
@@ -29,19 +25,15 @@ export const getProvinces = async () => {
 
 /**
  * Get all districts in a province
- * @param {string} provinceId - Province ID
+ * @param {number} provinceCode - Province code
  * @returns {Promise<Array>} List of districts
  */
-export const getDistrictsByProvince = async (provinceId) => {
+export const getDistrictsByProvince = async (provinceCode) => {
   try {
     const response = await axios.get(
-      `${LOCATION_API_BASE}/district/${provinceId}`
+      `${LOCATION_API_BASE}/p/${provinceCode}?depth=2`
     );
-    // Map to common format: {code, name}
-    return response.data.results.map((d) => ({
-      code: d.district_id,
-      name: d.district_name,
-    }));
+    return response.data.districts || [];
   } catch (error) {
     console.error("Error fetching districts:", error);
     throw error;
@@ -50,17 +42,15 @@ export const getDistrictsByProvince = async (provinceId) => {
 
 /**
  * Get all wards in a district
- * @param {string} districtId - District ID
+ * @param {number} districtCode - District code
  * @returns {Promise<Array>} List of wards
  */
-export const getWardsByDistrict = async (districtId) => {
+export const getWardsByDistrict = async (districtCode) => {
   try {
-    const response = await axios.get(`${LOCATION_API_BASE}/ward/${districtId}`);
-    // Map to common format: {code, name}
-    return response.data.results.map((w) => ({
-      code: w.ward_id,
-      name: w.ward_name,
-    }));
+    const response = await axios.get(
+      `${LOCATION_API_BASE}/d/${districtCode}?depth=2`
+    );
+    return response.data.wards || [];
   } catch (error) {
     console.error("Error fetching wards:", error);
     throw error;
@@ -68,39 +58,44 @@ export const getWardsByDistrict = async (districtId) => {
 };
 
 /**
- * Note: The vnappmob API doesn't support getting individual province/district/ward by code
- * These functions are kept for API compatibility but may not work as expected
+ * Get province by code
+ * @param {number} provinceCode - Province code
+ * @returns {Promise<Object>} Province details
  */
-
-export const getProvinceByCode = async (provinceId) => {
+export const getProvinceByCode = async (provinceCode) => {
   try {
-    // Fetch all provinces and find the one with matching ID
-    const provinces = await getProvinces();
-    return provinces.find((p) => p.code === provinceId);
+    const response = await axios.get(`${LOCATION_API_BASE}/p/${provinceCode}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching province:", error);
     throw error;
   }
 };
 
-export const getDistrictByCode = async (districtId) => {
+/**
+ * Get district by code
+ * @param {number} districtCode - District code
+ * @returns {Promise<Object>} District details
+ */
+export const getDistrictByCode = async (districtCode) => {
   try {
-    // Note: This requires knowing the province ID first
-    console.warn(
-      "getDistrictByCode requires province context with vnappmob API"
-    );
-    return null;
+    const response = await axios.get(`${LOCATION_API_BASE}/d/${districtCode}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching district:", error);
     throw error;
   }
 };
 
-export const getWardByCode = async (wardId) => {
+/**
+ * Get ward by code
+ * @param {number} wardCode - Ward code
+ * @returns {Promise<Object>} Ward details
+ */
+export const getWardByCode = async (wardCode) => {
   try {
-    // Note: This requires knowing the district ID first
-    console.warn("getWardByCode requires district context with vnappmob API");
-    return null;
+    const response = await axios.get(`${LOCATION_API_BASE}/w/${wardCode}`);
+    return response.data;
   } catch (error) {
     console.error("Error fetching ward:", error);
     throw error;
