@@ -58,6 +58,7 @@ import ChatPage from "./pages/ChatPage";
 import MessagesLayout from "./pages/MessagesLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StorePage from "./pages/StorePage";
+import MessagesPage from "./pages/message/MessagesPage";
 
 // This component now acts as the main layout wrapper.
 // It uses the location to decide which layout to render.
@@ -74,8 +75,8 @@ function AppLayout() {
       <div className="h-screen flex flex-col overflow-hidden">
         <Header />
         <main className="flex-1 min-h-0">
-          {/* The MessagesLayout component is now the element of the route */}
-          <MessagesLayout />
+          {/* The MessagesPage component is now the element of the route */}
+          <MessagesPage />
         </main>
       </div>
     );

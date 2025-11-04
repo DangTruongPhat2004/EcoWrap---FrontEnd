@@ -7,9 +7,14 @@ export default defineConfig({
     proxy: {
       // Proxy all API routes to backend during development
       "/api": {
-        target: "https://localhost:7077",
+        target: "http://14.225.205.215",
         changeOrigin: true,
         secure: false, // dev cert tự ký → để false
+      },
+      "/chats": {
+        target: "http://14.225.205.215",
+        changeOrigin: true,
+        secure: false,
       },
       // Routes without /api prefix (Dashboard, Feedback, etc.)
       "/Dashboard": {
