@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createProduct } from "../../services/productApi";
+import { getAllCategories } from "../../services/categoryApi";
 import {
   Button,
   Input,
@@ -11,6 +12,8 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Select,
+  SelectItem,
 } from "@heroui/react";
 import {
   ArrowLeft,
@@ -32,6 +35,7 @@ const DetailItem = ({ label, children }) => (
 const AddProduct = () => {
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [formData, setFormData] = useState({
     productId: "",
     productName: "",
@@ -54,6 +58,25 @@ const AddProduct = () => {
   const [imageFile, setImageFile] = useState(null);
   const [certificateFile, setCertificateFile] = useState(null);
   const [designFile, setDesignFile] = useState(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await getAllCategories();
+        // Handle both response formats: array or {success, data}
+        if (Array.isArray(response)) {
+          setCategories(response);
+        } else if (response.success && response.data) {
+          setCategories(response.data);
+        } else if (response.data) {
+          setCategories(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const getFileName = (file) => {
     if (!file) return "Chưa có file";
@@ -121,14 +144,26 @@ const AddProduct = () => {
     setIsCreating(true);
     const createFormData = new FormData();
 
-    for (const key in formData) {
-      createFormData.append(key, formData[key]);
-    }
+    // Append all fields with PascalCase for backend (C# convention)
+    createFormData.append("ProductId", formData.productId);
+    createFormData.append("ProductName", formData.productName);
+    createFormData.append(
+      "ProductDescription",
+      formData.productDescription || ""
+    );
+    createFormData.append("Unit", formData.unit);
+    createFormData.append("Size", formData.size);
+    createFormData.append("InkType", formData.inkType);
+    createFormData.append("PrintProcess", formData.printProcess);
+    createFormData.append("ProductPrice", formData.productPrice);
+    createFormData.append("WeightGram", formData.weightGram);
+    createFormData.append("MaterialType", formData.materialType);
+    createFormData.append("CategoryId", formData.categoryId);
 
-    if (imageFile) createFormData.append("imageFile", imageFile);
+    if (imageFile) createFormData.append("ImageFile", imageFile);
     if (certificateFile)
-      createFormData.append("certificateFile", certificateFile);
-    if (designFile) createFormData.append("designFile", designFile);
+      createFormData.append("CertificateFile", certificateFile);
+    if (designFile) createFormData.append("DesignFile", designFile);
 
     try {
       await createProduct(createFormData);
@@ -367,18 +402,44 @@ const AddProduct = () => {
                 }}
               />
             </DetailItem>
-            <DetailItem label="Loại sản phẩm (ID) *">
-              <Input
+            <DetailItem label="Loại sản phẩm *">
+              <Select
                 name="categoryId"
-                value={formData.categoryId}
-                onChange={handleInputChange}
+                selectedKeys={
+                  formData.categoryId
+                    ? new Set([formData.categoryId.toString()])
+                    : new Set()
+                }
+                onSelectionChange={(keys) => {
+                  const selectedId = Array.from(keys)[0];
+                  setFormData((prev) => ({
+                    ...prev,
+                    categoryId: parseInt(selectedId),
+                  }));
+                  if (errors.categoryId) {
+                    setErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.categoryId;
+                      return newErrors;
+                    });
+                  }
+                }}
                 variant="bordered"
                 isInvalid={!!errors.categoryId}
                 errorMessage={errors.categoryId}
+                placeholder="Chọn loại sản phẩm"
                 classNames={{
-                  inputWrapper: "border border-gray-400",
+                  trigger: "border border-gray-400 bg-white",
+                  value: "text-gray-900",
                 }}
-              />
+                items={categories}
+              >
+                {(cat) => (
+                  <SelectItem key={cat.categoryId} textValue={cat.categoryName}>
+                    {cat.categoryName}
+                  </SelectItem>
+                )}
+              </Select>
             </DetailItem>
             <DetailItem label="Cân nặng (gram) *">
               <Input

@@ -22,9 +22,11 @@ import {
   OrderManagement,
   OrderDetailAdmin,
   CategoryManagement,
+  FeedbackManagement,
+  MyFeedback,
 } from "./pages";
 import VendorDashboard from "./pages/vendor/VendorDashboard";
-import VendorProfile from "./pages/vendor/VendorProfile";
+import VendorSettings from "./pages/vendor/VendorSettings";
 import WarehouseManagement from "./pages/vendor/WarehouseManagement";
 import VendorProductDetail from "./pages/vendor/VendorProductDetail";
 import AddProduct from "./pages/vendor/AddProduct";
@@ -57,6 +59,7 @@ import MessagesLayout from "./pages/MessagesLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StorePage from "./pages/StorePage";
 import CustomizePage from "./pages/customer/CustomizePage";
+import MessagesPage from "./pages/message/MessagesPage";
 
 // This component now acts as the main layout wrapper.
 // It uses the location to decide which layout to render.
@@ -74,8 +77,8 @@ function AppLayout() {
       <div className="h-screen flex flex-col overflow-hidden">
         <Header />
         <main className="flex-1 min-h-0">
-          {/* The MessagesLayout component is now the element of the route */}
-          <MessagesLayout />
+          {/* The MessagesPage component is now the element of the route */}
+          <MessagesPage />
         </main>
       </div>
     );
@@ -182,6 +185,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="feedback" element={<MyFeedback />} />
           {/* Add other nested account routes here */}
         </Route>
         <Route
@@ -196,6 +200,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="orders" element={<OrdersPage />} />
           <Route path="orders/:orderId" element={<OrderDetailPage />} />
+          <Route path="feedback" element={<MyFeedback />} />
           {/* Add other nested customer routes here */}
         </Route>
         <Route
@@ -215,6 +220,7 @@ function App() {
           <Route path="orders" element={<OrderManagement />} />
           <Route path="orders/:orderId" element={<OrderDetailAdmin />} />
           <Route path="categories" element={<CategoryManagement />} />
+          <Route path="feedback" element={<FeedbackManagement />} />
           {/* Add other nested admin routes here */}
         </Route>
         <Route
@@ -227,7 +233,7 @@ function App() {
         >
           <Route index element={<VendorDashboard />} />
           <Route path="dashboard" element={<VendorDashboard />} />
-          <Route path="profile" element={<VendorProfile />} />
+          <Route path="settings" element={<VendorSettings />} />
           <Route path="warehouses" element={<WarehouseManagement />} />
           <Route path="products" element={<ProductManagement />} />
           <Route path="products/new" element={<AddProduct />} />

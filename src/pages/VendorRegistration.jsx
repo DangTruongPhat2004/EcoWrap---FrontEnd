@@ -29,6 +29,7 @@ const VendorRegistration = () => {
     businessLicenseFile: null,
     businessLicenseFileName: "",
     agreeTerms: false,
+    agreeCommission: false,
   });
 
   const [errors, setErrors] = useState({});
@@ -121,6 +122,9 @@ const VendorRegistration = () => {
     }
     if (!formData.agreeTerms) {
       newErrors.agreeTerms = "Vui lòng đồng ý với chính sách và điều khoản";
+    }
+    if (!formData.agreeCommission) {
+      newErrors.agreeCommission = "Vui lòng đồng ý với chính sách hoa hồng";
     }
 
     setErrors(newErrors);
@@ -585,6 +589,35 @@ const VendorRegistration = () => {
                 <p className="text-red-500 text-sm flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.agreeTerms}
+                </p>
+              )}
+
+              {/* Commission Agreement Checkbox */}
+              <div className="flex items-start gap-3 pt-3">
+                <input
+                  type="checkbox"
+                  id="agreeCommission"
+                  name="agreeCommission"
+                  checked={formData.agreeCommission}
+                  onChange={handleInputChange}
+                  className="mt-1 w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                />
+                <label
+                  htmlFor="agreeCommission"
+                  className="text-sm text-gray-700"
+                >
+                  Tôi đồng ý với{" "}
+                  <span className="text-emerald-600 font-semibold">
+                    chính sách hoa hồng 5%
+                  </span>{" "}
+                  trên mỗi giao dịch thành công. EcoWrap sẽ giữ lại 5% giá trị
+                  đơn hàng làm phí dịch vụ và hỗ trợ vận hành nền tảng.
+                </label>
+              </div>
+              {errors.agreeCommission && (
+                <p className="text-red-500 text-sm flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.agreeCommission}
                 </p>
               )}
             </div>

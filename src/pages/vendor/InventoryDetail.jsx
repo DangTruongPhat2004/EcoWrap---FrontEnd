@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import inventoryApi from "../../services/inventoryApi";
+import { getAllCategories } from "../../services/categoryApi";
+import { getMyProducts } from "../../services/productApi";
 import {
   Button,
   Modal,
@@ -52,6 +54,7 @@ const InventoryDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const {
@@ -74,13 +77,36 @@ const InventoryDetail = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [updateError, setUpdateError] = useState("");
 
+  // Helper function to get category name by ID
+  const getCategoryName = (categoryId) => {
+    const category = categories.find((cat) => cat.categoryId === categoryId);
+    return category ? category.categoryName : null;
+  };
+
   useEffect(() => {
     const fetchInventoryDetail = async () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await inventoryApi.getInventoryById(id);
-        setItem(data);
+        const [data, categoriesData, productsData] = await Promise.all([
+          inventoryApi.getInventoryById(id),
+          getAllCategories(),
+          getMyProducts(),
+        ]);
+
+        // Find the matching product for this inventory item
+        const matchingProduct = productsData.find(
+          (p) => p.productId === data.productId
+        );
+
+        // Add product data to the inventory item
+        const itemWithProduct = {
+          ...data,
+          product: matchingProduct || null,
+        };
+
+        setItem(itemWithProduct);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         setNewQuantity(data.stockQuantity.toString());
       } catch (err) {
         setError(
@@ -128,9 +154,24 @@ const InventoryDetail = () => {
     try {
       const quantity = parseInt(newQuantity, 10);
       await inventoryApi.updateInventory(id, { stockQuantity: quantity });
-      // Refetch data to show the latest update
-      const updatedItem = await inventoryApi.getInventoryById(id);
-      setItem(updatedItem);
+      // Refetch data to show the latest update with product data
+      const [updatedItem, productsData] = await Promise.all([
+        inventoryApi.getInventoryById(id),
+        getMyProducts(),
+      ]);
+
+      // Find matching product
+      const matchingProduct = productsData.find(
+        (p) => p.productId === updatedItem.productId
+      );
+
+      // Add product data to updated item
+      const itemWithProduct = {
+        ...updatedItem,
+        product: matchingProduct || null,
+      };
+
+      setItem(itemWithProduct);
       onConfirmModalOpenChange(); // Close confirmation modal
       alert("Cập nhật số lượng thành công!");
     } catch (err) {
@@ -276,7 +317,7 @@ const InventoryDetail = () => {
               <DetailItem
                 icon={<Tag className="w-5 h-5" />}
                 label="Loại"
-                value={product?.category?.categoryName || product?.categoryId}
+                value={getCategoryName(product?.categoryId) || "Chưa phân loại"}
               />
               <DetailItem
                 icon={<Scale className="w-5 h-5" />}

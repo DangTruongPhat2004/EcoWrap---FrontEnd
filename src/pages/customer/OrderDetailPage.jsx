@@ -13,7 +13,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import {
-  getOrderById,
+  getMyOrderDetail,
   confirmDelivery,
   getOrderStatusLabel,
   getOrderStatusColor,
@@ -56,7 +56,7 @@ export default function OrderDetailPage() {
   const fetchOrderDetail = React.useCallback(async () => {
     try {
       setLoading(true);
-      const response = await getOrderById(orderId);
+      const response = await getMyOrderDetail(orderId);
 
       if (response.success && response.data) {
         setOrder(response.data);

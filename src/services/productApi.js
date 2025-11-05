@@ -20,7 +20,8 @@ const transformProduct = (product) => {
     material: product.materialType,
     images: product.imageFile ? [product.imageFile] : [],
     inStock: product.productStatus === "In stock",
-    category: product.category?.name || product.categoryId,
+    // Keep the full category object, don't overwrite it
+    categoryName: product.category?.categoryName || "Chưa phân loại",
     // Add seller information
     seller: product.seller
       ? {
@@ -221,6 +222,38 @@ export const updateProduct = async (productId, formData) => {
     return response.data;
   } catch (error) {
     console.error("Error updating product:", error);
+    throw error;
+  }
+};
+
+/**
+ * Activate a product (set IsActive = true)
+ * @param {string} productId - The product ID to activate
+ * @returns {Promise} Response from the API
+ */
+export const activateProduct = async (productId) => {
+  try {
+    const response = await apiClient.put(`/api/Product/${productId}/activate`);
+    return response.data;
+  } catch (error) {
+    console.error("Error activating product:", error);
+    throw error;
+  }
+};
+
+/**
+ * Deactivate a product (set IsActive = false)
+ * @param {string} productId - The product ID to deactivate
+ * @returns {Promise} Response from the API
+ */
+export const deactivateProduct = async (productId) => {
+  try {
+    const response = await apiClient.put(
+      `/api/Product/${productId}/deactivate`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error deactivating product:", error);
     throw error;
   }
 };

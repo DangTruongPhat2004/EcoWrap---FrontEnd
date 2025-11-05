@@ -133,12 +133,18 @@ const VendorProfile = () => {
       const formDataToSend = new FormData();
 
       // Add all form fields
-      formDataToSend.append("CompanyName", formData.companyName);
-      formDataToSend.append("Address", formData.address);
-      formDataToSend.append("BankAccountNumber", formData.bankAccountNumber);
-      formDataToSend.append("BankName", formData.bankName);
-      formDataToSend.append("AccountHolderName", formData.accountHolderName);
-      formDataToSend.append("BankBranch", formData.bankBranch);
+      formDataToSend.append("CompanyName", formData.companyName || "");
+      formDataToSend.append("Address", formData.address || "");
+      formDataToSend.append(
+        "BankAccountNumber",
+        formData.bankAccountNumber || ""
+      );
+      formDataToSend.append("BankName", formData.bankName || "");
+      formDataToSend.append(
+        "AccountHolderName",
+        formData.accountHolderName || ""
+      );
+      formDataToSend.append("BankBranch", formData.bankBranch || "");
 
       // Add QR code image if changed
       if (qrFile) {
@@ -153,16 +159,28 @@ const VendorProfile = () => {
         formDataToSend.append("CompanyBanner", bannerFile);
       }
 
-      await updateSeller(formDataToSend);
-      alert("Cập nhật thông tin thành công!");
+      console.log("Updating seller with data:", {
+        companyName: formData.companyName,
+        address: formData.address,
+        hasQRCode: !!qrFile,
+        hasCompanyImage: !!companyImageFile,
+        hasBanner: !!bannerFile,
+      });
+
+      const response = await updateSeller(formDataToSend);
+      console.log("Update seller response:", response);
+
+      toast.success("Cập nhật thông tin thành công!");
       setIsEditing(false);
       fetchSellerInfo(); // Refresh data
     } catch (err) {
       console.error("Error updating seller info:", err);
-      alert(
-        "Không thể cập nhật thông tin: " +
-          (err.response?.data?.message || err.message)
-      );
+      const errorMessage =
+        err.response?.data?.Message ||
+        err.response?.data?.message ||
+        err.message ||
+        "Lỗi không xác định";
+      toast.error("Không thể cập nhật thông tin: " + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -251,17 +269,7 @@ const VendorProfile = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Thông Tin Cửa Hàng
-        </h1>
-        <p className="text-gray-600">
-          Quản lý thông tin cửa hàng và thông tin thanh toán
-        </p>
-      </div>
-
+    <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Form */}
         <div className="lg:col-span-2 space-y-6">

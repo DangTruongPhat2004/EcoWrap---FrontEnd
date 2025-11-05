@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { Plus, Search, AlertTriangle, Warehouse, Package } from "lucide-react";
 import inventoryApi from "../../services/inventoryApi";
+import { getMyProducts } from "../../services/productApi";
 
 const InventoryManagement = () => {
   const navigate = useNavigate();
@@ -28,8 +29,23 @@ const InventoryManagement = () => {
     setIsDataLoading(true);
     setDataError(null);
     try {
-      const response = await inventoryApi.getMyInventory();
-      setInventoryItems(response);
+      const [inventoryResponse, productsResponse] = await Promise.all([
+        inventoryApi.getMyInventory(),
+        getMyProducts(),
+      ]);
+
+      // Create a map of products by productId for quick lookup
+      const productsMap = new Map(
+        productsResponse.map((product) => [product.productId, product])
+      );
+
+      // Map inventory items with their product data
+      const inventoryWithProducts = inventoryResponse.map((item) => ({
+        ...item,
+        product: productsMap.get(item.productId) || null,
+      }));
+
+      setInventoryItems(inventoryWithProducts);
     } catch (error) {
       console.error("Error fetching inventory:", error);
       setDataError("Không thể tải danh sách tồn kho. Vui lòng thử lại.");

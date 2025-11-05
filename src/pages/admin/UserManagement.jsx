@@ -58,8 +58,8 @@ const UserManagement = () => {
   const getRoleLabel = (roleId) => {
     const roleMap = {
       1: "Admin",
-      2: "Người Bán",
-      3: "Người Mua",
+      2: "Người Mua",
+      3: "Người Bán",
     };
     return roleMap[roleId] || "Không rõ";
   };
@@ -157,15 +157,15 @@ const UserManagement = () => {
   });
 
   const totalUsers = usersArray.length;
-  const totalSellers = usersArray.filter((u) => u.roleId === 2).length;
-  const totalBuyers = usersArray.filter((u) => u.roleId === 3).length;
+  const totalBuyers = usersArray.filter((u) => u.roleId === 2).length;
+  const totalSellers = usersArray.filter((u) => u.roleId === 3).length;
   const verifiedUsers = usersArray.filter((u) => u.isVerified).length;
 
   const roleCounts = {
     all: totalUsers,
     1: usersArray.filter((u) => u.roleId === 1).length,
-    2: totalSellers,
-    3: totalBuyers,
+    2: totalBuyers,
+    3: totalSellers,
   };
 
   const statusCounts = {
@@ -276,7 +276,7 @@ const UserManagement = () => {
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             }`}
           >
-            Người Bán ({roleCounts[2]})
+            Người Bán ({roleCounts[3]})
           </button>
           <button
             onClick={() => setRoleFilter("3")}
@@ -286,7 +286,7 @@ const UserManagement = () => {
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             }`}
           >
-            Người Mua ({roleCounts[3]})
+            Người Mua ({roleCounts[2]})
           </button>
         </div>
 

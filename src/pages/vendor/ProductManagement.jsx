@@ -13,6 +13,7 @@ import {
 } from "@heroui/react";
 import { Plus, Search, AlertTriangle } from "lucide-react";
 import { getMyProducts } from "../../services/productApi";
+import { getAllCategories } from "../../services/categoryApi";
 
 const ProductManagement = () => {
   const navigate = useNavigate();
@@ -20,18 +21,23 @@ const ProductManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
 
-  // Fetch products from API
+  // Fetch products and categories from API
   const fetchProducts = async () => {
     setIsDataLoading(true);
     setDataError(null);
     try {
-      const response = await getMyProducts();
-      setProducts(response);
+      const [productsResponse, categoriesResponse] = await Promise.all([
+        getMyProducts(),
+        getAllCategories(),
+      ]);
+      setProducts(productsResponse);
+      setCategories(categoriesResponse);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      console.error("Error fetching data:", error);
       setDataError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
     } finally {
       setIsDataLoading(false);
@@ -43,15 +49,33 @@ const ProductManagement = () => {
     fetchProducts();
   }, []);
 
+  // Get category name by ID
+  const getCategoryName = (categoryId) => {
+    const category = categories.find((cat) => cat.categoryId === categoryId);
+    return category?.categoryName || "Chưa phân loại";
+  };
+
   // Filter products based on search term
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.category &&
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (product.material &&
-        product.material.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const filteredProducts = products.filter((product) => {
+    const searchLower = searchTerm.toLowerCase();
+    const productName = (
+      product.productName ||
+      product.name ||
+      ""
+    ).toLowerCase();
+    const categoryName = getCategoryName(product.categoryId).toLowerCase();
+    const materialType = (
+      product.materialType ||
+      product.material ||
+      ""
+    ).toLowerCase();
+
+    return (
+      productName.includes(searchLower) ||
+      categoryName.includes(searchLower) ||
+      materialType.includes(searchLower)
+    );
+  });
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
@@ -150,9 +174,9 @@ const ProductManagement = () => {
             <TableColumn className="text-gray-700 font-semibold">
               Giá
             </TableColumn>
-            {/* <TableColumn className="text-gray-700 font-semibold">
-              Trạng Thái
-            </TableColumn> */}
+            <TableColumn className="text-gray-700 font-semibold">
+              Hoạt Động
+            </TableColumn>
           </TableHeader>
           <TableBody
             emptyContent={
@@ -196,7 +220,7 @@ const ProductManagement = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {product.category || "Chưa có"}
+                    {getCategoryName(product.categoryId)}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -206,30 +230,27 @@ const ProductManagement = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {product.price.toLocaleString("vi-VN", {
+                    {(
+                      product.productPrice ||
+                      product.price ||
+                      0
+                    ).toLocaleString("vi-VN", {
                       style: "currency",
                       currency: "VND",
                     })}
                   </span>
                 </TableCell>
-                {/* <TableCell>
+                <TableCell>
                   <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      product.productStatus === "In stock"
+                    className={`px-3 py-1 text-sm font-medium rounded-full ${
+                      product.isActive ?? true
                         ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
+                        : "bg-gray-100 text-gray-600"
                     }`}
                   >
-                    {product.productStatus === "In stock"
-                      ? "Còn hàng"
-                      : "Hết hàng"}
+                    {product.isActive ?? true ? "Đang mở bán" : "Đã đóng"}
                   </span>
                 </TableCell>
-                <TableCell>
-                  <span className="text-sm font-mono text-gray-600">
-                    #{product.id}
-                  </span>
-                </TableCell> */}
               </TableRow>
             ))}
           </TableBody>

@@ -6,7 +6,9 @@ import * as signalR from "@microsoft/signalr";
 const connection = createConnection();
 
 function createConnection() {
-  const baseUrl = "https://localhost:7077"; // Hoặc lấy từ biến môi trường
+  // Use relative URL for SignalR to work with Vercel proxy
+  // In production, this will use the same domain as the frontend
+  const baseUrl = ""; // Empty string means relative URL (same origin)
 
   function getLsToken() {
     try {

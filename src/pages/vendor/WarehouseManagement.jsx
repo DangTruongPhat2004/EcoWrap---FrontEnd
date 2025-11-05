@@ -15,8 +15,6 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-  Select,
-  SelectItem,
 } from "@heroui/react";
 import {
   Plus,
@@ -66,43 +64,24 @@ const WarehouseManagement = () => {
   });
   const [errors, setErrors] = useState({});
 
-  // Mock data for locations (for form dropdowns)
-  const provinces = [
-    { id: "Ha Noi", name: "Hà Nội" },
-    { id: "TP. Ho Chi Minh", name: "TP. Hồ Chí Minh" },
-    { id: "Da Nang", name: "Đà Nẵng" },
-    { id: "Can Tho", name: "Cần Thơ" },
-    { id: "Hai Phong", name: "Hải Phòng" },
-    { id: "Lam Dong", name: "Lâm Đồng" },
-  ];
-
-  const districts = [
-    { id: "Dong Da", name: "Đống Đa", provinceId: "Ha Noi" },
-    { id: "Quan 5", name: "Quận 5", provinceId: "TP. Ho Chi Minh" },
-    { id: "Hai Chau", name: "Hải Châu", provinceId: "Da Nang" },
-    { id: "Ninh Kieu", name: "Ninh Kiều", provinceId: "Can Tho" },
-    { id: "Ngo Quyen", name: "Ngô Quyền", provinceId: "Hai Phong" },
-    { id: "Da Lat", name: "Đà Lạt", provinceId: "Lam Dong" },
-    { id: "Yen Lang", name: "Yên Lãng", provinceId: "Ha Noi" },
-  ];
-
-  const wards = [
-    { id: "Lang Thuong", name: "Láng Thượng", districtId: "Dong Da" },
-    { id: "Phuong 4", name: "Phường 4", districtId: "Quan 5" },
-    { id: "Hai Chau I", name: "Hải Châu I", districtId: "Hai Chau" },
-    { id: "Hung Loi", name: "Hưng Lợi", districtId: "Ninh Kieu" },
-    { id: "May Chai", name: "Máy Chai", districtId: "Ngo Quyen" },
-    { id: "Phuong 1", name: "Phường 1", districtId: "Da Lat" },
-    { id: "An Lieng", name: "An Liêng", districtId: "Yen Lang" },
-  ];
-
   // Fetch warehouses from API
   const fetchWarehouses = async () => {
     setIsDataLoading(true);
     setDataError(null);
     try {
-      const response = await warehouseApi.getWarehouses();
+      const response = await warehouseApi.getMyWarehouses();
       setWarehouses(response);
+
+      // Extract phone number from first warehouse's seller.user if available
+      if (
+        response &&
+        response.length > 0 &&
+        response[0].seller?.user?.phoneNumber
+      ) {
+        const userPhoneNumber = response[0].seller.user.phoneNumber;
+        setUserInfo({ phoneNumber: userPhoneNumber });
+        console.log("Extracted phone number from warehouse:", userPhoneNumber);
+      }
     } catch (error) {
       console.error("Error fetching warehouses:", error);
       setDataError("Không thể tải danh sách kho hàng. Vui lòng thử lại.");
@@ -119,7 +98,10 @@ const WarehouseManagement = () => {
         const localUser = JSON.parse(localStorage.getItem("user"));
         if (localUser && localUser.userId) {
           const userData = await getUserById(localUser.userId);
-          setUserInfo(userData);
+          console.log("User data fetched for warehouse:", userData);
+          // API returns { success, data: {...}, message }, extract the actual user data
+          const actualUserData = userData.data || userData;
+          setUserInfo(actualUserData);
         }
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -141,13 +123,8 @@ const WarehouseManagement = () => {
       warehouse.districtId.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Get filtered districts and wards based on selected province/district
-  const filteredDistricts = districts.filter(
-    (district) => district.provinceId === formData.provinceId
-  );
-  const filteredWards = wards.filter(
-    (ward) => ward.districtId === formData.districtId
-  );
+  // Districts and wards are already filtered by the useEffect hooks
+  // No need to filter them again here
 
   // Form validation
   const validateForm = () => {
@@ -225,10 +202,47 @@ const WarehouseManagement = () => {
 
   const handleAddWarehouse = () => {
     setModalMode("add");
+
+    // Try multiple sources for phone number
+    let phoneNumber = "";
+
+    // First try: userInfo from API
+    if (userInfo?.phoneNumber) {
+      phoneNumber = userInfo.phoneNumber;
+    }
+    // Second try: existing warehouses (from seller.user.phoneNumber)
+    else if (
+      warehouses &&
+      warehouses.length > 0 &&
+      warehouses[0].seller?.user?.phoneNumber
+    ) {
+      phoneNumber = warehouses[0].seller.user.phoneNumber;
+    }
+    // Third try: localStorage user object
+    else {
+      try {
+        const localUser = JSON.parse(localStorage.getItem("user"));
+        if (localUser?.phoneNumber) {
+          phoneNumber = localUser.phoneNumber;
+        }
+      } catch (e) {
+        console.error("Error reading user from localStorage:", e);
+      }
+    }
+
+    console.log(
+      "Auto-filling phone number:",
+      phoneNumber,
+      "from userInfo:",
+      userInfo,
+      "from warehouses:",
+      warehouses
+    );
+
     setFormData({
       warehouseName: "",
       address: "",
-      phoneNumber: userInfo?.phoneNumber || "", // Tự động điền SĐT của user
+      phoneNumber: phoneNumber, // Tự động điền SĐT của user
       provinceId: "",
       districtId: "",
       wardId: "",
@@ -665,34 +679,19 @@ const WarehouseManagement = () => {
                         <label className="text-sm font-medium text-gray-700 block">
                           Tỉnh/Thành Phố <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          placeholder="Chọn tỉnh/thành phố"
+                        <Input
+                          placeholder="Nhập tỉnh/thành phố"
                           variant="bordered"
-                          selectedKeys={
-                            formData.provinceId ? [formData.provinceId] : []
-                          }
-                          onSelectionChange={(keys) =>
-                            handleInputChange(
-                              "provinceId",
-                              Array.from(keys)[0] || ""
-                            )
+                          value={formData.provinceId}
+                          onChange={(e) =>
+                            handleInputChange("provinceId", e.target.value)
                           }
                           isInvalid={!!errors.provinceId}
                           errorMessage={errors.provinceId}
                           classNames={{
-                            trigger: "text-sm bg-white",
-                            popoverContent:
-                              "bg-white border border-gray-200 shadow-lg z-50",
-                            listbox: "bg-white",
-                            listboxWrapper: "bg-white",
+                            input: "text-sm",
                           }}
-                        >
-                          {provinces.map((province) => (
-                            <SelectItem key={province.id} value={province.id}>
-                              {province.name}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        />
                       </div>
                     </div>
 
@@ -702,35 +701,19 @@ const WarehouseManagement = () => {
                         <label className="text-sm font-medium text-gray-700 block">
                           Quận/Huyện <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          placeholder="Chọn quận/huyện"
+                        <Input
+                          placeholder="Nhập quận/huyện"
                           variant="bordered"
-                          selectedKeys={
-                            formData.districtId ? [formData.districtId] : []
-                          }
-                          onSelectionChange={(keys) =>
-                            handleInputChange(
-                              "districtId",
-                              Array.from(keys)[0] || ""
-                            )
+                          value={formData.districtId}
+                          onChange={(e) =>
+                            handleInputChange("districtId", e.target.value)
                           }
                           isInvalid={!!errors.districtId}
                           errorMessage={errors.districtId}
-                          isDisabled={!formData.provinceId}
                           classNames={{
-                            trigger: "text-sm bg-white",
-                            popoverContent:
-                              "bg-white border border-gray-200 shadow-lg z-50",
-                            listbox: "bg-white",
-                            listboxWrapper: "bg-white",
+                            input: "text-sm",
                           }}
-                        >
-                          {filteredDistricts.map((district) => (
-                            <SelectItem key={district.id} value={district.id}>
-                              {district.name}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        />
                       </div>
                     </div>
 
@@ -740,35 +723,19 @@ const WarehouseManagement = () => {
                         <label className="text-sm font-medium text-gray-700 block">
                           Phường/Xã <span className="text-red-500">*</span>
                         </label>
-                        <Select
-                          placeholder="Chọn phường/xã"
+                        <Input
+                          placeholder="Nhập phường/xã"
                           variant="bordered"
-                          selectedKeys={
-                            formData.wardId ? [formData.wardId] : []
-                          }
-                          onSelectionChange={(keys) =>
-                            handleInputChange(
-                              "wardId",
-                              Array.from(keys)[0] || ""
-                            )
+                          value={formData.wardId}
+                          onChange={(e) =>
+                            handleInputChange("wardId", e.target.value)
                           }
                           isInvalid={!!errors.wardId}
                           errorMessage={errors.wardId}
-                          isDisabled={!formData.districtId}
                           classNames={{
-                            trigger: "text-sm bg-white",
-                            popoverContent:
-                              "bg-white border border-gray-200 shadow-lg z-50",
-                            listbox: "bg-white",
-                            listboxWrapper: "bg-white",
+                            input: "text-sm",
                           }}
-                        >
-                          {filteredWards.map((ward) => (
-                            <SelectItem key={ward.id} value={ward.id}>
-                              {ward.name}
-                            </SelectItem>
-                          ))}
-                        </Select>
+                        />
                       </div>
                     </div>
                   </div>
@@ -842,16 +809,8 @@ const WarehouseManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Vị trí:</span>{" "}
-                      {
-                        provinces.find((p) => p.id === formData.provinceId)
-                          ?.name
-                      }{" "}
-                      -{" "}
-                      {
-                        districts.find((d) => d.id === formData.districtId)
-                          ?.name
-                      }{" "}
-                      - {wards.find((w) => w.id === formData.wardId)?.name}
+                      {formData.provinceId} - {formData.districtId} -{" "}
+                      {formData.wardId}
                     </div>
                   </div>
                 </div>
@@ -916,16 +875,8 @@ const WarehouseManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Vị trí:</span>{" "}
-                      {
-                        provinces.find((p) => p.id === formData.provinceId)
-                          ?.name
-                      }{" "}
-                      -{" "}
-                      {
-                        districts.find((d) => d.id === formData.districtId)
-                          ?.name
-                      }{" "}
-                      - {wards.find((w) => w.id === formData.wardId)?.name}
+                      {formData.provinceId} - {formData.districtId} -{" "}
+                      {formData.wardId}
                     </div>
                   </div>
                 </div>

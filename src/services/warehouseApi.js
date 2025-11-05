@@ -12,6 +12,16 @@ const warehouseApi = {
     }
   },
 
+  getMyWarehouses: async (params = {}) => {
+    try {
+      const response = await apiClient.get("/api/Warehouse/my", { params });
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching warehouses:", error);
+      throw error;
+    }
+  },
+
   // Lấy thông tin chi tiết một kho hàng
   getWarehouseById: async (warehouseId) => {
     try {

@@ -1,18 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardBody, Button, Chip, Avatar } from "@nextui-org/react";
-import {
-  Store,
-  MapPin,
-  Package,
-  ArrowLeft,
-  MessageCircle,
-  Star,
-} from "lucide-react";
+import { Store, MapPin, Package, ArrowLeft, Star } from "lucide-react";
 import { getSellerById } from "../services/sellerApi";
 import { getProductsBySeller } from "../services/productApi";
 import { fmtVND } from "../utils/money";
 import toast from "react-hot-toast";
+import ChatButton from "../components/chat/ChatButton";
 
 export default function StorePage() {
   const { sellerId } = useParams();
@@ -20,6 +14,27 @@ export default function StorePage() {
   const [seller, setSeller] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Get authentication from localStorage
+  const authToken = localStorage.getItem("token");
+  const userString = localStorage.getItem("user");
+  let currentUserId = null;
+  let currentUserRole = "";
+
+  if (userString) {
+    try {
+      const userResponse = JSON.parse(userString);
+      if (userResponse.data) {
+        currentUserId = userResponse.data.userId || userResponse.data.id;
+        currentUserRole = userResponse.data.role || "";
+      } else {
+        currentUserId = userResponse.userId || userResponse.id;
+        currentUserRole = userResponse.role || "";
+      }
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+    }
+  }
 
   useEffect(() => {
     fetchStoreData();
@@ -107,12 +122,24 @@ export default function StorePage() {
             <div className="flex flex-col md:flex-row gap-6">
               {/* Store Avatar */}
               <div className="flex-shrink-0">
-                <Avatar
-                  src={seller.companyImage}
-                  alt={seller.companyName}
-                  className="w-32 h-32 border-4 border-white shadow-lg"
-                  fallback={<Store size={48} className="text-gray-400" />}
-                />
+                {seller.companyImage ? (
+                  <div className="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-100">
+                    <img
+                      src={seller.companyImage}
+                      alt={seller.companyName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Show fallback icon if image fails
+                        console.error("Failed to load image");
+                        e.target.parentElement.innerHTML = "<fallback icon>";
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-32 h-32 rounded-full bg-emerald-100">
+                    <Store size={48} />
+                  </div>
+                )}
               </div>
 
               {/* Store Details */}
@@ -145,16 +172,37 @@ export default function StorePage() {
 
                   {/* Action Buttons */}
                   <div className="flex gap-3">
-                    <Button
-                      color="default"
-                      variant="bordered"
-                      startContent={<MessageCircle size={18} />}
-                    >
-                      Chat ngay
-                    </Button>
-                    <Button color="primary" startContent={<Store size={18} />}>
-                      Theo dõi
-                    </Button>
+                    {/* Hide chat button if seller viewing their own shop */}
+                    {!(
+                      currentUserRole === "Seller" &&
+                      seller.userId === currentUserId
+                    ) && (
+                      <ChatButton
+                        product={{
+                          sellerId: seller.sellerId || seller.id,
+                          productName: seller.companyName,
+                          seller: {
+                            companyName: seller.companyName,
+                          },
+                        }}
+                        currentUserId={
+                          currentUserId ? parseInt(currentUserId) : null
+                        }
+                        authToken={authToken}
+                      />
+                    )}
+                    {/* Hide follow button if seller viewing their own shop */}
+                    {!(
+                      currentUserRole === "Seller" &&
+                      seller.userId === currentUserId
+                    ) && (
+                      <Button
+                        color="primary"
+                        startContent={<Store size={18} />}
+                      >
+                        Theo dõi
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -225,13 +273,13 @@ export default function StorePage() {
                         <Chip
                           size="sm"
                           color={
-                            product.productStatus === "Available"
+                            product.productStatus === "In stock"
                               ? "success"
                               : "default"
                           }
                           variant="flat"
                         >
-                          {product.productStatus === "Available"
+                          {product.productStatus === "In stock"
                             ? "Còn hàng"
                             : "Hết hàng"}
                         </Chip>

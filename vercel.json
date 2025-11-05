@@ -1,0 +1,17 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://14.225.205.215/api/:path*"
+    },
+    {
+      "source": "/chats/:path*",
+      "destination": "http://14.225.205.215/chats/:path*"
+    },
+    {
+      "source": "/hubs/:path*",
+      "destination": "http://14.225.205.215/hubs/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

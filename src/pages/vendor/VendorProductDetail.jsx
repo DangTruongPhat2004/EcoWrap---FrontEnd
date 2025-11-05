@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 import {
   getProductById,
   updateProduct,
   deleteProduct,
+  activateProduct,
+  deactivateProduct,
 } from "../../services/productApi";
+import { getAllCategories } from "../../services/categoryApi";
 import {
   Button,
   Input,
@@ -15,6 +19,9 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Select,
+  SelectItem,
+  Switch,
 } from "@heroui/react";
 import {
   ArrowLeft,
@@ -46,6 +53,7 @@ const VendorProductDetail = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({});
+  const [categories, setCategories] = useState([]);
   const {
     isOpen: isUpdateConfirmOpen,
     onOpenChange: onUpdateConfirmOpenChange,
@@ -61,12 +69,26 @@ const VendorProductDetail = () => {
   const [designFile, setDesignFile] = useState(null);
 
   useEffect(() => {
-    const fetchProductData = async () => {
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
-        const productData = await getProductById(id);
+        const [productData, categoriesResponse] = await Promise.all([
+          getProductById(id),
+          getAllCategories(),
+        ]);
+
         setProduct(productData);
+
+        // Handle both response formats: array or {success, data}
+        if (Array.isArray(categoriesResponse)) {
+          setCategories(categoriesResponse);
+        } else if (categoriesResponse.success && categoriesResponse.data) {
+          setCategories(categoriesResponse.data);
+        } else if (categoriesResponse.data) {
+          setCategories(categoriesResponse.data);
+        }
+
         // Initialize form data for editing
         setFormData({
           productId: productData.productId || "",
@@ -79,7 +101,9 @@ const VendorProductDetail = () => {
           productPrice: productData.productPrice || 0,
           weightGram: productData.weightGram || 0,
           materialType: productData.materialType || "",
-          categoryId: productData.categoryId || "",
+          categoryId:
+            productData.category?.categoryId || productData.categoryId || "",
+          isActive: productData.isActive ?? true,
           // Files are handled separately
         });
       } catch (err) {
@@ -91,7 +115,7 @@ const VendorProductDetail = () => {
       }
     };
 
-    fetchProductData();
+    fetchData();
   }, [id]);
 
   const formatPrice = (price) => {
@@ -161,7 +185,8 @@ const VendorProductDetail = () => {
         productPrice: product.productPrice || 0,
         weightGram: product.weightGram || 0,
         materialType: product.materialType || "",
-        categoryId: product.categoryId || "",
+        categoryId: product.category?.categoryId || product.categoryId || "",
+        isActive: product.isActive ?? true,
       });
       // Reset file states
       setImageFile(null);
@@ -227,16 +252,28 @@ const VendorProductDetail = () => {
     setIsUpdating(true);
     const updateFormData = new FormData();
 
-    // Append all text fields from formData
-    for (const key in formData) {
-      updateFormData.append(key, formData[key]);
-    }
+    // Append all fields with PascalCase for backend (C# convention)
+    updateFormData.append("ProductId", formData.productId);
+    updateFormData.append("ProductName", formData.productName);
+    updateFormData.append(
+      "ProductDescription",
+      formData.productDescription || ""
+    );
+    updateFormData.append("Unit", formData.unit);
+    updateFormData.append("Size", formData.size);
+    updateFormData.append("InkType", formData.inkType);
+    updateFormData.append("PrintProcess", formData.printProcess);
+    updateFormData.append("ProductPrice", formData.productPrice);
+    updateFormData.append("WeightGram", formData.weightGram);
+    updateFormData.append("MaterialType", formData.materialType);
+    updateFormData.append("CategoryId", formData.categoryId);
+    // Note: IsActive is handled separately via activate/deactivate endpoints
 
     // Append files if they have been changed
-    if (imageFile) updateFormData.append("imageFile", imageFile);
+    if (imageFile) updateFormData.append("ImageFile", imageFile);
     if (certificateFile)
-      updateFormData.append("certificateFile", certificateFile);
-    if (designFile) updateFormData.append("designFile", designFile);
+      updateFormData.append("CertificateFile", certificateFile);
+    if (designFile) updateFormData.append("DesignFile", designFile);
 
     try {
       onUpdateConfirmOpenChange(); // Đóng modal xác nhận
@@ -597,18 +634,47 @@ const VendorProductDetail = () => {
                     }}
                   />
                 </DetailItem>
-                <DetailItem label="Loại sản phẩm (ID)">
-                  <Input
+                <DetailItem label="Loại sản phẩm">
+                  <Select
                     name="categoryId"
-                    value={formData.categoryId}
-                    onChange={handleInputChange}
+                    selectedKeys={
+                      formData.categoryId
+                        ? new Set([formData.categoryId.toString()])
+                        : new Set()
+                    }
+                    onSelectionChange={(keys) => {
+                      const selectedId = Array.from(keys)[0];
+                      setFormData((prev) => ({
+                        ...prev,
+                        categoryId: parseInt(selectedId),
+                      }));
+                      if (errors.categoryId) {
+                        setErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.categoryId;
+                          return newErrors;
+                        });
+                      }
+                    }}
                     variant="bordered"
                     isInvalid={!!errors.categoryId}
                     errorMessage={errors.categoryId}
+                    placeholder="Chọn loại sản phẩm"
                     classNames={{
-                      inputWrapper: "border border-gray-200",
+                      trigger: "border border-gray-200 bg-white",
+                      value: "text-gray-900",
                     }}
-                  />
+                    items={categories}
+                  >
+                    {(cat) => (
+                      <SelectItem
+                        key={cat.categoryId}
+                        textValue={cat.categoryName}
+                      >
+                        {cat.categoryName}
+                      </SelectItem>
+                    )}
+                  </Select>
                 </DetailItem>
                 <DetailItem label="Cân nặng (gram)">
                   <Input
@@ -647,6 +713,64 @@ const VendorProductDetail = () => {
               </span>
             </DetailItem>
 
+            <DetailItem label="Trạng thái bán hàng">
+              <div className="space-y-2">
+                <Switch
+                  isSelected={product.isActive}
+                  onValueChange={async (value) => {
+                    // Check if trying to enable selling when out of stock
+                    if (value && product.productStatus !== "In stock") {
+                      toast.error(
+                        "Không thể mở bán sản phẩm hết hàng. Vui lòng nhập kho trước!"
+                      );
+                      return;
+                    }
+
+                    try {
+                      // Call activate/deactivate API immediately
+                      if (value) {
+                        await activateProduct(id);
+                        toast.success("Đã mở bán sản phẩm");
+                      } else {
+                        await deactivateProduct(id);
+                        toast.success("Đã đóng bán sản phẩm");
+                      }
+
+                      // Refresh product data to get latest state
+                      const refreshedProduct = await getProductById(id);
+                      setProduct(refreshedProduct);
+
+                      // Also update formData if in edit mode
+                      if (isEditing) {
+                        setFormData({ ...formData, isActive: value });
+                      }
+                    } catch (error) {
+                      console.error(
+                        "Error toggling product active status:",
+                        error
+                      );
+                      toast.error("Không thể thay đổi trạng thái bán hàng");
+                    }
+                  }}
+                  color="success"
+                  size="lg"
+                  isDisabled={
+                    product.productStatus !== "In stock" && !product.isActive
+                  }
+                >
+                  <span className="text-sm font-medium text-gray-900">
+                    {product.isActive ? "Đang mở bán" : "Đã đóng"}
+                  </span>
+                </Switch>
+                {product.productStatus !== "In stock" && !product.isActive && (
+                  <p className="text-xs text-amber-600 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3" />
+                    Sản phẩm hết hàng - Không thể mở bán
+                  </p>
+                )}
+              </div>
+            </DetailItem>
+
             {!isEditing && (
               <>
                 <DetailItem label="Đơn vị" value={product.unit} />
@@ -654,7 +778,10 @@ const VendorProductDetail = () => {
                 <DetailItem label="Loại mực" value={product.inkType} />
                 <DetailItem label="Quy trình in" value={product.printProcess} />
                 <DetailItem label="Chất liệu" value={product.materialType} />
-                <DetailItem label="Loại sản phẩm" value={product.category} />
+                <DetailItem
+                  label="Loại sản phẩm"
+                  value={product.category?.categoryName || "Chưa phân loại"}
+                />
                 <DetailItem
                   label="Cân nặng (gram)"
                   value={product.weightGram}

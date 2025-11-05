@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Edit3,
   Save,
@@ -12,6 +13,8 @@ import {
   Recycle,
   Key,
   Lock,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { useAuthStore } from "../../store/authStore";
 import { getUserIdFromToken } from "../../utils/jwt";
@@ -24,6 +27,7 @@ import toast from "react-hot-toast";
 
 const Profile = () => {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     fullName: "",
@@ -64,30 +68,51 @@ const Profile = () => {
       }
     } catch {}
 
-    // 2) Resolve userId from store, localStorage, or token then fetch
+    // 2) Resolve userId from multiple sources then fetch
     const resolveAndFetch = async () => {
       try {
         setLoading(true);
-        let userId = user?.userId;
-        if (!userId) {
-          const raw = localStorage.getItem("user");
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            userId = parsed?.userId;
-          }
+
+        // Try to get userId from multiple sources (order matters)
+        let userId = null;
+
+        // First try: from zustand store
+        if (user?.userId) {
+          userId = user.userId;
         }
+
+        // Second try: from localStorage
+        if (!userId) {
+          try {
+            const raw = localStorage.getItem("user");
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              userId = parsed?.userId;
+            }
+          } catch {}
+        }
+
+        // Third try: from JWT token
         if (!userId) {
           const token = localStorage.getItem("token");
-          userId = getUserIdFromToken(token);
+          if (token) {
+            userId = getUserIdFromToken(token);
+          }
         }
 
         if (!userId) {
+          console.error("Could not resolve userId from any source");
           setLoading(false);
           return;
         }
 
+        console.log("Fetching profile for userId:", userId);
         const response = await getUserById(userId);
-        const r = response?.data ?? response; // accept plain object or {data}
+        console.log("Profile response:", response);
+
+        // Handle both { data: {...} } and direct {...} response formats
+        const r = response?.data || response?.Data || response;
+
         if (r) {
           const userData = {
             username: r.userName || r.username || "",
@@ -95,18 +120,39 @@ const Profile = () => {
             phone: r.phoneNumber || r.phone || "",
             email: r.email || "",
           };
+          console.log("Setting profile data:", userData);
           setFormData(userData);
           setOriginalData(userData);
+
+          // Also update localStorage to ensure it has the latest data
+          try {
+            const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+            localStorage.setItem(
+              "user",
+              JSON.stringify({
+                ...storedUser,
+                userId: r.userId || storedUser.userId,
+                userName: userData.username,
+                username: userData.username,
+                fullName: userData.fullName,
+                phoneNumber: userData.phone,
+                email: userData.email,
+              })
+            );
+          } catch (e) {
+            console.error("Failed to update localStorage:", e);
+          }
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
+        toast.error("Không thể tải thông tin người dùng");
       } finally {
         setLoading(false);
       }
     };
 
     resolveAndFetch();
-  }, [user]);
+  }, []); // Remove 'user' dependency to prevent re-fetching on every render
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -117,7 +163,23 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
-    if (!user?.userId) {
+    // Get userId from multiple sources
+    let userId = user?.userId;
+    if (!userId) {
+      try {
+        const raw = localStorage.getItem("user");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          userId = parsed?.userId;
+        }
+      } catch {}
+    }
+    if (!userId) {
+      const token = localStorage.getItem("token");
+      userId = getUserIdFromToken(token);
+    }
+
+    if (!userId) {
       toast.error("Không tìm thấy thông tin người dùng");
       return;
     }
@@ -131,18 +193,58 @@ const Profile = () => {
         email: formData.email,
       };
 
-      const response = await updateUser(user.userId, updateData);
+      console.log(
+        "Saving profile for userId:",
+        userId,
+        "with data:",
+        updateData
+      );
+      const response = await updateUser(userId, updateData);
+      console.log("Update response:", response);
 
-      if (response.success) {
-        toast.success("Cập nhật thông tin thành công!");
+      // Response structure: { success: true, data: {...}, message: "..." }
+      if (response?.success !== false && response?.Success !== false) {
+        toast.success(
+          response?.message ||
+            response?.Message ||
+            "Cập nhật thông tin thành công!"
+        );
         setOriginalData(formData);
         setIsEditing(false);
+
+        // Update localStorage user data with the response data
+        try {
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          const updatedUserData = response?.data || response?.Data || {};
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              ...storedUser,
+              userId: updatedUserData.userId || storedUser.userId,
+              userName: updatedUserData.username || formData.username,
+              username: updatedUserData.username || formData.username,
+              fullName: updatedUserData.fullName || formData.fullName,
+              phoneNumber: updatedUserData.phoneNumber || formData.phone,
+              email: updatedUserData.email || formData.email,
+            })
+          );
+        } catch (e) {
+          console.error("Failed to update localStorage:", e);
+        }
       } else {
-        toast.error(response.message || "Không thể cập nhật thông tin");
+        toast.error(
+          response?.message ||
+            response?.Message ||
+            "Không thể cập nhật thông tin"
+        );
       }
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error("Đã xảy ra lỗi khi cập nhật thông tin");
+      const errMsg =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Đã xảy ra lỗi khi cập nhật thông tin";
+      toast.error(errMsg);
     } finally {
       setIsSaving(false);
     }
@@ -184,12 +286,14 @@ const Profile = () => {
 
     try {
       setIsChangingPassword(true);
+      console.log("Attempting to change password...");
       const response = await changePassword(
         resetPasswordData.oldPassword,
         resetPasswordData.newPassword
       );
 
-      if (response.success) {
+      // Check for success in the response
+      if (response?.Success !== false) {
         toast.success("Đổi mật khẩu thành công!");
         setShowForgotPasswordModal(false);
         setResetPasswordData({
@@ -198,11 +302,18 @@ const Profile = () => {
           confirmPassword: "",
         });
       } else {
-        toast.error(response.message || "Không thể đổi mật khẩu");
+        toast.error(
+          response.Message || response.message || "Không thể đổi mật khẩu"
+        );
       }
     } catch (error) {
       console.error("Error changing password:", error);
-      toast.error("Đã xảy ra lỗi khi đổi mật khẩu");
+      const errMsg =
+        error?.response?.data?.Message ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "Đã xảy ra lỗi khi đổi mật khẩu";
+      toast.error(errMsg);
     } finally {
       setIsChangingPassword(false);
     }
@@ -449,6 +560,30 @@ const Profile = () => {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Feedback Prompt Card */}
+            <div className="bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg shadow-sm border border-emerald-200 p-6">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Star className="w-5 h-5 text-white fill-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    Đánh giá trải nghiệm
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Chia sẻ ý kiến của bạn về nền tảng EcoWrap
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate("/customer/feedback")}
+                className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Để lại đánh giá</span>
+              </button>
             </div>
           </div>
         </div>
