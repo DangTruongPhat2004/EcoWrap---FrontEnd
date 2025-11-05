@@ -1,9 +1,7 @@
-// Use relative URLs to work with Vite proxy
-// In development: uses proxy to forward to http://14.225.205.215
-// In production: will use the actual deployed API URL
-const API_BASE_URL = import.meta.env.PROD
-  ? "http://14.225.205.215" // Production URL
-  : ""; // Development uses Vite proxy (relative URLs)
+// Use relative URLs to work with Vercel proxy
+// Both development and production use relative URLs
+// The Vercel proxy (vercel.json) will forward requests to the backend
+const API_BASE_URL = ""; // Always use relative URLs
 
 class ChatService {
   constructor(token) {
