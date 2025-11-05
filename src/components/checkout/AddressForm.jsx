@@ -155,7 +155,7 @@ export default function AddressForm({
             <Input
               placeholder="Nhập phường/xã"
               value={v.ward || ""}
-              onValueChange={(val) => set("ward", val)}
+              onValueChange={(val) => setWithAddressUpdate("ward", val)}
               onBlur={() => markTouched("ward")}
               isInvalid={!!showErr("ward")}
               variant="bordered"
@@ -172,7 +172,7 @@ export default function AddressForm({
             <Input
               placeholder="Nhập quận/huyện"
               value={v.district || ""}
-              onValueChange={(val) => set("district", val)}
+              onValueChange={(val) => setWithAddressUpdate("district", val)}
               onBlur={() => markTouched("district")}
               isInvalid={!!showErr("district")}
               variant="bordered"
@@ -191,7 +191,7 @@ export default function AddressForm({
             <Input
               placeholder="Nhập tỉnh/thành phố"
               value={v.province || ""}
-              onValueChange={(val) => set("province", val)}
+              onValueChange={(val) => setWithAddressUpdate("province", val)}
               onBlur={() => markTouched("province")}
               isInvalid={!!showErr("province")}
               variant="bordered"
@@ -208,7 +208,7 @@ export default function AddressForm({
             <Input
               placeholder="Nhập ấp/thôn"
               value={v.hamlet || ""}
-              onValueChange={(val) => set("hamlet", val)}
+              onValueChange={(val) => setWithAddressUpdate("hamlet", val)}
               variant="bordered"
             />
           </div>
