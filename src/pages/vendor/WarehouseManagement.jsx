@@ -69,8 +69,19 @@ const WarehouseManagement = () => {
     setIsDataLoading(true);
     setDataError(null);
     try {
-      const response = await warehouseApi.getWarehouses();
+      const response = await warehouseApi.getMyWarehouses();
       setWarehouses(response);
+
+      // Extract phone number from first warehouse's seller.user if available
+      if (
+        response &&
+        response.length > 0 &&
+        response[0].seller?.user?.phoneNumber
+      ) {
+        const userPhoneNumber = response[0].seller.user.phoneNumber;
+        setUserInfo({ phoneNumber: userPhoneNumber });
+        console.log("Extracted phone number from warehouse:", userPhoneNumber);
+      }
     } catch (error) {
       console.error("Error fetching warehouses:", error);
       setDataError("Không thể tải danh sách kho hàng. Vui lòng thử lại.");
@@ -191,13 +202,43 @@ const WarehouseManagement = () => {
 
   const handleAddWarehouse = () => {
     setModalMode("add");
-    const phoneNumber = userInfo?.phoneNumber || "";
+
+    // Try multiple sources for phone number
+    let phoneNumber = "";
+
+    // First try: userInfo from API
+    if (userInfo?.phoneNumber) {
+      phoneNumber = userInfo.phoneNumber;
+    }
+    // Second try: existing warehouses (from seller.user.phoneNumber)
+    else if (
+      warehouses &&
+      warehouses.length > 0 &&
+      warehouses[0].seller?.user?.phoneNumber
+    ) {
+      phoneNumber = warehouses[0].seller.user.phoneNumber;
+    }
+    // Third try: localStorage user object
+    else {
+      try {
+        const localUser = JSON.parse(localStorage.getItem("user"));
+        if (localUser?.phoneNumber) {
+          phoneNumber = localUser.phoneNumber;
+        }
+      } catch (e) {
+        console.error("Error reading user from localStorage:", e);
+      }
+    }
+
     console.log(
       "Auto-filling phone number:",
       phoneNumber,
       "from userInfo:",
-      userInfo
+      userInfo,
+      "from warehouses:",
+      warehouses
     );
+
     setFormData({
       warehouseName: "",
       address: "",

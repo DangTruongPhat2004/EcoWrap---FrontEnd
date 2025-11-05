@@ -53,7 +53,7 @@ const AddInventory = () => {
       try {
         const [productsData, warehousesData] = await Promise.all([
           getMyProducts(),
-          warehouseApi.getWarehouses(),
+          warehouseApi.getMyWarehouses(),
         ]);
         setProducts(productsData);
         setWarehouses(warehousesData);
