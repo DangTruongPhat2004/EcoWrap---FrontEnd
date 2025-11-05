@@ -213,6 +213,16 @@ export default function AddressForm({
             />
           </div>
 
+          {/* Display Complete Address */}
+          {v.completeAddress && (
+            <div className="md:col-span-2 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <label className="text-sm font-medium text-emerald-800 mb-2 block">
+                Địa chỉ đầy đủ:
+              </label>
+              <p className="text-sm text-gray-700">{v.completeAddress}</p>
+            </div>
+          )}
+
           <Textarea
             className="md:col-span-2"
             label="Ghi chú (không bắt buộc)"
