@@ -245,50 +245,308 @@ export const createPackaging = (type) => {
 };
 
 /**
+ * Store for layer-specific textures
+ */
+const layerTextures = new Map();
+
+/**
  * Apply texture to specific layer of a packaging model
  */
 export const applyTextureToLayer = (packagingModel, layerId, texture) => {
   const { model, type } = packagingModel;
 
-  if (!model || !texture) return;
+  if (!model || !texture || !layerId) {
+    console.warn(
+      "PackagingModels: Missing required parameters for applyTextureToLayer"
+    );
+    return;
+  }
 
-  // Find the mesh corresponding to the layer
+  console.log(`PackagingModels: Applying texture to ${type} layer ${layerId}`);
+
+  // Store texture for this layer
+  const textureKey = `${type}-${layerId}`;
+  layerTextures.set(textureKey, texture);
+
+  // Configure texture properties
+  texture.flipY = false;
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+
+  // Apply to different packaging types and layers
   switch (type) {
     case PACKAGING_TYPES.CUP:
-      if (layerId === "sleeve") {
-        const cup = model.children[0];
-        if (cup) {
-          cup.material.map = texture;
-          cup.material.needsUpdate = true;
-        }
-      }
+      applyCupTexture(model, layerId, texture);
       break;
-
     case PACKAGING_TYPES.BAG:
-    case PACKAGING_TYPES.BOX: {
-      // For box and bag, apply texture to specific faces
-      const bodyMesh = model.children[0];
-      if (bodyMesh && bodyMesh.geometry) {
-        // Apply texture based on UV mapping
-        bodyMesh.material.map = texture;
-        bodyMesh.material.needsUpdate = true;
+      applyBagTexture(model, layerId, texture);
+      break;
+    case PACKAGING_TYPES.BOX:
+      applyBoxTexture(model, layerId, texture);
+      break;
+    case PACKAGING_TYPES.POUCH:
+      applyPouchTexture(model, layerId, texture);
+      break;
+    default:
+      console.warn(`PackagingModels: Unknown packaging type: ${type}`);
+      break;
+  }
+};
+
+/**
+ * Apply texture to cup layers
+ */
+const applyCupTexture = (model, layerId, texture) => {
+  // Find the main cylinder body (largest cylinder, not the rim)
+  let cupBody = null;
+  let maxHeight = 0;
+
+  model.children.forEach((child) => {
+    if (child.geometry?.type === "CylinderGeometry") {
+      const params = child.geometry.parameters;
+      const height = params?.height || 0;
+      if (height > maxHeight) {
+        maxHeight = height;
+        cupBody = child;
+      }
+    }
+  });
+
+  if (!cupBody) {
+    console.warn("PackagingModels: Could not find cup body mesh");
+    return;
+  }
+
+  // Clear any existing textures from rim (TorusGeometry)
+  model.children.forEach((child) => {
+    if (child.geometry?.type === "TorusGeometry") {
+      if (child.material.map) {
+        child.material.map.dispose();
+        child.material.map = null;
+        child.material.needsUpdate = true;
+        console.log("PackagingModels: Cleared texture from cup rim");
+      }
+    }
+  });
+
+  switch (layerId) {
+    case "sleeve":
+    case "front":
+    case "back": {
+      // For cups, all these layers apply to the wrap-around surface
+      // The cylinder only has one surface that wraps around
+      if (cupBody.material.map) {
+        cupBody.material.map.dispose();
+      }
+      cupBody.material.map = texture.clone();
+      cupBody.material.needsUpdate = true;
+      console.log(`PackagingModels: Applied texture to cup body ${layerId}`);
+      break;
+    }
+    default:
+      console.warn(`PackagingModels: Unknown cup layer: ${layerId}`);
+  }
+};
+
+/**
+ * Apply texture to bag layers
+ */
+const applyBagTexture = (model, layerId, texture) => {
+  // Find the main body mesh (largest box, not handles or gusset)
+  let bodyMesh = null;
+  let maxVolume = 0;
+
+  model.children.forEach((child) => {
+    if (child.geometry?.type === "BoxGeometry") {
+      const params = child.geometry.parameters;
+      const volume =
+        (params?.width || 0) * (params?.height || 0) * (params?.depth || 0);
+      if (volume > maxVolume) {
+        maxVolume = volume;
+        bodyMesh = child;
+      }
+    }
+  });
+
+  if (!bodyMesh) {
+    console.warn("PackagingModels: Could not find bag body mesh");
+    return;
+  }
+
+  // Clear textures from other bag meshes (handles, gusset)
+  model.children.forEach((child) => {
+    if (child !== bodyMesh && child.geometry?.type === "BoxGeometry") {
+      if (child.material.map) {
+        child.material.map.dispose();
+        child.material.map = null;
+        child.material.needsUpdate = true;
+        console.log("PackagingModels: Cleared texture from bag handle/gusset");
+      }
+    }
+  });
+
+  // Create materials array for different faces if not exists
+  if (!Array.isArray(bodyMesh.material)) {
+    const originalMaterial = bodyMesh.material;
+    bodyMesh.material = [
+      originalMaterial.clone(), // right (0)
+      originalMaterial.clone(), // left (1)
+      originalMaterial.clone(), // top (2)
+      originalMaterial.clone(), // bottom (3)
+      originalMaterial.clone(), // front (4)
+      originalMaterial.clone(), // back (5)
+    ];
+  }
+
+  const materials = bodyMesh.material;
+
+  switch (layerId) {
+    case "front": {
+      if (materials[4]) {
+        if (materials[4].map) materials[4].map.dispose();
+        materials[4].map = texture.clone();
+        materials[4].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to bag front (face 4)");
       }
       break;
     }
-
-    case PACKAGING_TYPES.POUCH: {
-      if (layerId === "front" || layerId === "back") {
-        const pouch = model.children[0];
-        if (pouch) {
-          pouch.material.map = texture;
-          pouch.material.needsUpdate = true;
-        }
+    case "back": {
+      if (materials[5]) {
+        if (materials[5].map) materials[5].map.dispose();
+        materials[5].map = texture.clone();
+        materials[5].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to bag back (face 5)");
+      }
+      break;
+    }
+    case "left": {
+      if (materials[1]) {
+        if (materials[1].map) materials[1].map.dispose();
+        materials[1].map = texture.clone();
+        materials[1].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to bag left (face 1)");
+      }
+      break;
+    }
+    case "right": {
+      if (materials[0]) {
+        if (materials[0].map) materials[0].map.dispose();
+        materials[0].map = texture.clone();
+        materials[0].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to bag right (face 0)");
+      }
+      break;
+    }
+    case "bottom": {
+      if (materials[3]) {
+        if (materials[3].map) materials[3].map.dispose();
+        materials[3].map = texture.clone();
+        materials[3].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to bag bottom (face 3)");
       }
       break;
     }
     default:
-      break;
+      console.warn(`PackagingModels: Unknown bag layer: ${layerId}`);
   }
+};
+
+/**
+ * Apply texture to box layers
+ */
+const applyBoxTexture = (model, layerId, texture) => {
+  // Similar to bag but also handle lid
+  applyBagTexture(model, layerId, texture);
+
+  // Also apply to lid if it's a top layer
+  if (layerId === "top") {
+    const lid = model.children.find(
+      (child) => child.position.y > 0 && child.geometry?.type === "BoxGeometry"
+    );
+    if (lid) {
+      if (!Array.isArray(lid.material)) {
+        const originalMaterial = lid.material;
+        lid.material = Array(6)
+          .fill(null)
+          .map(() => originalMaterial.clone());
+      }
+      if (lid.material[2]) {
+        // top face
+        if (lid.material[2].map) lid.material[2].map.dispose();
+        lid.material[2].map = texture;
+        lid.material[2].needsUpdate = true;
+      }
+    }
+  }
+};
+
+/**
+ * Apply texture to pouch layers
+ */
+const applyPouchTexture = (model, layerId, texture) => {
+  const pouch = model.children.find(
+    (child) => child.geometry?.type === "ExtrudeGeometry"
+  );
+  if (!pouch) {
+    console.warn("PackagingModels: Could not find pouch mesh");
+    return;
+  }
+
+  // Convert to materials array if needed (for front/back separation)
+  if (!Array.isArray(pouch.material)) {
+    const originalMaterial = pouch.material;
+    // ExtrudeGeometry has 3 material groups: front, back, and sides
+    pouch.material = [
+      originalMaterial.clone(), // front face (0)
+      originalMaterial.clone(), // back face (1)
+      originalMaterial.clone(), // sides (2)
+    ];
+  }
+
+  const materials = pouch.material;
+
+  switch (layerId) {
+    case "front": {
+      if (materials[0]) {
+        if (materials[0].map) materials[0].map.dispose();
+        materials[0].map = texture.clone();
+        materials[0].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to pouch front (face 0)");
+      }
+      break;
+    }
+    case "back": {
+      if (materials[1]) {
+        if (materials[1].map) materials[1].map.dispose();
+        materials[1].map = texture.clone();
+        materials[1].needsUpdate = true;
+        console.log("PackagingModels: Applied texture to pouch back (face 1)");
+      }
+      break;
+    }
+    default:
+      console.warn(`PackagingModels: Unknown pouch layer: ${layerId}`);
+  }
+};
+
+/**
+ * Get texture for a specific layer (useful for switching between layers)
+ */
+export const getLayerTexture = (packagingType, layerId) => {
+  const textureKey = `${packagingType}-${layerId}`;
+  return layerTextures.get(textureKey);
+};
+
+/**
+ * Clear all stored textures (cleanup)
+ */
+export const clearLayerTextures = () => {
+  for (const texture of layerTextures.values()) {
+    if (texture && texture.dispose) {
+      texture.dispose();
+    }
+  }
+  layerTextures.clear();
 };
 
 export default {
