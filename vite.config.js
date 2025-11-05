@@ -29,7 +29,7 @@ export default defineConfig({
       },
       // mọi request bắt đầu bằng /ai sẽ được forward sang backend
       "/ai": {
-        target: "http://14.225.205.215", // đổi đúng port HTTPS backend của bạn
+        target: "https://localhost:7077", // đổi đúng port HTTPS backend của bạn
         changeOrigin: true,
         secure: false, // dev cert tự ký → để false
       },
