@@ -33,6 +33,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false, // dev cert tự ký → để false
       },
+      "/messages": {
+        target: "http://14.225.205.215",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });

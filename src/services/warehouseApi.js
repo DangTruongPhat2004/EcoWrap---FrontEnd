@@ -4,7 +4,7 @@ const warehouseApi = {
   // Lấy danh sách tất cả kho hàng của vendor
   getWarehouses: async (params = {}) => {
     try {
-      const response = await apiClient.get("/api/Warehouse", { params });
+      const response = await apiClient.get("/api/Inventory/my", { params });
       return response.data;
     } catch (error) {
       console.error("Error fetching warehouses:", error);
