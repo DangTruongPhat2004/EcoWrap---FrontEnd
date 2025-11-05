@@ -157,15 +157,15 @@ const UserManagement = () => {
   });
 
   const totalUsers = usersArray.length;
-  const totalSellers = usersArray.filter((u) => u.roleId === 2).length;
-  const totalBuyers = usersArray.filter((u) => u.roleId === 3).length;
+  const totalBuyers = usersArray.filter((u) => u.roleId === 2).length;
+  const totalSellers = usersArray.filter((u) => u.roleId === 3).length;
   const verifiedUsers = usersArray.filter((u) => u.isVerified).length;
 
   const roleCounts = {
     all: totalUsers,
     1: usersArray.filter((u) => u.roleId === 1).length,
-    2: totalSellers,
-    3: totalBuyers,
+    2: totalBuyers,
+    3: totalSellers,
   };
 
   const statusCounts = {
