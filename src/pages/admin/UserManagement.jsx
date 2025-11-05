@@ -58,8 +58,8 @@ const UserManagement = () => {
   const getRoleLabel = (roleId) => {
     const roleMap = {
       1: "Admin",
-      2: "Người Bán",
-      3: "Người Mua",
+      2: "Người Mua",
+      3: "Người Bán",
     };
     return roleMap[roleId] || "Không rõ";
   };
@@ -276,7 +276,7 @@ const UserManagement = () => {
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             }`}
           >
-            Người Bán ({roleCounts[2]})
+            Người Bán ({roleCounts[3]})
           </button>
           <button
             onClick={() => setRoleFilter("3")}
@@ -286,7 +286,7 @@ const UserManagement = () => {
                 : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
             }`}
           >
-            Người Mua ({roleCounts[3]})
+            Người Mua ({roleCounts[2]})
           </button>
         </div>
 
