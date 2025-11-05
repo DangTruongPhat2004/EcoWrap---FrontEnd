@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "http://14.225.205.215",
+  baseURL: "",
   timeout: 30000,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
   withCredentials: true, // TẮT tạm để tránh CORS kiểu credentials
