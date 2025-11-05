@@ -9,7 +9,7 @@ const inventoryApi = {
    */
   getMyInventory: async (params = {}) => {
     try {
-      const response = await apiClient.get("/api/Inventory", {
+      const response = await apiClient.get("/api/Inventory/my", {
         params,
       });
       return response.data;
@@ -83,7 +83,7 @@ const inventoryApi = {
       console.error(`Error deleting inventory ${inventoryId}:`, error);
       throw error;
     }
-  }
+  },
 };
 
 export default inventoryApi;
