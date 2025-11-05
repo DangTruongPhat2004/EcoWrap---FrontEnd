@@ -31,7 +31,7 @@ export default function AddressForm({
   const setWithAddressUpdate = (k, val) => {
     const newValue = { ...v, [k]: val };
     // If updating a location field, rebuild the complete address
-    if (['ward', 'district', 'province', 'hamlet'].includes(k)) {
+    if (["ward", "district", "province", "hamlet"].includes(k)) {
       newValue.completeAddress = buildCompleteAddress(newValue);
     }
     onChange?.(newValue);
