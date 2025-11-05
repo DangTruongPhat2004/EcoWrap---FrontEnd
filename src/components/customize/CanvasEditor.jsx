@@ -35,7 +35,9 @@ const CanvasEditor = forwardRef(
       return `ecowrap-layers-${id}`;
     }, [designId]);
 
-    // Save layers to localStorage
+    // Save layers to localStorage (as backup/recovery mechanism only)
+    // Note: Primary save happens in CustomizePage via designApi.updateDesign/createDesign
+    // localStorage is used as a safety net to prevent data loss between API saves
     const saveToLocalStorage = React.useCallback(() => {
       const storageKey = getStorageKey();
       try {
@@ -51,17 +53,20 @@ const CanvasEditor = forwardRef(
           console.log(
             "CanvasEditor: Saving layer",
             currentLayerRef.current,
-            "to localStorage"
+            "to localStorage (backup)"
           );
         }
 
         localStorage.setItem(storageKey, JSON.stringify(layersDataRef.current));
         console.log(
-          "CanvasEditor: Saved all layers to localStorage:",
+          "CanvasEditor: Saved all layers to localStorage (backup):",
           storageKey
         );
       } catch (error) {
-        console.error("Failed to save layers to localStorage:", error);
+        console.error(
+          "CanvasEditor: Failed to save layers to localStorage:",
+          error
+        );
       }
     }, [getStorageKey]);
 
@@ -76,16 +81,31 @@ const CanvasEditor = forwardRef(
       }, 1000);
     }, [saveToLocalStorage]);
 
-    // Load layers from localStorage on mount
+    // Load layers from localStorage on mount (as fallback/recovery only)
+    // Note: Primary data should be loaded from backend via CustomizePage
     useEffect(() => {
       const storageKey = getStorageKey();
       const savedLayers = localStorage.getItem(storageKey);
       if (savedLayers) {
         try {
-          layersDataRef.current = JSON.parse(savedLayers);
-          console.log("Loaded layers from localStorage:", storageKey);
+          const parsedLayers = JSON.parse(savedLayers);
+          // Only load from localStorage if backend data hasn't been loaded yet
+          if (Object.keys(layersDataRef.current).length === 0) {
+            layersDataRef.current = parsedLayers;
+            console.log(
+              "CanvasEditor: Loaded layers from localStorage (recovery):",
+              storageKey
+            );
+          } else {
+            console.log(
+              "CanvasEditor: Skipping localStorage load - backend data already present"
+            );
+          }
         } catch (error) {
-          console.error("Failed to load layers from localStorage:", error);
+          console.error(
+            "CanvasEditor: Failed to load layers from localStorage:",
+            error
+          );
         }
       }
     }, [getStorageKey]);
@@ -762,6 +782,26 @@ const CanvasEditor = forwardRef(
       // Get canvas instance
       getCanvas: () => fabricCanvasRef.current,
 
+      // Force save current layer state (useful before hiding canvas)
+      saveCurrentLayer: () => {
+        if (currentLayerRef.current && fabricCanvasRef.current) {
+          const currentData = fabricCanvasRef.current.toJSON([
+            "name",
+            "assetId",
+            "source",
+            "kind",
+            "selectable",
+            "evented",
+          ]);
+          layersDataRef.current[currentLayerRef.current] = currentData;
+          saveToLocalStorage();
+          console.log(
+            "CanvasEditor: Force saved current layer:",
+            currentLayerRef.current
+          );
+        }
+      },
+
       // Export specific layer as image
       exportLayerAsImage: async (layerId) => {
         // Save current layer first
@@ -771,13 +811,42 @@ const CanvasEditor = forwardRef(
             "assetId",
             "source",
             "kind",
+            "selectable",
+            "evented",
           ]);
           layersDataRef.current[currentLayerRef.current] = currentData;
         }
 
+        // Get layer data
         const layerData = layersDataRef.current[layerId];
-        if (!layerData) {
-          console.warn(`No data found for layer: ${layerId}`);
+
+        // If requesting current active layer, use current canvas
+        if (layerId === currentLayerRef.current && fabricCanvasRef.current) {
+          try {
+            const dataURL = fabricCanvasRef.current.toDataURL({
+              format: "png",
+              quality: 0.9,
+              multiplier: 1,
+            });
+            console.log(
+              `CanvasEditor: Exported current layer ${layerId} directly`
+            );
+            return dataURL;
+          } catch (error) {
+            console.error(
+              `CanvasEditor: Error exporting current layer ${layerId}:`,
+              error
+            );
+            return null;
+          }
+        }
+
+        if (
+          !layerData ||
+          !layerData.objects ||
+          layerData.objects.length === 0
+        ) {
+          console.warn(`CanvasEditor: No data found for layer: ${layerId}`);
           return null;
         }
 
@@ -789,16 +858,57 @@ const CanvasEditor = forwardRef(
         const fabricTemp = new fabric.Canvas(tempCanvas, {
           width: 800,
           height: 600,
-          backgroundColor: "#ffffff",
+          backgroundColor: "transparent", // Use transparent background
         });
 
         return new Promise((resolve) => {
-          fabricTemp.loadFromJSON(layerData, () => {
-            fabricTemp.renderAll();
-            const dataURL = fabricTemp.toDataURL({ format: "png", quality: 1 });
+          try {
+            fabricTemp.loadFromJSON(layerData, () => {
+              // Filter out template objects for cleaner export
+              const objectsToRemove = [];
+              fabricTemp.getObjects().forEach((obj) => {
+                if (
+                  obj.name === "template-outline" ||
+                  obj.name === "helper-line"
+                ) {
+                  objectsToRemove.push(obj);
+                }
+              });
+              objectsToRemove.forEach((obj) => fabricTemp.remove(obj));
+
+              fabricTemp.renderAll();
+
+              // Check if canvas has any visible content
+              const hasContent = fabricTemp.getObjects().length > 0;
+              if (!hasContent) {
+                fabricTemp.dispose();
+                console.log(
+                  `CanvasEditor: Layer ${layerId} has no visible content`
+                );
+                resolve(null);
+                return;
+              }
+
+              const dataURL = fabricTemp.toDataURL({
+                format: "png",
+                quality: 0.9,
+                multiplier: 1,
+              });
+
+              fabricTemp.dispose();
+              console.log(
+                `CanvasEditor: Successfully exported layer ${layerId}`
+              );
+              resolve(dataURL);
+            });
+          } catch (error) {
             fabricTemp.dispose();
-            resolve(dataURL);
-          });
+            console.error(
+              `CanvasEditor: Error exporting layer ${layerId}:`,
+              error
+            );
+            resolve(null);
+          }
         });
       },
 

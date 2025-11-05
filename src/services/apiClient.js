@@ -2,8 +2,8 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "",
-  timeout: 10000,
+  baseURL: "http://14.225.205.215",
+  timeout: 30000,
   headers: { "Content-Type": "application/json", Accept: "application/json" },
   withCredentials: true, // TẮT tạm để tránh CORS kiểu credentials
 });
