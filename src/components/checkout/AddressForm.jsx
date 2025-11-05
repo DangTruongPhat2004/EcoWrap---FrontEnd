@@ -16,6 +16,27 @@ export default function AddressForm({
   const [touched, setTouched] = useState({});
   const [userDataLoaded, setUserDataLoaded] = useState(false);
 
+  // Function to build complete address from location parts
+  const buildCompleteAddress = (addressParts) => {
+    const parts = [];
+    if (addressParts.address?.trim()) parts.push(addressParts.address.trim());
+    if (addressParts.hamlet?.trim()) parts.push(addressParts.hamlet.trim());
+    if (addressParts.ward?.trim()) parts.push(addressParts.ward.trim());
+    if (addressParts.district?.trim()) parts.push(addressParts.district.trim());
+    if (addressParts.province?.trim()) parts.push(addressParts.province.trim());
+    return parts.join(", ");
+  };
+
+  // Custom set function for location fields that updates complete address
+  const setWithAddressUpdate = (k, val) => {
+    const newValue = { ...v, [k]: val };
+    // If updating a location field, rebuild the complete address
+    if (['ward', 'district', 'province', 'hamlet'].includes(k)) {
+      newValue.completeAddress = buildCompleteAddress(newValue);
+    }
+    onChange?.(newValue);
+  };
+
   // Auto-fill user data on mount
   useEffect(() => {
     let isMounted = true;
