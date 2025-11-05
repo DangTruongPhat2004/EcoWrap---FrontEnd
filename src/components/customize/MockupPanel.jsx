@@ -9,6 +9,7 @@ const MockupPanel = ({
   canvasRef,
   embedded = false,
   packagingType = "box",
+  layersData = {},
   activeLayerId,
 }) => {
   const mountRef = useRef(null);
@@ -137,13 +138,12 @@ const MockupPanel = ({
 
   // Update texture from canvas - apply specific layer to specific model face
   useEffect(() => {
-    if (!canvasRef?.current || !packagingRef.current || !activeLayerId) {
+    if (!canvasRef?.current || !packagingRef.current) {
       console.log(
-        "MockupPanel: Skipping texture update - missing dependencies",
+        "MockupPanel: Skipping texture update - canvasRef or packagingRef not ready",
         {
           hasCanvasRef: !!canvasRef?.current,
           hasPackagingRef: !!packagingRef.current,
-          activeLayerId: activeLayerId,
         }
       );
       return;
@@ -151,155 +151,68 @@ const MockupPanel = ({
 
     console.log(
       "MockupPanel: Setting up texture updates for layer:",
-      activeLayerId,
-      "on packaging type:",
-      mockupType
+      activeLayerId
     );
 
     const updateTexture = async () => {
-      if (!canvasRef?.current || !activeLayerId) {
-        console.warn("MockupPanel: Missing dependencies in updateTexture");
+      // Add null check inside updateTexture
+      if (!canvasRef?.current) {
+        console.warn("MockupPanel: canvasRef is null in updateTexture");
         return;
       }
 
+      if (!canvasRef.current.exportLayerAsImage) {
+        console.warn(
+          "MockupPanel: exportLayerAsImage not available, using current canvas"
+        );
+        const fabricCanvas = canvasRef.current.getCanvas();
+        if (!fabricCanvas) return;
+
+        const dataURL = fabricCanvas.toDataURL({ format: "png", quality: 1 });
+        applyTextureToModel(dataURL);
+        return;
+      }
+
+      console.log("MockupPanel: Updating texture from layer:", activeLayerId);
+
+      // Export current active layer as image
       try {
-        let dataURL = null;
-
-        // Try to export the specific layer
-        if (canvasRef.current.exportLayerAsImage) {
-          console.log("MockupPanel: Exporting layer as image:", activeLayerId);
-          dataURL = await canvasRef.current.exportLayerAsImage(activeLayerId);
-        } else if (canvasRef.current.getCanvas) {
-          // Fallback: use current canvas content
-          console.warn("MockupPanel: Using current canvas as fallback");
-          const fabricCanvas = canvasRef.current.getCanvas();
-          if (fabricCanvas) {
-            dataURL = fabricCanvas.toDataURL({ format: "png", quality: 0.8 });
-          }
-        }
-
-        // Check if we have valid image data (should start with data:image/png;base64,)
-        if (
-          dataURL &&
-          dataURL !== "data:," &&
-          dataURL.startsWith("data:image/")
-        ) {
-          console.log(
-            "MockupPanel: Applying texture for layer:",
-            activeLayerId
-          );
-          await applyTextureToModel(dataURL, activeLayerId);
-        } else {
-          console.log(
-            "MockupPanel: No valid texture data for layer:",
-            activeLayerId,
-            "dataURL:",
-            dataURL ? dataURL.substring(0, 50) : "null"
-          );
+        const dataURL = await canvasRef.current.exportLayerAsImage(
+          activeLayerId
+        );
+        if (dataURL) {
+          applyTextureToModel(dataURL);
         }
       } catch (error) {
-        console.error("MockupPanel: Error updating texture:", error);
+        console.error("MockupPanel: Error exporting layer:", error);
       }
     };
 
-    const applyTextureToModel = async (dataURL, layerId) => {
-      return new Promise((resolve) => {
-        const loader = new THREE.TextureLoader();
-        loader.load(
-          dataURL,
-          (texture) => {
-            try {
-              // Configure texture properly
-              texture.flipY = false;
-              texture.wrapS = THREE.ClampToEdgeWrapping;
-              texture.wrapT = THREE.ClampToEdgeWrapping;
-              texture.minFilter = THREE.LinearFilter;
-              texture.magFilter = THREE.LinearFilter;
-
-              // Apply texture to specific layer using the utility function
-              if (packagingRef.current) {
-                // Import the utility function dynamically
-                import("./PackagingModels").then(({ applyTextureToLayer }) => {
-                  applyTextureToLayer(packagingRef.current, layerId, texture);
-                  console.log(
-                    `MockupPanel: Applied texture to layer ${layerId} successfully`
-                  );
-                  resolve();
-                });
-              }
-            } catch (error) {
-              console.error("MockupPanel: Error applying texture:", error);
-              resolve();
-            }
-          },
-          undefined,
-          (error) => {
-            console.error("MockupPanel: Error loading texture:", error);
-            resolve();
+    const applyTextureToModel = (dataURL) => {
+      const loader = new THREE.TextureLoader();
+      loader.load(dataURL, (texture) => {
+        if (packagingRef.current && packagingRef.current.model) {
+          // Apply texture to the main mesh
+          const mesh = packagingRef.current.model.children[0];
+          if (mesh && mesh.material) {
+            mesh.material.map = texture;
+            mesh.material.needsUpdate = true;
+            console.log(
+              "MockupPanel: Texture applied successfully for layer:",
+              activeLayerId
+            );
           }
-        );
+        }
       });
     };
 
-    // Debounced update function
-    let updateTimer = null;
-    const debouncedUpdate = () => {
-      if (updateTimer) clearTimeout(updateTimer);
-      updateTimer = setTimeout(updateTexture, 300);
-    };
+    // Initial update
+    setTimeout(updateTexture, 500);
 
-    // Initial update after a short delay
-    const initialTimer = setTimeout(updateTexture, 800);
-
-    // Listen for canvas changes if available
-    const handleCanvasChange = () => {
-      console.log("MockupPanel: Canvas change detected, updating texture...");
-      debouncedUpdate();
-    };
-
-    // Capture canvas reference at the time of effect
-    const currentCanvasRef = canvasRef.current;
-    let fabricCanvas = null;
-
-    // Set up canvas change listener
-    if (currentCanvasRef && currentCanvasRef.getCanvas) {
-      fabricCanvas = currentCanvasRef.getCanvas();
-      if (fabricCanvas) {
-        console.log(
-          "MockupPanel: Setting up canvas event listeners for layer:",
-          activeLayerId
-        );
-        fabricCanvas.on("object:modified", handleCanvasChange);
-        fabricCanvas.on("object:added", handleCanvasChange);
-        fabricCanvas.on("object:removed", handleCanvasChange);
-        fabricCanvas.on("path:created", handleCanvasChange);
-        fabricCanvas.on("after:render", handleCanvasChange);
-      } else {
-        console.warn("MockupPanel: Could not get fabric canvas instance");
-      }
-    } else {
-      console.warn("MockupPanel: Canvas ref not ready for event listeners");
-    }
-
-    // Cleanup
-    return () => {
-      console.log(
-        "MockupPanel: Cleaning up event listeners for layer:",
-        activeLayerId
-      );
-      clearTimeout(initialTimer);
-      if (updateTimer) clearTimeout(updateTimer);
-
-      // Use captured reference for cleanup
-      if (fabricCanvas) {
-        fabricCanvas.off("object:modified", handleCanvasChange);
-        fabricCanvas.off("object:added", handleCanvasChange);
-        fabricCanvas.off("object:removed", handleCanvasChange);
-        fabricCanvas.off("path:created", handleCanvasChange);
-        fabricCanvas.off("after:render", handleCanvasChange);
-      }
-    };
-  }, [canvasRef, activeLayerId, mockupType]); // Removed layersData to prevent excessive updates
+    // Update on canvas changes (with debounce)
+    const timer = setInterval(updateTexture, 2000);
+    return () => clearInterval(timer);
+  }, [canvasRef, layersData, activeLayerId, mockupType]); // Added activeLayerId and mockupType
 
   const createMockup = (scene, type) => {
     console.log("Creating packaging model of type:", type);

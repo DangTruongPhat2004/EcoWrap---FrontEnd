@@ -16,7 +16,7 @@ const designApi = {
     if (q) params.append("q", q);
     if (status) params.append("status", status);
 
-    const response = await apiClient.get(`/api/Designs?${params.toString()}`);
+    const response = await apiClient.get(`/designs?${params.toString()}`);
     return response.data;
   },
 
@@ -25,7 +25,7 @@ const designApi = {
    * Returns design with ETag for concurrency control
    */
   async getDesign(id) {
-    const response = await apiClient.get(`/api/Designs/${id}`);
+    const response = await apiClient.get(`/designs/${id}`);
     return {
       data: response.data,
       etag: response.headers.etag || response.headers.ETag,
@@ -36,7 +36,7 @@ const designApi = {
    * Create new design
    */
   async createDesign(designData) {
-    const response = await apiClient.post("/api/Designs", designData);
+    const response = await apiClient.post("/designs", designData);
     return {
       data: response.data,
       etag: response.headers.etag || response.headers.ETag,
@@ -50,7 +50,7 @@ const designApi = {
    * @param {string} etag - ETag from previous GET/PUT for concurrency control
    */
   async updateDesign(id, updateData, etag) {
-    const response = await apiClient.put(`/api/Designs/${id}`, updateData, {
+    const response = await apiClient.put(`/designs/${id}`, updateData, {
       headers: {
         "If-Match": etag,
       },
@@ -66,7 +66,7 @@ const designApi = {
    */
   async deleteDesign(id, hard = false) {
     const params = hard ? "?hard=true" : "";
-    await apiClient.delete(`/api/Designs/${id}${params}`);
+    await apiClient.delete(`/designs/${id}${params}`);
   },
 
   /**

@@ -10,7 +10,6 @@ import {
   Shuffle,
   Save,
   ShoppingCart,
-  FileText,
 } from "lucide-react";
 import CanvasEditor from "../../components/customize/CanvasEditor";
 import ThanhPhanPanel from "../../components/customize/ThanhPhanPanel";
@@ -20,9 +19,7 @@ import DrawingTools from "../../components/customize/DrawingTools";
 import AssetsPanel from "../../components/customize/AssetsPanel";
 import { LayerMinimapPanel } from "../../components/customize/LayerMinimap";
 import DesignSidebar from "../../components/customize/DesignSidebar";
-import DielinePreview from "../../components/customize/DielinePreview";
 import designApi from "../../services/designApi";
-import dielineApi from "../../services/dielineApi";
 import { PACKAGING_LAYERS } from "../../components/customize/PackagingModels";
 
 const CustomizePage = () => {
@@ -36,10 +33,8 @@ const CustomizePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [isGeneratingDieline, setIsGeneratingDieline] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [showMockup, setShowMockup] = useState(false);
-  const [showDielinePreview, setShowDielinePreview] = useState(false);
 
   // Packaging and layer state
   const [packagingType, setPackagingType] = useState("box");
@@ -54,21 +49,6 @@ const CustomizePage = () => {
     }
   }, [packagingType, activeLayerId]);
 
-  // Force canvas render when toggling mockup view or on mount
-  useEffect(() => {
-    if (!showMockup && canvasRef.current) {
-      // Small delay to ensure canvas is visible before rendering
-      const timer = setTimeout(() => {
-        const canvas = canvasRef.current.getCanvas?.();
-        if (canvas) {
-          canvas.renderAll();
-          console.log("CustomizePage: Forced canvas render");
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [showMockup]);
-
   // History for undo/redo
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -80,49 +60,9 @@ const CustomizePage = () => {
       setDesign(data);
       setEtag(newEtag);
 
-      // Load design data into canvas from backend
+      // Load design data into canvas
       if (canvasRef.current && data.designData) {
-        try {
-          const parsedData = JSON.parse(data.designData);
-
-          // Set packaging type from saved design
-          if (parsedData.packagingType) {
-            setPackagingType(parsedData.packagingType);
-          }
-
-          // Load all layers data from backend (primary source)
-          if (parsedData.layers && canvasRef.current.loadAllLayers) {
-            canvasRef.current.loadAllLayers(parsedData.layers);
-            console.log("CustomizePage: Loaded design layers from backend API");
-
-            // Force render after loading
-            setTimeout(() => {
-              const canvas = canvasRef.current?.getCanvas?.();
-              if (canvas) {
-                canvas.renderAll();
-                console.log("CustomizePage: Forced render after load");
-              }
-            }, 150);
-          } else if (canvasRef.current.loadDesign) {
-            // Fallback to old format if exists
-            canvasRef.current.loadDesign(parsedData);
-            console.log("CustomizePage: Loaded design using legacy format");
-
-            // Force render after loading
-            setTimeout(() => {
-              const canvas = canvasRef.current?.getCanvas?.();
-              if (canvas) {
-                canvas.renderAll();
-              }
-            }, 150);
-          }
-        } catch (parseError) {
-          console.error(
-            "CustomizePage: Failed to parse design data:",
-            parseError
-          );
-          toast.error("Dữ liệu thiết kế không hợp lệ");
-        }
+        canvasRef.current.loadDesign(JSON.parse(data.designData));
       }
     } catch (error) {
       console.error("Failed to load design:", error);
@@ -196,36 +136,6 @@ const CustomizePage = () => {
       const allLayers = canvasRef.current.exportAllLayers();
       const thumbnail = await canvasRef.current.exportThumbnail();
 
-      // Generate dieline SVG
-      let dielineSvgUrl = null;
-      if (Object.keys(allLayers).length > 0) {
-        setIsGeneratingDieline(true);
-        try {
-          const dielineResult = await dielineApi.generateAndUploadDieline(
-            allLayers,
-            packagingType,
-            design.id || "new",
-            canvasRef // Pass canvas reference for rendering designs
-          );
-          dielineSvgUrl = dielineResult.url;
-
-          if (dielineResult.success) {
-            toast.success("Đã tạo file dieline", { duration: 2000 });
-          } else if (dielineResult.fallback) {
-            toast.loading("Đang tạo file dieline tạm thời...", {
-              duration: 2000,
-            });
-          }
-        } catch (dielineError) {
-          console.error("Dieline generation failed:", dielineError);
-          toast.error(
-            "Không thể tạo file dieline, nhưng thiết kế vẫn được lưu"
-          );
-        } finally {
-          setIsGeneratingDieline(false);
-        }
-      }
-
       const designData = {
         title: design.title,
         designData: JSON.stringify({
@@ -233,7 +143,6 @@ const CustomizePage = () => {
           layers: allLayers,
         }),
         thumbnailUrl: thumbnail,
-        dielineSvgUrl: dielineSvgUrl, // Add dieline URL to the save data
         status: "draft",
         usedAssets: [],
         tags: design.tags || [],
@@ -251,14 +160,9 @@ const CustomizePage = () => {
         toast.success("Đã lưu thiết kế");
       } else {
         // Create new
-        console.log(
-          "CustomizePage: Creating new design with data:",
-          designData
-        );
         const { data, etag: newEtag } = await designApi.createDesign(
           designData
         );
-        console.log("CustomizePage: Design created successfully:", data);
         setDesign(data);
         setEtag(newEtag);
         navigate(`/thiet-ke/${data.id}`, { replace: true });
@@ -268,27 +172,12 @@ const CustomizePage = () => {
       setHasUnsavedChanges(false);
     } catch (error) {
       console.error("Save failed:", error);
-      console.error("Error details:", {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message,
-      });
-
       if (error.response?.status === 409) {
         toast.error(
           "Thiết kế đã được chỉnh sửa bởi người khác. Vui lòng tải lại."
         );
-      } else if (error.response?.status === 401) {
-        toast.error("Bạn cần đăng nhập để lưu thiết kế");
-      } else if (error.response?.status === 400) {
-        toast.error(
-          "Dữ liệu thiết kế không hợp lệ: " +
-            (error.response?.data?.message || "")
-        );
       } else {
-        toast.error(
-          "Không thể lưu thiết kế: " + (error.message || "Lỗi không xác định")
-        );
+        toast.error("Không thể lưu thiết kế");
       }
     } finally {
       setIsSaving(false);
@@ -366,12 +255,7 @@ const CustomizePage = () => {
           <Button isIconOnly variant="light" onClick={() => navigate(-1)}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-semibold">Thiết Kế Bao Bì Của Bạn</h1>
-            <span className="px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700 rounded-full border border-orange-300">
-              BETA
-            </span>
-          </div>
+          <h1 className="text-lg font-semibold">Thiết Kế Bao Bì Của Bạn</h1>
           <span className="text-sm text-gray-500">Quay lại</span>
         </div>
 
@@ -402,33 +286,16 @@ const CustomizePage = () => {
           <Button
             variant="light"
             startContent={<Eye className="w-4 h-4" />}
-            onClick={() => {
-              // Save current layer state before toggling
-              if (canvasRef.current?.saveCurrentLayer) {
-                canvasRef.current.saveCurrentLayer();
-              }
-              setShowMockup(!showMockup);
-            }}
+            onClick={() => setShowMockup(!showMockup)}
           >
             {showMockup ? "Canvas" : "Mockup"}
-          </Button>
-          <Button
-            variant="light"
-            startContent={<FileText className="w-4 h-4" />}
-            onClick={() => setShowDielinePreview(true)}
-            isDisabled={!canvasRef.current}
-          >
-            Dieline
           </Button>
           <Button
             isIconOnly
             variant="light"
             onClick={() => {
-              toast("Tính năng mẫu ngẫu nhiên đang được phát triển", {
-                icon: "🎨",
-              });
+              /* TODO: Random template */
             }}
-            title="Áp dụng mẫu ngẫu nhiên (sắp có)"
           >
             <Shuffle className="w-4 h-4" />
           </Button>
@@ -436,19 +303,13 @@ const CustomizePage = () => {
           <div className="w-px h-6 bg-gray-300 mx-2" />
 
           {/* Auto-save indicator */}
-          {isGeneratingDieline && (
-            <span className="text-xs text-blue-600 flex items-center gap-1">
-              <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              Đang tạo file dieline...
-            </span>
-          )}
-          {hasUnsavedChanges && !isGeneratingDieline && (
+          {hasUnsavedChanges && (
             <span className="text-xs text-amber-600 flex items-center gap-1">
               <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
               Đang lưu tự động...
             </span>
           )}
-          {!hasUnsavedChanges && !isGeneratingDieline && design?.id && (
+          {!hasUnsavedChanges && design?.id && (
             <span className="text-xs text-green-600 flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full" />
               Đã lưu
@@ -461,15 +322,15 @@ const CustomizePage = () => {
             variant="bordered"
             startContent={<Save className="w-4 h-4" />}
             onClick={handleSave}
-            isLoading={isSaving || isGeneratingDieline}
+            isLoading={isSaving}
           >
-            {isGeneratingDieline ? "Tạo dieline..." : "Lưu ngay"}
+            Lưu ngay
           </Button>
           <Button
             color="success"
             variant="solid"
             onClick={handleApply}
-            isLoading={isSaving || isGeneratingDieline}
+            isLoading={isSaving}
           >
             Áp dụng
           </Button>
@@ -478,7 +339,6 @@ const CustomizePage = () => {
             variant="solid"
             startContent={<ShoppingCart className="w-4 h-4" />}
             onClick={handleAddToCart}
-            isDisabled={isSaving || isGeneratingDieline}
           >
             Thêm Vào Giỏ Hàng
           </Button>
@@ -489,7 +349,7 @@ const CustomizePage = () => {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
         <DesignSidebar
-          designs={[]} // DesignSidebar loads recent designs from backend internally
+          designs={[]} // TODO: Load recent designs
           currentDesignId={design?.id}
           onCreateNew={() => navigate("/thiet-ke/new")}
           onSelectDesign={(designId) => navigate(`/thiet-ke/${designId}`)}
@@ -521,16 +381,16 @@ const CustomizePage = () => {
           </div>
 
           {/* Canvas or Mockup View */}
-          <div className="flex-1 flex items-center justify-center p-8 relative">
-            {/* Always keep CanvasEditor mounted and rendered */}
-            <div
-              style={{
-                position: showMockup ? "absolute" : "relative",
-                visibility: showMockup ? "hidden" : "visible",
-                zIndex: showMockup ? -1 : 1,
-                pointerEvents: showMockup ? "none" : "auto",
-              }}
-            >
+          <div className="flex-1 flex items-center justify-center p-8">
+            {showMockup ? (
+              <MockupPanel
+                key={`mockup-${packagingType}-${showMockup}`}
+                canvasRef={canvasRef}
+                zoom={zoom}
+                packagingType={packagingType}
+                activeLayerId={activeLayerId}
+              />
+            ) : (
               <CanvasEditor
                 ref={canvasRef}
                 zoom={zoom}
@@ -540,17 +400,6 @@ const CustomizePage = () => {
                 designId={design?.id || id}
                 packagingType={packagingType}
               />
-            </div>
-            {showMockup && (
-              <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-                <MockupPanel
-                  key={`mockup-${packagingType}-${activeLayerId}`}
-                  canvasRef={canvasRef}
-                  zoom={zoom}
-                  packagingType={packagingType}
-                  activeLayerId={activeLayerId}
-                />
-              </div>
             )}
           </div>
 
@@ -663,15 +512,6 @@ const CustomizePage = () => {
           </div>
         </div>
       </div>
-
-      {/* Dieline Preview Modal */}
-      <DielinePreview
-        canvasRef={canvasRef}
-        packagingType={packagingType}
-        designId={design?.id}
-        isVisible={showDielinePreview}
-        onClose={() => setShowDielinePreview(false)}
-      />
     </div>
   );
 };
