@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://14.225.205.215/api/:path*"
+      "destination": "https://14.225.205.215/api/:path*"
     },
     {
       "source": "/ai/:path*",
-      "destination": "http://14.225.205.215/ai/:path*"
+      "destination": "https://14.225.205.215/ai/:path*"
     },
     {
       "source": "/chats/:path*",
-      "destination": "http://14.225.205.215/chats/:path*"
+      "destination": "https://14.225.205.215/chats/:path*"
     },
     {
       "source": "/hubs/:path*",
-      "destination": "http://14.225.205.215/hubs/:path*"
+      "destination": "https://14.225.205.215/hubs/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
