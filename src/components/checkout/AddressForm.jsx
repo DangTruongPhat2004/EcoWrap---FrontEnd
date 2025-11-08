@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardBody, Input, Textarea, Checkbox } from "@nextui-org/react";
 import { getUserById } from "../../services/userApi";
 import { getUserIdFromJwt } from "../../utils/jwt";
+import LocationSelector from "../ui/LocationSelector";
 
 export default function AddressForm({
   value,
@@ -81,13 +82,37 @@ export default function AddressForm({
     fullName: !v.fullName?.trim() ? "Vui lòng nhập họ tên" : "",
     phone: !/^0\d{9}$/.test(v.phone || "") ? "SĐT 10 số, bắt đầu bằng 0" : "",
     address: !v.address?.trim() ? "Vui lòng nhập địa chỉ" : "",
-    ward: !v.ward?.trim() ? "Vui lòng nhập phường/xã" : "",
-    district: !v.district?.trim() ? "Vui lòng nhập quận/huyện" : "",
-    province: !v.province?.trim() ? "Vui lòng nhập tỉnh/thành phố" : "",
+    ward: !v.wardCode && !v.ward?.trim() ? "Vui lòng chọn phường/xã" : "",
+    district:
+      !v.districtCode && !v.district?.trim() ? "Vui lòng chọn quận/huyện" : "",
+    province:
+      !v.provinceCode && !v.province?.trim()
+        ? "Vui lòng chọn tỉnh/thành phố"
+        : "",
   };
 
   const showErr = (k) => touched[k] && err[k];
   const markTouched = (field) => setTouched((t) => ({ ...t, [field]: true }));
+
+  // Handle location changes from LocationSelector
+  const handleLocationChange = (locationData) => {
+    const newValue = {
+      ...v,
+      provinceCode: locationData.provinceCode,
+      provinceName: locationData.provinceName,
+      districtCode: locationData.districtCode,
+      districtName: locationData.districtName,
+      wardCode: locationData.wardCode,
+      wardName: locationData.wardName,
+      // Update old format for backward compatibility
+      province: locationData.provinceName,
+      district: locationData.districtName,
+      ward: locationData.wardName,
+    };
+    // Rebuild complete address
+    newValue.completeAddress = buildCompleteAddress(newValue);
+    onChange?.(newValue);
+  };
 
   return (
     <Card className={`border border-gray-200 rounded-xl ${className}`}>
@@ -136,7 +161,7 @@ export default function AddressForm({
               Địa chỉ <span className="text-red-500">*</span>
             </label>
             <Input
-              placeholder="Số nhà, đường, phường/xã"
+              placeholder="Số nhà, đường"
               value={v.address || ""}
               onValueChange={(val) => set("address", val)}
               onBlur={() => markTouched("address")}
@@ -148,59 +173,26 @@ export default function AddressForm({
             )}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">
-              Phường/Xã <span className="text-red-500">*</span>
-            </label>
-            <Input
-              placeholder="Nhập phường/xã"
-              value={v.ward || ""}
-              onValueChange={(val) => setWithAddressUpdate("ward", val)}
-              onBlur={() => markTouched("ward")}
-              isInvalid={!!showErr("ward")}
+          {/* Location Selector Component */}
+          <div className="md:col-span-2">
+            <LocationSelector
+              value={{
+                provinceCode: v.provinceCode,
+                districtCode: v.districtCode,
+                wardCode: v.wardCode,
+                provinceName: v.provinceName || v.province,
+                districtName: v.districtName || v.district,
+                wardName: v.wardName || v.ward,
+              }}
+              onChange={handleLocationChange}
+              errors={{
+                province: showErr("province"),
+                district: showErr("district"),
+                ward: showErr("ward"),
+              }}
+              onBlur={(field) => markTouched(field)}
               variant="bordered"
             />
-            {showErr("ward") && (
-              <span className="text-sm text-red-600">{showErr("ward")}</span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">
-              Quận/Huyện <span className="text-red-500">*</span>
-            </label>
-            <Input
-              placeholder="Nhập quận/huyện"
-              value={v.district || ""}
-              onValueChange={(val) => setWithAddressUpdate("district", val)}
-              onBlur={() => markTouched("district")}
-              isInvalid={!!showErr("district")}
-              variant="bordered"
-            />
-            {showErr("district") && (
-              <span className="text-sm text-red-600">
-                {showErr("district")}
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">
-              Tỉnh/Thành phố <span className="text-red-500">*</span>
-            </label>
-            <Input
-              placeholder="Nhập tỉnh/thành phố"
-              value={v.province || ""}
-              onValueChange={(val) => setWithAddressUpdate("province", val)}
-              onBlur={() => markTouched("province")}
-              isInvalid={!!showErr("province")}
-              variant="bordered"
-            />
-            {showErr("province") && (
-              <span className="text-sm text-red-600">
-                {showErr("province")}
-              </span>
-            )}
           </div>
 
           <div className="flex flex-col gap-2">

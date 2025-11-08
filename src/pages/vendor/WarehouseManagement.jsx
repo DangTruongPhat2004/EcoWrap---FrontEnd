@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import warehouseApi from "../../services/warehouseApi";
 import { getUserById } from "../../services/userApi";
+import LocationSelector from "../../components/ui/LocationSelector";
 
 const WarehouseManagement = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -58,9 +59,12 @@ const WarehouseManagement = () => {
     warehouseName: "",
     address: "",
     phoneNumber: "",
-    provinceId: "",
-    districtId: "",
-    wardId: "",
+    provinceCode: "",
+    provinceName: "",
+    districtCode: "",
+    districtName: "",
+    wardCode: "",
+    wardName: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -138,14 +142,14 @@ const WarehouseManagement = () => {
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = "Số điện thoại là bắt buộc";
     }
-    if (!formData.provinceId) {
-      newErrors.provinceId = "Vui lòng chọn tỉnh/thành phố";
+    if (!formData.provinceCode) {
+      newErrors.province = "Vui lòng chọn tỉnh/thành phố";
     }
-    if (!formData.districtId) {
-      newErrors.districtId = "Vui lòng chọn quận/huyện";
+    if (!formData.districtCode) {
+      newErrors.district = "Vui lòng chọn quận/huyện";
     }
-    if (!formData.wardId) {
-      newErrors.wardId = "Vui lòng chọn phường/xã";
+    if (!formData.wardCode) {
+      newErrors.ward = "Vui lòng chọn phường/xã";
     }
     return newErrors;
   };
@@ -163,32 +167,36 @@ const WarehouseManagement = () => {
         [field]: "",
       }));
     }
-    // Reset dependent fields when province or district changes
-    if (field === "provinceId") {
-      setFormData((prev) => ({
-        ...prev,
-        districtId: "",
-        wardId: "",
-      }));
-    }
-    if (field === "districtId") {
-      setFormData((prev) => ({
-        ...prev,
-        wardId: "",
-      }));
-    }
+  };
+
+  // Handle location changes from LocationSelector
+  const handleLocationChange = (locationData) => {
+    setFormData((prev) => ({
+      ...prev,
+      ...locationData,
+    }));
+    // Clear location errors
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.province;
+      delete newErrors.district;
+      delete newErrors.ward;
+      return newErrors;
+    });
   };
 
   // Reset form
   const resetForm = () => {
     setFormData({
-      ...formData, // Giữ lại SĐT đã điền sẵn
       warehouseName: "",
       address: "",
       phoneNumber: "",
-      provinceId: "",
-      districtId: "",
-      wardId: "",
+      provinceCode: "",
+      provinceName: "",
+      districtCode: "",
+      districtName: "",
+      wardCode: "",
+      wardName: "",
     });
     setErrors({});
     setEditingWarehouse(null);
@@ -243,9 +251,12 @@ const WarehouseManagement = () => {
       warehouseName: "",
       address: "",
       phoneNumber: phoneNumber, // Tự động điền SĐT của user
-      provinceId: "",
-      districtId: "",
-      wardId: "",
+      provinceCode: "",
+      provinceName: "",
+      districtCode: "",
+      districtName: "",
+      wardCode: "",
+      wardName: "",
     });
     setErrors({});
     onOpen();
@@ -258,9 +269,12 @@ const WarehouseManagement = () => {
       warehouseName: warehouse.warehouseName,
       address: warehouse.address,
       phoneNumber: warehouse.phoneNumber,
-      provinceId: warehouse.provinceId,
-      districtId: warehouse.districtId,
-      wardId: warehouse.wardId,
+      provinceCode: warehouse.provinceId,
+      provinceName: warehouse.provinceId, // Will be loaded from API
+      districtCode: warehouse.districtId,
+      districtName: warehouse.districtId,
+      wardCode: warehouse.wardId,
+      wardName: warehouse.wardId,
     });
     setErrors({});
     onOpen();
@@ -289,9 +303,9 @@ const WarehouseManagement = () => {
         warehouseName: formData.warehouseName,
         address: formData.address,
         phoneNumber: formData.phoneNumber,
-        provinceId: formData.provinceId,
-        districtId: formData.districtId,
-        wardId: formData.wardId,
+        provinceId: formData.provinceName,
+        districtId: formData.districtName,
+        wardId: formData.wardName,
       };
 
       // Call API to create warehouse
@@ -322,9 +336,9 @@ const WarehouseManagement = () => {
         warehouseName: formData.warehouseName,
         address: formData.address,
         phoneNumber: formData.phoneNumber,
-        provinceId: formData.provinceId,
-        districtId: formData.districtId,
-        wardId: formData.wardId,
+        provinceId: formData.provinceName,
+        districtId: formData.districtName,
+        wardId: formData.wardName,
       };
 
       await warehouseApi.updateWarehouse(
@@ -673,71 +687,23 @@ const WarehouseManagement = () => {
                       📍 Vị trí địa lý
                     </h3>
 
-                    {/* Tỉnh/Thành Phố */}
-                    <div className="mb-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 block">
-                          Tỉnh/Thành Phố <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          placeholder="Nhập tỉnh/thành phố"
-                          variant="bordered"
-                          value={formData.provinceId}
-                          onChange={(e) =>
-                            handleInputChange("provinceId", e.target.value)
-                          }
-                          isInvalid={!!errors.provinceId}
-                          errorMessage={errors.provinceId}
-                          classNames={{
-                            input: "text-sm",
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Quận/Huyện */}
-                    <div className="mb-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 block">
-                          Quận/Huyện <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          placeholder="Nhập quận/huyện"
-                          variant="bordered"
-                          value={formData.districtId}
-                          onChange={(e) =>
-                            handleInputChange("districtId", e.target.value)
-                          }
-                          isInvalid={!!errors.districtId}
-                          errorMessage={errors.districtId}
-                          classNames={{
-                            input: "text-sm",
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Phường/Xã */}
-                    <div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium text-gray-700 block">
-                          Phường/Xã <span className="text-red-500">*</span>
-                        </label>
-                        <Input
-                          placeholder="Nhập phường/xã"
-                          variant="bordered"
-                          value={formData.wardId}
-                          onChange={(e) =>
-                            handleInputChange("wardId", e.target.value)
-                          }
-                          isInvalid={!!errors.wardId}
-                          errorMessage={errors.wardId}
-                          classNames={{
-                            input: "text-sm",
-                          }}
-                        />
-                      </div>
-                    </div>
+                    <LocationSelector
+                      value={{
+                        provinceCode: formData.provinceCode,
+                        districtCode: formData.districtCode,
+                        wardCode: formData.wardCode,
+                        provinceName: formData.provinceName,
+                        districtName: formData.districtName,
+                        wardName: formData.wardName,
+                      }}
+                      onChange={handleLocationChange}
+                      errors={{
+                        province: errors.province,
+                        district: errors.district,
+                        ward: errors.ward,
+                      }}
+                      variant="bordered"
+                    />
                   </div>
                 </div>
               </ModalBody>
@@ -809,8 +775,8 @@ const WarehouseManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Vị trí:</span>{" "}
-                      {formData.provinceId} - {formData.districtId} -{" "}
-                      {formData.wardId}
+                      {formData.provinceName} - {formData.districtName} -{" "}
+                      {formData.wardName}
                     </div>
                   </div>
                 </div>
@@ -875,8 +841,8 @@ const WarehouseManagement = () => {
                     </div>
                     <div>
                       <span className="font-medium">Vị trí:</span>{" "}
-                      {formData.provinceId} - {formData.districtId} -{" "}
-                      {formData.wardId}
+                      {formData.provinceName} - {formData.districtName} -{" "}
+                      {formData.wardName}
                     </div>
                   </div>
                 </div>
