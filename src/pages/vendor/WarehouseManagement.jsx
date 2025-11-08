@@ -27,7 +27,6 @@ import {
 import { message } from "antd";
 import warehouseApi from "../../services/warehouseApi";
 import { getUserById } from "../../services/userApi";
-import LocationSelector from "../../components/ui/LocationSelector";
 
 const WarehouseManagement = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -68,6 +67,16 @@ const WarehouseManagement = () => {
     wardName: "",
   });
   const [errors, setErrors] = useState({});
+
+  // Location dropdowns state
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [locationLoading, setLocationLoading] = useState({
+    provinces: false,
+    districts: false,
+    wards: false,
+  });
 
   // Fetch warehouses from API
   const fetchWarehouses = async () => {
@@ -170,17 +179,124 @@ const WarehouseManagement = () => {
     }
   };
 
-  // Handle location changes from LocationSelector
-  const handleLocationChange = (locationData) => {
+  // Fetch provinces on component mount
+  React.useEffect(() => {
+    const loadProvinces = async () => {
+      setLocationLoading((prev) => ({ ...prev, provinces: true }));
+      try {
+        const response = await fetch("https://provinces.open-api.vn/api/p/");
+        const data = await response.json();
+        setProvinces(data);
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
+      } finally {
+        setLocationLoading((prev) => ({ ...prev, provinces: false }));
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // Fetch districts when province changes
+  React.useEffect(() => {
+    if (!formData.provinceCode) {
+      setDistricts([]);
+      setWards([]);
+      return;
+    }
+
+    const loadDistricts = async () => {
+      setLocationLoading((prev) => ({ ...prev, districts: true }));
+      try {
+        const response = await fetch(
+          `https://provinces.open-api.vn/api/p/${formData.provinceCode}?depth=2`
+        );
+        const data = await response.json();
+        setDistricts(data.districts || []);
+      } catch (error) {
+        console.error("Error fetching districts:", error);
+      } finally {
+        setLocationLoading((prev) => ({ ...prev, districts: false }));
+      }
+    };
+    loadDistricts();
+  }, [formData.provinceCode]);
+
+  // Fetch wards when district changes
+  React.useEffect(() => {
+    if (!formData.districtCode) {
+      setWards([]);
+      return;
+    }
+
+    const loadWards = async () => {
+      setLocationLoading((prev) => ({ ...prev, wards: true }));
+      try {
+        const response = await fetch(
+          `https://provinces.open-api.vn/api/d/${formData.districtCode}?depth=2`
+        );
+        const data = await response.json();
+        setWards(data.wards || []);
+      } catch (error) {
+        console.error("Error fetching wards:", error);
+      } finally {
+        setLocationLoading((prev) => ({ ...prev, wards: false }));
+      }
+    };
+    loadWards();
+  }, [formData.districtCode]);
+
+  // Handle province selection
+  const handleProvinceChange = (e) => {
+    const code = e.target.value;
+    const province = provinces.find((p) => p.code === Number(code));
     setFormData((prev) => ({
       ...prev,
-      ...locationData,
+      provinceCode: code,
+      provinceName: province?.name || "",
+      districtCode: "",
+      districtName: "",
+      wardCode: "",
+      wardName: "",
     }));
-    // Clear location errors
     setErrors((prev) => {
       const newErrors = { ...prev };
       delete newErrors.province;
       delete newErrors.district;
+      delete newErrors.ward;
+      return newErrors;
+    });
+  };
+
+  // Handle district selection
+  const handleDistrictChange = (e) => {
+    const code = e.target.value;
+    const district = districts.find((d) => d.code === Number(code));
+    setFormData((prev) => ({
+      ...prev,
+      districtCode: code,
+      districtName: district?.name || "",
+      wardCode: "",
+      wardName: "",
+    }));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.district;
+      delete newErrors.ward;
+      return newErrors;
+    });
+  };
+
+  // Handle ward selection
+  const handleWardChange = (e) => {
+    const code = e.target.value;
+    const ward = wards.find((w) => w.code === Number(code));
+    setFormData((prev) => ({
+      ...prev,
+      wardCode: code,
+      wardName: ward?.name || "",
+    }));
+    setErrors((prev) => {
+      const newErrors = { ...prev };
       delete newErrors.ward;
       return newErrors;
     });
@@ -710,23 +826,96 @@ const WarehouseManagement = () => {
                       📍 Vị trí địa lý
                     </h3>
 
-                    <LocationSelector
-                      value={{
-                        provinceCode: formData.provinceCode,
-                        districtCode: formData.districtCode,
-                        wardCode: formData.wardCode,
-                        provinceName: formData.provinceName,
-                        districtName: formData.districtName,
-                        wardName: formData.wardName,
-                      }}
-                      onChange={handleLocationChange}
-                      errors={{
-                        province: errors.province,
-                        district: errors.district,
-                        ward: errors.ward,
-                      }}
-                      variant="bordered"
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Province Select */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">
+                          Tỉnh/Thành phố <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={formData.provinceCode || ""}
+                          onChange={handleProvinceChange}
+                          disabled={locationLoading.provinces}
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                            errors.province
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          <option value="">Chọn tỉnh/thành phố</option>
+                          {provinces.map((province) => (
+                            <option key={province.code} value={province.code}>
+                              {province.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.province && (
+                          <span className="text-sm text-red-600">
+                            {errors.province}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* District Select */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">
+                          Quận/Huyện <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={formData.districtCode || ""}
+                          onChange={handleDistrictChange}
+                          disabled={
+                            !formData.provinceCode || locationLoading.districts
+                          }
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                            errors.district
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          <option value="">Chọn quận/huyện</option>
+                          {districts.map((district) => (
+                            <option key={district.code} value={district.code}>
+                              {district.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.district && (
+                          <span className="text-sm text-red-600">
+                            {errors.district}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Ward Select */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">
+                          Phường/Xã <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={formData.wardCode || ""}
+                          onChange={handleWardChange}
+                          disabled={
+                            !formData.districtCode || locationLoading.wards
+                          }
+                          className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${
+                            errors.ward ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          <option value="">Chọn phường/xã</option>
+                          {wards.map((ward) => (
+                            <option key={ward.code} value={ward.code}>
+                              {ward.name}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.ward && (
+                          <span className="text-sm text-red-600">
+                            {errors.ward}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </ModalBody>
