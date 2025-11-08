@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { message } from "antd";
 import {
   getProductById,
   updateProduct,
@@ -239,10 +239,20 @@ const VendorProductDetail = () => {
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      const errorMessages = Object.values(validationErrors).map(
-        (msg) => `- ${msg}`
-      );
-      alert(`Vui lòng sửa các lỗi sau:\n\n${errorMessages.join("\n")}`);
+      const errorMessages = Object.values(validationErrors);
+      message.error({
+        content: (
+          <div>
+            <div className="font-semibold mb-2">Vui lòng sửa các lỗi sau:</div>
+            <ul className="text-sm list-disc ml-4 space-y-1">
+              {errorMessages.map((msg, idx) => (
+                <li key={idx}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        ),
+        duration: 5,
+      });
       return;
     }
     onUpdateConfirmOpenChange(); // Mở modal xác nhận
@@ -283,11 +293,18 @@ const VendorProductDetail = () => {
       setProduct(refreshedProduct); // Cập nhật state với dữ liệu mới
       setIsEditing(false);
       setErrors({});
-      alert("Cập nhật sản phẩm thành công!");
+      message.success("Cập nhật sản phẩm thành công!");
     } catch (err) {
       console.error("Failed to update product:", err);
-      alert(
-        "Cập nhật thất bại: " + (err.response?.data?.message || err.message)
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        err.message ||
+        "Cập nhật thất bại";
+      const statusCode = err.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
       setIsUpdating(false);
@@ -298,12 +315,19 @@ const VendorProductDetail = () => {
     setIsDeleting(true);
     try {
       await deleteProduct(id);
-      alert("Xóa sản phẩm thành công!");
+      message.success("Xóa sản phẩm thành công!");
       navigate("/vendor/products");
     } catch (err) {
       console.error("Failed to delete product:", err);
-      alert(
-        "Xóa sản phẩm thất bại: " + (err.response?.data?.message || err.message)
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        err.message ||
+        "Xóa sản phẩm thất bại";
+      const statusCode = err.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
       setIsDeleting(false);
@@ -720,7 +744,7 @@ const VendorProductDetail = () => {
                   onValueChange={async (value) => {
                     // Check if trying to enable selling when out of stock
                     if (value && product.productStatus !== "In stock") {
-                      toast.error(
+                      message.error(
                         "Không thể mở bán sản phẩm hết hàng. Vui lòng nhập kho trước!"
                       );
                       return;
@@ -730,10 +754,10 @@ const VendorProductDetail = () => {
                       // Call activate/deactivate API immediately
                       if (value) {
                         await activateProduct(id);
-                        toast.success("Đã mở bán sản phẩm");
+                        message.success("Đã mở bán sản phẩm");
                       } else {
                         await deactivateProduct(id);
-                        toast.success("Đã đóng bán sản phẩm");
+                        message.success("Đã đóng bán sản phẩm");
                       }
 
                       // Refresh product data to get latest state
@@ -749,7 +773,7 @@ const VendorProductDetail = () => {
                         "Error toggling product active status:",
                         error
                       );
-                      toast.error("Không thể thay đổi trạng thái bán hàng");
+                      message.error("Không thể thay đổi trạng thái bán hàng");
                     }
                   }}
                   color="success"

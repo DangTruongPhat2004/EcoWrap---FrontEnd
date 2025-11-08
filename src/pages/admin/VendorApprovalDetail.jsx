@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { message } from "antd";
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -81,12 +82,17 @@ const VendorApprovalDetail = () => {
 
     try {
       await approveRegistration(id);
-      alert("Đã phê duyệt đơn đăng ký thành công!");
+      message.success("Đã phê duyệt đơn đăng ký thành công!");
       navigate("/admin/approvals");
     } catch (err) {
       console.error("Error approving registration:", err);
-      setError(
-        err.response?.data?.message || "Không thể phê duyệt đơn đăng ký"
+      const errorMessage =
+        err.response?.data?.message || "Không thể phê duyệt đơn đăng ký";
+      const statusCode = err.response?.status;
+
+      setError(errorMessage);
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
       setIsApproving(false);
@@ -95,7 +101,7 @@ const VendorApprovalDetail = () => {
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      alert("Vui lòng nhập lý do từ chối");
+      message.warning("Vui lòng nhập lý do từ chối");
       return;
     }
 
@@ -104,11 +110,18 @@ const VendorApprovalDetail = () => {
 
     try {
       await adminRejectRegistration(id, rejectReason);
-      alert("Đã từ chối đơn đăng ký");
+      message.success("Đã từ chối đơn đăng ký");
       navigate("/admin/approvals");
     } catch (err) {
       console.error("Error rejecting registration:", err);
-      setError(err.response?.data?.message || "Không thể từ chối đơn đăng ký");
+      const errorMessage =
+        err.response?.data?.message || "Không thể từ chối đơn đăng ký";
+      const statusCode = err.response?.status;
+
+      setError(errorMessage);
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setIsRejecting(false);
       setShowRejectModal(false);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { message, Modal } from "antd";
 import {
   Star,
   Trash2,
@@ -36,17 +37,32 @@ const FeedbackManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Xóa đánh giá này?")) return;
-    setDeletingId(id);
-    try {
-      await deleteFeedback(id);
-      setFeedbacks(feedbacks.filter((f) => f.feedbackId !== id));
-    } catch (err) {
-      console.error("Error deleting feedback:", err);
-      alert("Không thể xóa đánh giá");
-    } finally {
-      setDeletingId(null);
-    }
+    Modal.confirm({
+      title: "Xác nhận xóa",
+      content: "Bạn có chắc chắn muốn xóa đánh giá này?",
+      okText: "Xóa",
+      cancelText: "Hủy",
+      okType: "danger",
+      onOk: async () => {
+        setDeletingId(id);
+        try {
+          await deleteFeedback(id);
+          setFeedbacks(feedbacks.filter((f) => f.feedbackId !== id));
+          message.success("Đã xóa đánh giá thành công");
+        } catch (err) {
+          console.error("Error deleting feedback:", err);
+          const errorMessage =
+            err.response?.data?.message || "Không thể xóa đánh giá";
+          const statusCode = err.response?.status;
+
+          message.error(
+            `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+          );
+        } finally {
+          setDeletingId(null);
+        }
+      },
+    });
   };
 
   const formatDate = (dateString) => {

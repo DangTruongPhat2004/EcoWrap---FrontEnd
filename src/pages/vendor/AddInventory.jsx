@@ -23,6 +23,7 @@ import {
   Package,
   Warehouse,
 } from "lucide-react";
+import { message } from "antd";
 import { getMyProducts } from "../../services/productApi";
 import warehouseApi from "../../services/warehouseApi";
 import inventoryApi from "../../services/inventoryApi";
@@ -94,12 +95,19 @@ const AddInventory = () => {
         stockQuantity: parseInt(quantity, 10),
       };
       await inventoryApi.addInventory(inventoryData);
-      alert("Nhập kho thành công!");
+      message.success("Nhập kho thành công!");
       navigate("/vendor/inventory");
     } catch (err) {
       console.error("Failed to add inventory:", err);
-      alert(
-        "Nhập kho thất bại: " + (err.response?.data?.message || err.message)
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        err.message ||
+        "Nhập kho thất bại";
+      const statusCode = err.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
       setIsCreating(false);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { message } from "antd";
 import inventoryApi from "../../services/inventoryApi";
 import { getAllCategories } from "../../services/categoryApi";
 import { getMyProducts } from "../../services/productApi";
@@ -173,10 +174,18 @@ const InventoryDetail = () => {
 
       setItem(itemWithProduct);
       onConfirmModalOpenChange(); // Close confirmation modal
-      alert("Cập nhật số lượng thành công!");
+      message.success("Cập nhật số lượng thành công!");
     } catch (err) {
       onConfirmModalOpenChange(); // Close confirmation modal on error too
-      alert(err.response?.data?.message || "Cập nhật thất bại.");
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        "Cập nhật thất bại.";
+      const statusCode = err.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setIsUpdating(false);
     }
@@ -186,10 +195,19 @@ const InventoryDetail = () => {
     setIsDeleting(true);
     try {
       await inventoryApi.deleteInventory(id);
-      alert("Xóa mục tồn kho thành công!");
+      message.success("Xóa mục tồn kho thành công!");
       navigate("/vendor/inventory");
     } catch (err) {
-      alert("Xóa thất bại: " + (err.response?.data?.message || err.message));
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        err.message ||
+        "Xóa thất bại";
+      const statusCode = err.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
       console.error("Failed to delete inventory:", err);
     } finally {
       setIsDeleting(false);

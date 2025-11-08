@@ -153,6 +153,9 @@ export default function LocationSelector({
           classNames={{
             trigger: "min-h-[40px]",
           }}
+          popoverProps={{
+            style: { zIndex: 10000 },
+          }}
         >
           {provinces.map((province) => (
             <SelectItem
@@ -185,6 +188,9 @@ export default function LocationSelector({
           classNames={{
             trigger: "min-h-[40px]",
           }}
+          popoverProps={{
+            style: { zIndex: 10000 },
+          }}
         >
           {districts.map((district) => (
             <SelectItem
@@ -216,6 +222,9 @@ export default function LocationSelector({
           variant={variant}
           classNames={{
             trigger: "min-h-[40px]",
+          }}
+          popoverProps={{
+            style: { zIndex: 10000 },
           }}
         >
           {wards.map((ward) => (

@@ -24,6 +24,7 @@ import {
   Building,
   AlertTriangle,
 } from "lucide-react";
+import { message } from "antd";
 import warehouseApi from "../../services/warehouseApi";
 import { getUserById } from "../../services/userApi";
 import LocationSelector from "../../components/ui/LocationSelector";
@@ -318,11 +319,19 @@ const WarehouseManagement = () => {
       onConfirmOpenChange();
       resetForm();
 
-      // Show success message (you can add a toast notification here)
-      alert("Tạo kho hàng thành công!");
+      // Show success message
+      message.success("Tạo kho hàng thành công!");
     } catch (error) {
       console.error("Error creating warehouse:", error);
-      alert("Có lỗi xảy ra khi tạo kho hàng. Vui lòng thử lại.");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.errors?.[0]?.message ||
+        "Có lỗi xảy ra khi tạo kho hàng. Vui lòng thử lại.";
+      const statusCode = error.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -354,10 +363,18 @@ const WarehouseManagement = () => {
       resetForm();
 
       // Show success message
-      alert("Cập nhật kho hàng thành công!");
+      message.success("Cập nhật kho hàng thành công!");
     } catch (error) {
       console.error("Error updating warehouse:", error);
-      alert("Có lỗi xảy ra khi cập nhật kho hàng. Vui lòng thử lại.");
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.errors?.[0]?.message ||
+        "Có lỗi xảy ra khi cập nhật kho hàng. Vui lòng thử lại.";
+      const statusCode = error.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -383,11 +400,17 @@ const WarehouseManagement = () => {
       resetForm();
 
       // Show success message
-      alert("Xóa kho hàng thành công!");
+      message.success("Xóa kho hàng thành công!");
     } catch (error) {
       console.error("Error deleting warehouse:", error);
-      alert(
-        "Có lỗi xảy ra khi xóa kho hàng. Kho hàng có thể đang được sử dụng."
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.errors?.[0]?.message ||
+        "Có lỗi xảy ra khi xóa kho hàng. Kho hàng có thể đang được sử dụng.";
+      const statusCode = error.response?.status;
+
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
       setIsLoading(false);

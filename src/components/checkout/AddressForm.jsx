@@ -96,6 +96,15 @@ export default function AddressForm({
 
   // Handle location changes from LocationSelector
   const handleLocationChange = (locationData) => {
+    // Build location string for base address field
+    const locationParts = [];
+    if (locationData.wardName) locationParts.push(locationData.wardName);
+    if (locationData.districtName)
+      locationParts.push(locationData.districtName);
+    if (locationData.provinceName)
+      locationParts.push(locationData.provinceName);
+    const locationString = locationParts.join(", ");
+
     const newValue = {
       ...v,
       provinceCode: locationData.provinceCode,
@@ -108,6 +117,8 @@ export default function AddressForm({
       province: locationData.provinceName,
       district: locationData.districtName,
       ward: locationData.wardName,
+      // Auto-fill base address field with location string
+      address: locationString || v.address || "",
     };
     // Rebuild complete address
     newValue.completeAddress = buildCompleteAddress(newValue);
