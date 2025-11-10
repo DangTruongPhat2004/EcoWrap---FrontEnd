@@ -139,13 +139,13 @@ const Products = () => {
         return;
       }
 
-      const minQty = product.minQuantity || 100;
+      // Always add 1 quantity per click
       await addCartItem({
         productId: product.productId,
-        quantity: minQty,
+        quantity: 1,
       });
 
-      message.success(`Đã thêm ${minQty} ${product.name} vào giỏ hàng!`);
+      message.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
     } catch (error) {
       console.error("Error adding to cart:", error);
       const errorMsg =
@@ -565,7 +565,7 @@ const Products = () => {
                           {formatPrice(product.price)}/chiếc
                         </div>
                         <div className="text-xs text-gray-500">
-                          MOQ: {product.minQuantity || 100} chiếc
+                          MOQ: {product.minQuantity || 1} chiếc
                         </div>
                       </div>
 

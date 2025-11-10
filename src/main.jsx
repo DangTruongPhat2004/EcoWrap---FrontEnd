@@ -4,6 +4,7 @@ import App from "./App.jsx";
 
 import "./styles/index.css";
 import "./styles/eco-animations.css";
+import "antd/dist/reset.css"; // Ant Design styles
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { NextUIProvider } from "@nextui-org/react";
