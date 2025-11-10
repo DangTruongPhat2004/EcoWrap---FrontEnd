@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { message } from "antd";
 import { getAllProducts } from "../services/productApi";
-import { addToCart } from "../services/cartApi";
+import { addCartItem } from "../services/cartApi";
 import {
   categories,
   priceRanges,
@@ -140,7 +140,7 @@ const Products = () => {
       }
 
       const minQty = product.minQuantity || 100;
-      await addToCart({
+      await addCartItem({
         productId: product.productId,
         quantity: minQty,
       });
