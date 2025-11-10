@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { message } from "antd";
 import ChatService from "../../services/chatService";
 
 const ChatWindow = ({
@@ -86,7 +87,13 @@ const ChatWindow = ({
       await fetchMessages();
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Failed to send message. Please try again.");
+      const errorMsg =
+        error?.response?.data?.message ||
+        "Không thể gửi tin nhắn. Vui lòng thử lại.";
+      const statusCode = error?.response?.status;
+      message.error(
+        `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setIsSending(false);
     }

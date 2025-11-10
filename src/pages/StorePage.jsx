@@ -5,7 +5,7 @@ import { Store, MapPin, Package, ArrowLeft, Star } from "lucide-react";
 import { getSellerById } from "../services/sellerApi";
 import { getProductsBySeller } from "../services/productApi";
 import { fmtVND } from "../utils/money";
-import toast from "react-hot-toast";
+import { message } from "antd";
 import ChatButton from "../components/chat/ChatButton";
 
 export default function StorePage() {
@@ -63,7 +63,7 @@ export default function StorePage() {
       }
     } catch (error) {
       console.error("Error fetching store data:", error);
-      toast.error("Không thể tải thông tin cửa hàng");
+      message.error("Không thể tải thông tin cửa hàng");
     } finally {
       setLoading(false);
     }

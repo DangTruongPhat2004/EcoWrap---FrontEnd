@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardBody, Divider, Link as NextUILink } from "@nextui-org/react";
+import { message } from "antd";
 import CartItemRow from "../components/cart/CartItemRow";
 import ImpactCard from "../components/cart/ImpactCard";
 import SummaryCard from "../components/cart/SummaryCard";
@@ -66,7 +67,12 @@ export default function CartPage() {
       setItems((arr) => arr.map((it) => (it.id === id ? { ...it, qty } : it)));
     } catch (err) {
       console.error("Error updating quantity:", err);
-      alert("Không thể cập nhật số lượng");
+      const errorMsg =
+        err?.response?.data?.message || "Không thể cập nhật số lượng";
+      const statusCode = err?.response?.status;
+      message.error(
+        `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     }
   };
 
@@ -77,9 +83,14 @@ export default function CartPage() {
 
       // Remove from local state
       setItems((arr) => arr.filter((it) => it.id !== id));
+      message.success("Đã xóa sản phẩm khỏi giỏ hàng");
     } catch (err) {
       console.error("Error removing item:", err);
-      alert("Không thể xóa sản phẩm");
+      const errorMsg = err?.response?.data?.message || "Không thể xóa sản phẩm";
+      const statusCode = err?.response?.status;
+      message.error(
+        `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     }
   };
 

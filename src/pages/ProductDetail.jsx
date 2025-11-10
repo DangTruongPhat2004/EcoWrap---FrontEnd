@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { message } from "antd";
 import {
   getProductById,
   getAllProducts,
@@ -169,14 +170,17 @@ const ProductDetail = () => {
 
       window.dispatchEvent(new CustomEvent("cart:updated"));
 
-      alert(`Đã thêm ${quantity} ${product.name} vào giỏ hàng!`);
+      message.success(`Đã thêm ${quantity} ${product.name} vào giỏ hàng!`);
     } catch (error) {
       console.error("Error adding to cart:", error);
       const errorMsg =
         error.response?.data?.Message ||
         error.response?.data?.message ||
         "Không thể thêm vào giỏ hàng";
-      alert(errorMsg);
+      const statusCode = error?.response?.status;
+      message.error(
+        `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setAddingToCart(false);
     }
@@ -910,7 +914,9 @@ const ProductDetail = () => {
             {(!currentUserId || !authToken) && (
               <button
                 onClick={() => {
-                  alert("Vui lòng đăng nhập để liên hệ với người bán");
+                  message.warning(
+                    "Vui lòng đăng nhập để liên hệ với người bán"
+                  );
                   navigate("/login");
                 }}
                 className="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors flex items-center"

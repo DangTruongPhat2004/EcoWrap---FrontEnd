@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Plus, Pencil, Trash2, Tag, X, Save } from "lucide-react";
-import toast from "react-hot-toast";
+import { message } from "antd";
 import {
   getAllCategories,
   createCategory,
@@ -30,7 +30,7 @@ const CategoryManagement = () => {
       const data = await getAllCategories();
       setCategories(data);
     } catch {
-      toast.error("Không thể tải danh sách danh mục");
+      message.error("Không thể tải danh sách danh mục");
     } finally {
       setLoading(false);
     }
@@ -66,7 +66,7 @@ const CategoryManagement = () => {
   // Handle form submit
   const handleSubmit = async () => {
     if (!formData.categoryId || !formData.categoryName) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      message.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
@@ -85,14 +85,14 @@ const CategoryManagement = () => {
     );
 
     if (duplicateId) {
-      toast.error(
+      message.error(
         `ID ${formData.categoryId} đã tồn tại. Vui lòng chọn ID khác.`
       );
       return;
     }
 
     if (duplicateName) {
-      toast.error(
+      message.error(
         `Tên danh mục "${formData.categoryName}" đã tồn tại. Vui lòng chọn tên khác.`
       );
       return;
@@ -103,17 +103,17 @@ const CategoryManagement = () => {
       if (selectedCategory) {
         // Update
         await updateCategory(formData);
-        toast.success("Cập nhật danh mục thành công");
+        message.success("Cập nhật danh mục thành công");
       } else {
         // Create
         await createCategory(formData);
-        toast.success("Thêm danh mục thành công");
+        message.success("Thêm danh mục thành công");
       }
       fetchCategories();
       setIsModalOpen(false);
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Có lỗi xảy ra";
-      toast.error(errorMessage);
+      message.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -124,13 +124,13 @@ const CategoryManagement = () => {
     try {
       setIsSaving(true);
       await deleteCategory(selectedCategory.categoryId);
-      toast.success("Xóa danh mục thành công");
+      message.success("Xóa danh mục thành công");
       fetchCategories();
       setIsDeleteModalOpen(false);
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Không thể xóa danh mục";
-      toast.error(errorMessage);
+      message.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

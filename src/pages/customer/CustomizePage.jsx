@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@nextui-org/react";
-import { toast } from "react-hot-toast";
+import { message } from "antd";
 import {
   ArrowLeft,
   RotateCcw,
@@ -121,12 +121,12 @@ const CustomizePage = () => {
             "CustomizePage: Failed to parse design data:",
             parseError
           );
-          toast.error("Dữ liệu thiết kế không hợp lệ");
+          message.error("Dữ liệu thiết kế không hợp lệ");
         }
       }
     } catch (error) {
       console.error("Failed to load design:", error);
-      toast.error("Không thể tải thiết kế");
+      message.error("Không thể tải thiết kế");
       navigate("/thiet-ke");
     } finally {
       setIsLoading(false);
@@ -172,7 +172,7 @@ const CustomizePage = () => {
 
       setEtag(newEtag);
       setHasUnsavedChanges(false);
-      toast.success("Đã tự động lưu", { duration: 1000 });
+      message.success("Đã tự động lưu");
     } catch (error) {
       console.error("Auto-save failed:", error);
     }
@@ -210,15 +210,13 @@ const CustomizePage = () => {
           dielineSvgUrl = dielineResult.url;
 
           if (dielineResult.success) {
-            toast.success("Đã tạo file dieline", { duration: 2000 });
+            message.success("Đã tạo file dieline");
           } else if (dielineResult.fallback) {
-            toast.loading("Đang tạo file dieline tạm thời...", {
-              duration: 2000,
-            });
+            message.info("Đang tạo file dieline tạm thời...");
           }
         } catch (dielineError) {
           console.error("Dieline generation failed:", dielineError);
-          toast.error(
+          message.warning(
             "Không thể tạo file dieline, nhưng thiết kế vẫn được lưu"
           );
         } finally {
@@ -248,7 +246,7 @@ const CustomizePage = () => {
         );
         setDesign(data);
         setEtag(newEtag);
-        toast.success("Đã lưu thiết kế");
+        message.success("Đã lưu thiết kế");
       } else {
         // Create new
         console.log(
@@ -262,7 +260,7 @@ const CustomizePage = () => {
         setDesign(data);
         setEtag(newEtag);
         navigate(`/thiet-ke/${data.id}`, { replace: true });
-        toast.success("Đã tạo thiết kế mới");
+        message.success("Đã tạo thiết kế mới");
       }
 
       setHasUnsavedChanges(false);
@@ -275,18 +273,18 @@ const CustomizePage = () => {
       });
 
       if (error.response?.status === 409) {
-        toast.error(
+        message.error(
           "Thiết kế đã được chỉnh sửa bởi người khác. Vui lòng tải lại."
         );
       } else if (error.response?.status === 401) {
-        toast.error("Bạn cần đăng nhập để lưu thiết kế");
+        message.error("Bạn cần đăng nhập để lưu thiết kế");
       } else if (error.response?.status === 400) {
-        toast.error(
+        message.error(
           "Dữ liệu thiết kế không hợp lệ: " +
             (error.response?.data?.message || "")
         );
       } else {
-        toast.error(
+        message.error(
           "Không thể lưu thiết kế: " + (error.message || "Lỗi không xác định")
         );
       }
@@ -319,12 +317,12 @@ const CustomizePage = () => {
 
   const handleApply = async () => {
     await handleSave();
-    toast.success("Đã áp dụng thiết kế");
+    message.success("Đã áp dụng thiết kế");
   };
 
   const handleAddToCart = async () => {
     await handleSave();
-    toast.success("Đã thêm vào giỏ hàng");
+    message.success("Đã thêm vào giỏ hàng");
     navigate("/cart");
   };
 
@@ -424,9 +422,7 @@ const CustomizePage = () => {
             isIconOnly
             variant="light"
             onClick={() => {
-              toast("Tính năng mẫu ngẫu nhiên đang được phát triển", {
-                icon: "🎨",
-              });
+              message.info("Tính năng mẫu ngẫu nhiên đang được phát triển");
             }}
             title="Áp dụng mẫu ngẫu nhiên (sắp có)"
           >

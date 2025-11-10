@@ -6,7 +6,7 @@ import { toBackendRegister } from "../validation/schemas";
 import RegisterForm from "../components/auth/RegisterForm";
 import OtpModal from "../components/auth/OtpModal";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { message } from "antd";
 
 export default function RegisterPage() {
   const [emailLocked, setEmailLocked] = React.useState("");
@@ -34,7 +34,7 @@ export default function RegisterPage() {
       if (!email) throw new Error("Không lấy được email từ server.");
 
       // 🔔 Thông báo thành công
-      toast.success(
+      message.success(
         "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP."
       );
 
@@ -44,7 +44,7 @@ export default function RegisterPage() {
       });
     } catch (e) {
       console.error("[register/init] error:", e);
-      toast.error(e?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      message.error(e?.message || "Đăng ký thất bại. Vui lòng thử lại.");
     }
   };
 

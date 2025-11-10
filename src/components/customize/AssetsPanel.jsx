@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Card, Spinner } from "@nextui-org/react";
 import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { message } from "antd";
 import * as fabric from "fabric";
 
 const ASSETS_STORAGE_KEY = "ecowrap_user_assets";
@@ -35,7 +35,7 @@ const AssetsPanel = ({ canvasRef }) => {
       }
     } catch (error) {
       console.error("AssetsPanel: Failed to load assets:", error);
-      toast.error("Không thể tải tài nguyên của bạn");
+      message.error("Không thể tải tài nguyên của bạn");
       setAssets([]);
     } finally {
       setIsLoadingAssets(false);
@@ -53,7 +53,7 @@ const AssetsPanel = ({ canvasRef }) => {
       );
     } catch (error) {
       console.error("AssetsPanel: Failed to save assets:", error);
-      toast.error("Không thể lưu tài nguyên");
+      message.error("Không thể lưu tài nguyên");
     }
   };
 
@@ -103,7 +103,7 @@ const AssetsPanel = ({ canvasRef }) => {
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
 
     if (imageFiles.length === 0) {
-      toast.error("Vui lòng chọn file hình ảnh");
+      message.error("Vui lòng chọn file hình ảnh");
       return;
     }
 
@@ -112,7 +112,7 @@ const AssetsPanel = ({ canvasRef }) => {
       (file) => file.size > 5 * 1024 * 1024
     );
     if (oversizedFiles.length > 0) {
-      toast.error(`File quá lớn: ${oversizedFiles[0].name} (tối đa 5MB)`);
+      message.error(`File quá lớn: ${oversizedFiles[0].name} (tối đa 5MB)`);
       return;
     }
 
@@ -130,16 +130,18 @@ const AssetsPanel = ({ canvasRef }) => {
         const newAssets = successfulUploads.map((r) => r.asset);
         const updatedAssets = [...assets, ...newAssets];
         saveAssetsToStorage(updatedAssets);
-        toast.success(`Đã tải lên ${successfulUploads.length} file thành công`);
+        message.success(
+          `Đã tải lên ${successfulUploads.length} file thành công`
+        );
       }
 
       const failedUploads = results.filter((r) => !r.success);
       if (failedUploads.length > 0) {
-        toast.error(`${failedUploads.length} file tải lên thất bại`);
+        message.error(`${failedUploads.length} file tải lên thất bại`);
       }
     } catch (error) {
       console.error("AssetsPanel: Upload error:", error);
-      toast.error("Có lỗi xảy ra khi tải file lên");
+      message.error("Có lỗi xảy ra khi tải file lên");
     } finally {
       setIsUploading(false);
     }
@@ -239,19 +241,19 @@ const AssetsPanel = ({ canvasRef }) => {
   const handleAssetClick = (asset) => {
     if (!canvasRef?.current) {
       console.warn("AssetsPanel: Canvas not ready");
-      toast.error("Canvas chưa sẵn sàng");
+      message.error("Canvas chưa sẵn sàng");
       return;
     }
 
     const canvas = canvasRef.current.getCanvas();
     if (!canvas) {
       console.warn("AssetsPanel: Fabric canvas not ready");
-      toast.error("Canvas chưa sẵn sàng");
+      message.error("Canvas chưa sẵn sàng");
       return;
     }
 
-    // Show loading toast
-    const loadingToast = toast.loading("Đang thêm hình ảnh...");
+    // Show loading message
+    const hide = message.loading("Đang thêm hình ảnh...", 0);
 
     // Add image to canvas using data URL or remote URL
     const imageUrl = asset.thumbnailUrl || asset.url;
@@ -282,12 +284,14 @@ const AssetsPanel = ({ canvasRef }) => {
         canvas.setActiveObject(img);
         canvas.renderAll();
 
-        toast.success("Đã thêm hình ảnh vào thiết kế", { id: loadingToast });
+        hide();
+        message.success("Đã thêm hình ảnh vào thiết kế");
         console.log("AssetsPanel: Added image to canvas:", asset.name);
       })
       .catch((error) => {
         console.error("AssetsPanel: Failed to add image:", error);
-        toast.error("Không thể thêm hình ảnh", { id: loadingToast });
+        hide();
+        message.error("Không thể thêm hình ảnh");
       });
   };
 
@@ -296,11 +300,11 @@ const AssetsPanel = ({ canvasRef }) => {
       // Remove from localStorage
       const updatedAssets = assets.filter((a) => a.id !== assetId);
       saveAssetsToStorage(updatedAssets);
-      toast.success("Đã xóa tài nguyên");
+      message.success("Đã xóa tài nguyên");
       console.log("AssetsPanel: Deleted asset from localStorage:", assetId);
     } catch (error) {
       console.error("AssetsPanel: Failed to delete asset:", error);
-      toast.error("Không thể xóa tài nguyên");
+      message.error("Không thể xóa tài nguyên");
     }
   };
 

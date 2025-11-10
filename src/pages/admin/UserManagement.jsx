@@ -11,7 +11,7 @@ import {
   Save,
 } from "lucide-react";
 import { getAllUsers, updateUser, deleteUser } from "../../services/userApi";
-import toast from "react-hot-toast";
+import { message } from "antd";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -45,7 +45,7 @@ const UserManagement = () => {
       setUsers(normalized);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Không thể tải danh sách người dùng");
+      message.error("Không thể tải danh sách người dùng");
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ const UserManagement = () => {
   // Handle form submit
   const handleSubmit = async () => {
     if (!formData.userName || !formData.email) {
-      toast.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+      message.error("Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
 
@@ -101,15 +101,15 @@ const UserManagement = () => {
       const response = await updateUser(selectedUser.userId, formData);
 
       if (response.success) {
-        toast.success("Cập nhật người dùng thành công");
+        message.success("Cập nhật người dùng thành công");
         fetchUsers();
         setIsEditModalOpen(false);
       } else {
-        toast.error(response.message || "Không thể cập nhật người dùng");
+        message.error(response.message || "Không thể cập nhật người dùng");
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Có lỗi xảy ra";
-      toast.error(errorMessage);
+      message.error(errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -122,16 +122,16 @@ const UserManagement = () => {
       const response = await deleteUser(selectedUser.userId);
 
       if (response.success) {
-        toast.success("Xóa người dùng thành công");
+        message.success("Xóa người dùng thành công");
         fetchUsers();
         setIsDeleteModalOpen(false);
       } else {
-        toast.error(response.message || "Không thể xóa người dùng");
+        message.error(response.message || "Không thể xóa người dùng");
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Không thể xóa người dùng";
-      toast.error(errorMessage);
+      message.error(errorMessage);
     } finally {
       setIsSaving(false);
     }

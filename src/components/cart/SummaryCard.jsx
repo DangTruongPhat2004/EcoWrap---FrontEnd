@@ -1,6 +1,7 @@
 // src/components/cart/SummaryCard.jsx
 import React from "react";
 import { Card, CardBody, Divider, Input, Button } from "@nextui-org/react";
+import { message } from "antd";
 import { ArrowRight } from "lucide-react";
 import { fmtVND } from "../../utils/money";
 
@@ -20,13 +21,15 @@ export default function SummaryCard({
 
   const [coupon, setCoupon] = React.useState("");
   const [discount, setDiscount] = React.useState(0);
+  const [showAllItems, setShowAllItems] = React.useState(false);
 
   const applyCoupon = () => {
     if (coupon.trim().toUpperCase() === "ECO10") {
       setDiscount(Math.round(subtotal * 0.1));
+      message.success("Đã áp dụng mã giảm giá ECO10");
     } else {
       setDiscount(0);
-      alert("Mã không hợp lệ. Dùng thử ECO10");
+      message.warning("Mã không hợp lệ. Dùng thử ECO10");
     }
   };
 
@@ -43,41 +46,53 @@ export default function SummaryCard({
 
         {/* Order Items */}
         {items.length > 0 && (
-          <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
-            {items.map((item) => (
-              <div key={item.id} className="flex gap-3 items-start">
-                <div className="h-16 w-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
-                      No image
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">
-                    {item.name}
+          <>
+            <div className="mt-4 space-y-3 max-h-80 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              {(showAllItems ? items : items.slice(0, 3)).map((item) => (
+                <div key={item.id} className="flex gap-3 items-start">
+                  <div className="h-16 w-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                        No image
+                      </div>
+                    )}
                   </div>
-                  {item.variant && (
-                    <div className="text-xs text-gray-500 truncate">
-                      {item.variant}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">
+                      {item.name}
                     </div>
-                  )}
-                  <div className="text-sm text-gray-600 mt-1">
-                    {fmtVND(item.price)} x {item.qty}
+                    {item.variant && (
+                      <div className="text-xs text-gray-500 truncate">
+                        {item.variant}
+                      </div>
+                    )}
+                    <div className="text-sm text-gray-600 mt-1">
+                      {fmtVND(item.price)} x {item.qty}
+                    </div>
+                  </div>
+                  <div className="text-sm font-semibold text-gray-900 shrink-0">
+                    {fmtVND(item.price * item.qty)}
                   </div>
                 </div>
-                <div className="text-sm font-semibold text-gray-900 shrink-0">
-                  {fmtVND(item.price * item.qty)}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            {items.length > 3 && (
+              <button
+                onClick={() => setShowAllItems(!showAllItems)}
+                className="w-full text-sm text-emerald-600 hover:text-emerald-700 font-medium mt-2 py-1"
+              >
+                {showAllItems
+                  ? "Thu gọn"
+                  : `Xem thêm ${items.length - 3} sản phẩm`}
+              </button>
+            )}
+          </>
         )}
 
         <Divider className="my-4" />

@@ -20,7 +20,7 @@ import {
 } from "../../services/orderApi";
 import { createPaymentLink } from "../../services/paymentApi";
 import { fmtVND } from "../../utils/money";
-import toast from "react-hot-toast";
+import { message } from "antd";
 import dayjs from "dayjs";
 
 // Helper function to group items by seller
@@ -61,11 +61,11 @@ export default function OrderDetailPage() {
       if (response.success && response.data) {
         setOrder(response.data);
       } else {
-        toast.error(response.message || "Không thể tải chi tiết đơn hàng");
+        message.error(response.message || "Không thể tải chi tiết đơn hàng");
       }
     } catch (err) {
       console.error("Error fetching order detail:", err);
-      toast.error("Đã xảy ra lỗi khi tải đơn hàng");
+      message.error("Đã xảy ra lỗi khi tải đơn hàng");
     } finally {
       setLoading(false);
     }
@@ -81,14 +81,14 @@ export default function OrderDetailPage() {
       const response = await confirmDelivery(orderId);
 
       if (response.success) {
-        toast.success("Đã xác nhận nhận hàng thành công!");
+        message.success("Đã xác nhận nhận hàng thành công!");
         fetchOrderDetail(); // Reload order data
       } else {
-        toast.error(response.message || "Không thể xác nhận nhận hàng");
+        message.error(response.message || "Không thể xác nhận nhận hàng");
       }
     } catch (err) {
       console.error("Error confirming delivery:", err);
-      toast.error("Đã xảy ra lỗi khi xác nhận nhận hàng");
+      message.error("Đã xảy ra lỗi khi xác nhận nhận hàng");
     } finally {
       setConfirming(false);
     }
@@ -96,20 +96,20 @@ export default function OrderDetailPage() {
 
   const handlePayNow = async () => {
     try {
-      toast.loading("Đang tạo link thanh toán...", { id: "payment" });
+      const hide = message.loading("Đang tạo link thanh toán...", 0);
       const response = await createPaymentLink(orderId);
 
       if (response.success && response.checkoutUrl) {
-        toast.success("Chuyển đến trang thanh toán", { id: "payment" });
+        hide();
+        message.success("Chuyển đến trang thanh toán");
         window.location.href = response.checkoutUrl;
       } else {
-        toast.error(response.message || "Không thể tạo link thanh toán", {
-          id: "payment",
-        });
+        hide();
+        message.error(response.message || "Không thể tạo link thanh toán");
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Đã xảy ra lỗi khi tạo link thanh toán", { id: "payment" });
+      message.error("Đã xảy ra lỗi khi tạo link thanh toán");
     }
   };
 

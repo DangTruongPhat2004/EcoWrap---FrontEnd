@@ -26,7 +26,7 @@ import {
   getOrderStatusLabel,
   getOrderStatusColor,
 } from "../../services/orderApi";
-import toast from "react-hot-toast";
+import { message } from "antd";
 
 const OrderDetailAdmin = () => {
   const { orderId } = useParams();
@@ -79,16 +79,16 @@ const OrderDetailAdmin = () => {
       const response = await confirmPackaging(orderId);
 
       if (response.success) {
-        toast.success(
+        message.success(
           "Đã xác nhận và chuyển đơn hàng sang trạng thái đóng gói!"
         );
         fetchOrderDetail(); // Reload order
       } else {
-        toast.error(response.message || "Không thể xác nhận đơn hàng");
+        message.error(response.message || "Không thể xác nhận đơn hàng");
       }
     } catch (err) {
       console.error("Error confirming packaging:", err);
-      toast.error("Đã xảy ra lỗi khi xác nhận đơn hàng");
+      message.error("Đã xảy ra lỗi khi xác nhận đơn hàng");
     } finally {
       setActionLoading(false);
     }
@@ -106,16 +106,16 @@ const OrderDetailAdmin = () => {
       const response = await confirmShipment(orderId);
 
       if (response.success) {
-        toast.success(
+        message.success(
           "Đã tạo vận đơn GHTK và chuyển đơn hàng sang trạng thái giao hàng!"
         );
         fetchOrderDetail(); // Reload order
       } else {
-        toast.error(response.message || "Không thể tạo vận đơn");
+        message.error(response.message || "Không thể tạo vận đơn");
       }
     } catch (err) {
       console.error("Error confirming shipment:", err);
-      toast.error("Đã xảy ra lỗi khi xác nhận giao hàng");
+      message.error("Đã xảy ra lỗi khi xác nhận giao hàng");
     } finally {
       setActionLoading(false);
     }
@@ -127,7 +127,7 @@ const OrderDetailAdmin = () => {
     );
 
     if (!reason || reason.trim() === "") {
-      toast.error("Vui lòng nhập lý do từ chối");
+      message.error("Vui lòng nhập lý do từ chối");
       return;
     }
 
@@ -136,16 +136,16 @@ const OrderDetailAdmin = () => {
       const response = await declineOrder(orderId);
 
       if (response.success) {
-        toast.success(
+        message.success(
           "Đã từ chối đơn hàng. Email thông báo sẽ được gửi cho khách hàng."
         );
         fetchOrderDetail(); // Reload order
       } else {
-        toast.error(response.message || "Không thể từ chối đơn hàng");
+        message.error(response.message || "Không thể từ chối đơn hàng");
       }
     } catch (err) {
       console.error("Error declining order:", err);
-      toast.error("Đã xảy ra lỗi khi từ chối đơn hàng");
+      message.error("Đã xảy ra lỗi khi từ chối đơn hàng");
     } finally {
       setActionLoading(false);
     }
@@ -617,7 +617,7 @@ function groupItemsBySeller(items) {
 function BankInfoModal({ seller, onClose }) {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success("Đã sao chép!");
+    message.success("Đã sao chép!");
   };
 
   return (

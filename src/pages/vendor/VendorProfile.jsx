@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { getMySellerInfo, updateSeller } from "../../services/sellerApi";
 import { changePassword } from "../../services/userApi";
-import toast from "react-hot-toast";
+import { message } from "antd";
 
 const VendorProfile = () => {
   const [formData, setFormData] = useState({
@@ -170,7 +170,7 @@ const VendorProfile = () => {
       const response = await updateSeller(formDataToSend);
       console.log("Update seller response:", response);
 
-      toast.success("Cập nhật thông tin thành công!");
+      message.success("Cập nhật thông tin thành công!");
       setIsEditing(false);
       fetchSellerInfo(); // Refresh data
     } catch (err) {
@@ -180,7 +180,7 @@ const VendorProfile = () => {
         err.response?.data?.message ||
         err.message ||
         "Lỗi không xác định";
-      toast.error("Không thể cập nhật thông tin: " + errorMessage);
+      message.error("Không thể cập nhật thông tin: " + errorMessage);
     } finally {
       setLoading(false);
     }
@@ -205,15 +205,15 @@ const VendorProfile = () => {
       !passwordForm.newPassword ||
       !passwordForm.confirmPassword
     ) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      message.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      toast.error("Mật khẩu mới không khớp");
+      message.error("Mật khẩu mới không khớp");
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      message.error("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
     try {
@@ -223,7 +223,7 @@ const VendorProfile = () => {
         passwordForm.newPassword
       );
       if (res?.success) {
-        toast.success("Đổi mật khẩu thành công");
+        message.success("Đổi mật khẩu thành công");
         setShowPasswordModal(false);
         setPasswordForm({
           oldPassword: "",
@@ -231,10 +231,10 @@ const VendorProfile = () => {
           confirmPassword: "",
         });
       } else {
-        toast.error(res?.message || "Không thể đổi mật khẩu");
+        message.error(res?.message || "Không thể đổi mật khẩu");
       }
     } catch (e) {
-      toast.error("Có lỗi khi đổi mật khẩu");
+      message.error("Có lỗi khi đổi mật khẩu");
       console.error(e);
     } finally {
       setIsChangingPassword(false);

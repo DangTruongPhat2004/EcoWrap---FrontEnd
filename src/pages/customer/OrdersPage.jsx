@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { getMyOrders, getOrderStatusLabel } from "../../services/orderApi";
 import { createPaymentLink } from "../../services/paymentApi";
-import toast from "react-hot-toast";
+import { message } from "antd";
 
 export default function OrdersPage() {
   const navigate = useNavigate();
@@ -55,20 +55,20 @@ export default function OrdersPage() {
 
   const handlePayNow = async (orderId) => {
     try {
-      toast.loading("Đang tạo link thanh toán...", { id: "payment" });
+      const hide = message.loading("Đang tạo link thanh toán...", 0);
       const response = await createPaymentLink(orderId);
 
       if (response.success && response.checkoutUrl) {
-        toast.success("Chuyển đến trang thanh toán", { id: "payment" });
+        hide();
+        message.success("Chuyển đến trang thanh toán");
         window.location.href = response.checkoutUrl;
       } else {
-        toast.error(response.message || "Không thể tạo link thanh toán", {
-          id: "payment",
-        });
+        hide();
+        message.error(response.message || "Không thể tạo link thanh toán");
       }
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Đã xảy ra lỗi khi tạo link thanh toán", { id: "payment" });
+      message.error("Đã xảy ra lỗi khi tạo link thanh toán");
     }
   };
 

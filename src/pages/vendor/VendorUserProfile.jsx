@@ -7,7 +7,7 @@ import {
   updateUser,
   changePassword,
 } from "../../services/userApi";
-import toast from "react-hot-toast";
+import { message } from "antd";
 
 const VendorUserProfile = () => {
   const { user } = useAuthStore();
@@ -112,7 +112,7 @@ const VendorUserProfile = () => {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        toast.error("Không thể tải thông tin người dùng");
+        message.error("Không thể tải thông tin người dùng");
       } finally {
         setLoading(false);
       }
@@ -141,7 +141,7 @@ const VendorUserProfile = () => {
       }
 
       if (!userId) {
-        toast.error("Không thể xác định người dùng");
+        message.error("Không thể xác định người dùng");
         return;
       }
 
@@ -153,7 +153,7 @@ const VendorUserProfile = () => {
       };
 
       await updateUser(userId, updateData);
-      toast.success("Cập nhật thông tin thành công!");
+      message.success("Cập nhật thông tin thành công!");
       setOriginalData(formData);
       setIsEditing(false);
 
@@ -176,7 +176,7 @@ const VendorUserProfile = () => {
       }
     } catch (error) {
       console.error("Error updating user:", error);
-      toast.error(
+      message.error(
         error?.response?.data?.message || "Không thể cập nhật thông tin"
       );
     } finally {
@@ -195,15 +195,15 @@ const VendorUserProfile = () => {
       !passwordData.newPassword ||
       !passwordData.confirmPassword
     ) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      message.error("Vui lòng điền đầy đủ thông tin");
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("Mật khẩu mới không khớp");
+      message.error("Mật khẩu mới không khớp");
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      message.error("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
 
@@ -214,7 +214,7 @@ const VendorUserProfile = () => {
         passwordData.newPassword
       );
       if (res?.success || res?.Success) {
-        toast.success("Đổi mật khẩu thành công");
+        message.success("Đổi mật khẩu thành công");
         setShowPasswordModal(false);
         setPasswordData({
           oldPassword: "",
@@ -222,10 +222,10 @@ const VendorUserProfile = () => {
           confirmPassword: "",
         });
       } else {
-        toast.error(res?.message || res?.Message || "Không thể đổi mật khẩu");
+        message.error(res?.message || res?.Message || "Không thể đổi mật khẩu");
       }
     } catch (e) {
-      toast.error(e?.response?.data?.message || "Có lỗi khi đổi mật khẩu");
+      message.error(e?.response?.data?.message || "Có lỗi khi đổi mật khẩu");
       console.error(e);
     } finally {
       setIsChangingPassword(false);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { message } from "antd";
 import ChatService from "../../services/chatService";
 
 const ChatButton = ({ product, currentUserId, authToken }) => {
@@ -37,7 +38,7 @@ const ChatButton = ({ product, currentUserId, authToken }) => {
     // Check authentication
     if (!authToken || !currentUserId) {
       console.error("Missing auth");
-      alert("Vui lòng đăng nhập để liên hệ với người bán");
+      message.warning("Vui lòng đăng nhập để liên hệ với người bán");
       navigate("/login");
       return;
     }
@@ -45,7 +46,7 @@ const ChatButton = ({ product, currentUserId, authToken }) => {
     // Check product exists
     if (!product) {
       console.error("Product is undefined");
-      alert("Lỗi: Không tìm thấy thông tin sản phẩm");
+      message.error("Lỗi: Không tìm thấy thông tin sản phẩm");
       return;
     }
 
@@ -66,7 +67,7 @@ const ChatButton = ({ product, currentUserId, authToken }) => {
 
     if (!sellerId) {
       console.error("Could not find seller ID");
-      alert("Không thể liên hệ: Không tìm thấy thông tin người bán");
+      message.error("Không thể liên hệ: Không tìm thấy thông tin người bán");
       return;
     }
 
@@ -97,7 +98,10 @@ const ChatButton = ({ product, currentUserId, authToken }) => {
         errorMessage = error.response.data.message;
       }
 
-      alert(errorMessage);
+      const statusCode = error?.response?.status;
+      message.error(
+        `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
+      );
     } finally {
       setIsLoading(false);
     }

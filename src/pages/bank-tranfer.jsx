@@ -2,6 +2,7 @@
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Card, CardBody } from "@nextui-org/react";
+import { message } from "antd";
 import BankTransferPanel from "../components/checkout/BankTransferPanel";
 
 function useCountdown(targetMs) {
@@ -41,7 +42,7 @@ export default function BankTransferPage() {
   }, [orderCode]);
 
   const handlePaid = () => {
-    alert("Cảm ơn bạn! Chúng tôi sẽ kiểm tra và xác nhận thanh toán (demo).");
+    message.success("Cảm ơn bạn! Chúng tôi sẽ kiểm tra và xác nhận thanh toán");
     navigate("/"); // hoặc điều hướng tới trang đơn hàng
   };
 
