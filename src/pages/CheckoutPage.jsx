@@ -55,7 +55,7 @@ export default function CheckoutPage() {
           variant: item.product?.productDescription || "",
           price: item.cartItemPrice / item.quantity,
           qty: item.quantity,
-          image: item.product?.productImages?.[0] || null,
+          image: item.imageFile || item.product?.productImages?.[0] || null,
           designFile: item.designFile,
         }));
         setItems(transformedItems);

@@ -41,7 +41,7 @@ export default function CartPage() {
           variant: item.product?.productDescription || "",
           price: item.cartItemPrice / item.quantity, // Unit price
           qty: item.quantity,
-          image: item.product?.productImages?.[0] || null,
+          image: item.imageFile || item.product?.productImages?.[0] || null,
           designFile: item.designFile,
         }));
         setItems(transformedItems);
