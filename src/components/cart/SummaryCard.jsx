@@ -41,6 +41,47 @@ export default function SummaryCard({
           Tóm tắt đơn hàng
         </div>
 
+        {/* Order Items */}
+        {items.length > 0 && (
+          <div className="mt-4 space-y-3 max-h-64 overflow-y-auto">
+            {items.map((item) => (
+              <div key={item.id} className="flex gap-3 items-start">
+                <div className="h-16 w-16 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  {item.image ? (
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs">
+                      No image
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-gray-800 truncate">
+                    {item.name}
+                  </div>
+                  {item.variant && (
+                    <div className="text-xs text-gray-500 truncate">
+                      {item.variant}
+                    </div>
+                  )}
+                  <div className="text-sm text-gray-600 mt-1">
+                    {fmtVND(item.price)} x {item.qty}
+                  </div>
+                </div>
+                <div className="text-sm font-semibold text-gray-900 shrink-0">
+                  {fmtVND(item.price * item.qty)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Divider className="my-4" />
+
         {/* Rows */}
         <div className="mt-3 space-y-6 text-sm">
           <Row label="Tổng số lượng:" value={`${totalQty} sản phẩm`} />
