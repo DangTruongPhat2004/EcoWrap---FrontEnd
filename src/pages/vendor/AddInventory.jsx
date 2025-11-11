@@ -23,12 +23,13 @@ import {
   Package,
   Warehouse,
 } from "lucide-react";
-import { message } from "antd";
+import { App } from "antd";
 import { getMyProducts } from "../../services/productApi";
 import warehouseApi from "../../services/warehouseApi";
 import inventoryApi from "../../services/inventoryApi";
 
 const AddInventory = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [warehouses, setWarehouses] = useState([]);

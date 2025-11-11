@@ -6,9 +6,10 @@ import { toBackendRegister } from "../validation/schemas";
 import RegisterForm from "../components/auth/RegisterForm";
 import OtpModal from "../components/auth/OtpModal";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 
 export default function RegisterPage() {
+  const { message } = App.useApp();
   const [emailLocked, setEmailLocked] = React.useState("");
   const [openOtp, setOpenOtp] = React.useState(false);
   const [cooldown, setCooldown] = React.useState(0);

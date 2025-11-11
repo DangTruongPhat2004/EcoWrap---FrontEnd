@@ -12,9 +12,10 @@ import {
 } from "lucide-react";
 import { getMyOrders, getOrderStatusLabel } from "../../services/orderApi";
 import { createPaymentLink } from "../../services/paymentApi";
-import { message } from "antd";
+import { App } from "antd";
 
 export default function OrdersPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

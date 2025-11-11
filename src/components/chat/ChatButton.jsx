@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import ChatService from "../../services/chatService";
 
 const ChatButton = ({ product, currentUserId, authToken }) => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isCustomer, setIsCustomer] = useState(null); // null = checking, true = customer, false = not customer

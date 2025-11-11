@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { message } from "antd";
+import { App } from "antd";
 import ChatService from "../../services/chatService";
 
 const ChatWindow = ({
@@ -10,6 +10,7 @@ const ChatWindow = ({
   productName,
   onClose,
 }) => {
+  const { message } = App.useApp();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);

@@ -2,7 +2,7 @@
 import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Card, CardBody } from "@nextui-org/react";
-import { message } from "antd";
+import { App } from "antd";
 import BankTransferPanel from "../components/checkout/BankTransferPanel";
 
 function useCountdown(targetMs) {
@@ -21,6 +21,7 @@ function useCountdown(targetMs) {
 }
 
 export default function BankTransferPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [sp] = useSearchParams();
 

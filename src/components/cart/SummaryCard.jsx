@@ -1,7 +1,7 @@
 // src/components/cart/SummaryCard.jsx
 import React from "react";
 import { Card, CardBody, Divider, Input, Button } from "@nextui-org/react";
-import { message } from "antd";
+import { App } from "antd";
 import { ArrowRight } from "lucide-react";
 import { fmtVND } from "../../utils/money";
 
@@ -16,6 +16,7 @@ export default function SummaryCard({
   onBackToCart, // <-- nếu KHÔNG truyền prop này thì nút Back sẽ ẩn
   backLabel = "Quay lại giỏ hàng",
 }) {
+  const { message } = App.useApp();
   const subtotal = items.reduce((s, it) => s + it.price * it.qty, 0);
   const totalQty = items.reduce((s, it) => s + it.qty, 0);
 

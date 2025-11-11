@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import ChatService from "../../services/chatService";
 import { getProductById } from "../../services/productApi";
 import { getUserById } from "../../services/userApi";
@@ -11,6 +11,7 @@ import {
 } from "../../utils/timeUtils";
 
 const MessagesPage = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 

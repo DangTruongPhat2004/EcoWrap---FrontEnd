@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@nextui-org/react";
-import { message } from "antd";
+import { App } from "antd";
 import {
   ArrowLeft,
   RotateCcw,
@@ -26,6 +26,7 @@ import dielineApi from "../../services/dielineApi";
 import { PACKAGING_LAYERS } from "../../components/customize/PackagingModels";
 
 const CustomizePage = () => {
+  const { message } = App.useApp();
   const { id } = useParams();
   const navigate = useNavigate();
   const canvasRef = useRef(null);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { message, Modal } from "antd";
+import { App, Modal } from "antd";
 import {
   Star,
   Edit,
@@ -16,6 +16,7 @@ import {
 } from "../../services/feedbackApi";
 
 const MyFeedback = () => {
+  const { message } = App.useApp();
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);

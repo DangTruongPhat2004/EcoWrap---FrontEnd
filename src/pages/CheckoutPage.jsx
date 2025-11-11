@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardBody, Button } from "@nextui-org/react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import useShippingFee from "../components/checkout/hooks/useShippingFee";
 import usePaymentFee from "../components/checkout/hooks/usePaymentFee";
 import PaymentMethodSelector from "../components/checkout/PaymentMethodSelector";
@@ -17,6 +17,7 @@ import { createOrder, declineOrder } from "../services/orderApi";
 import { createPaymentLink } from "../services/paymentApi";
 
 export default function CheckoutPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
 
   const [items, setItems] = React.useState([]);

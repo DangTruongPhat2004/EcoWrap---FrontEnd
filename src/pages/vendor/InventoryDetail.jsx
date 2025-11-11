@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import inventoryApi from "../../services/inventoryApi";
 import { getAllCategories } from "../../services/categoryApi";
 import { getMyProducts } from "../../services/productApi";
@@ -52,6 +52,7 @@ const DetailItem = ({ icon, label, value, children }) => (
 );
 
 const InventoryDetail = () => {
+  const { message } = App.useApp();
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState(null);

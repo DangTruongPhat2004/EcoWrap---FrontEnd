@@ -23,9 +23,10 @@ import {
   updateUser,
   changePassword,
 } from "../../services/userApi";
-import { message } from "antd";
+import { App } from "antd";
 
 const Profile = () => {
+  const { message } = App.useApp();
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({

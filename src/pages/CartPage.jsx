@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardBody, Divider, Link as NextUILink } from "@nextui-org/react";
-import { message } from "antd";
+import { App } from "antd";
 import CartItemRow from "../components/cart/CartItemRow";
 import ImpactCard from "../components/cart/ImpactCard";
 import SummaryCard from "../components/cart/SummaryCard";
@@ -13,6 +13,7 @@ import {
 } from "../services/cartApi";
 
 export default function CartPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);

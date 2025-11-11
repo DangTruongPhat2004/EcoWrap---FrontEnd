@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Plus, Pencil, Trash2, Tag, X, Save } from "lucide-react";
-import { message } from "antd";
+import { App } from "antd";
 import {
   getAllCategories,
   createCategory,
@@ -10,6 +10,7 @@ import {
 } from "../../services/categoryApi";
 
 const CategoryManagement = () => {
+  const { message } = App.useApp();
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

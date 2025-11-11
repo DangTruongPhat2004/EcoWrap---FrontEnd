@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -13,6 +13,7 @@ import {
 } from "../../services/sellerRegistrationApi";
 
 const VendorApprovalDetail = () => {
+  const { message } = App.useApp();
   const { id } = useParams();
   const navigate = useNavigate();
   const [isApproving, setIsApproving] = useState(false);

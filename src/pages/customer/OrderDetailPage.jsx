@@ -20,7 +20,7 @@ import {
 } from "../../services/orderApi";
 import { createPaymentLink } from "../../services/paymentApi";
 import { fmtVND } from "../../utils/money";
-import { message } from "antd";
+import { App } from "antd";
 import dayjs from "dayjs";
 
 // Helper function to group items by seller
@@ -47,6 +47,7 @@ function groupItemsBySeller(items) {
 }
 
 export default function OrderDetailPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);

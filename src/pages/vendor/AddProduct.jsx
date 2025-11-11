@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import { createProduct } from "../../services/productApi";
 import { getAllCategories } from "../../services/categoryApi";
 import {
@@ -34,6 +34,7 @@ const DetailItem = ({ label, children }) => (
 );
 
 const AddProduct = () => {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [categories, setCategories] = useState([]);

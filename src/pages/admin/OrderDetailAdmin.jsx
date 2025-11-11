@@ -26,9 +26,10 @@ import {
   getOrderStatusLabel,
   getOrderStatusColor,
 } from "../../services/orderApi";
-import { message } from "antd";
+import { App } from "antd";
 
 const OrderDetailAdmin = () => {
+  const { message } = App.useApp();
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);

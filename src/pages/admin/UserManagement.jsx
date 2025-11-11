@@ -11,9 +11,10 @@ import {
   Save,
 } from "lucide-react";
 import { getAllUsers, updateUser, deleteUser } from "../../services/userApi";
-import { message } from "antd";
+import { App } from "antd";
 
 const UserManagement = () => {
+  const { message } = App.useApp();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

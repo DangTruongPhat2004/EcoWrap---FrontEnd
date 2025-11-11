@@ -5,10 +5,11 @@ import { Store, MapPin, Package, ArrowLeft, Star } from "lucide-react";
 import { getSellerById } from "../services/sellerApi";
 import { getProductsBySeller } from "../services/productApi";
 import { fmtVND } from "../utils/money";
-import { message } from "antd";
+import { App } from "antd";
 import ChatButton from "../components/chat/ChatButton";
 
 export default function StorePage() {
+  const { message } = App.useApp();
   const { sellerId } = useParams();
   const navigate = useNavigate();
   const [seller, setSeller] = useState(null);

@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button, Card, Spinner } from "@nextui-org/react";
 import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
-import { message } from "antd";
+import { App } from "antd";
 import * as fabric from "fabric";
 
 const ASSETS_STORAGE_KEY = "ecowrap_user_assets";
 
 const AssetsPanel = ({ canvasRef }) => {
+  const { message } = App.useApp();
   const [assets, setAssets] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);

@@ -7,9 +7,10 @@ import {
   updateUser,
   changePassword,
 } from "../../services/userApi";
-import { message } from "antd";
+import { App } from "antd";
 
 const VendorUserProfile = () => {
+  const { message } = App.useApp();
   const { user } = useAuthStore();
   const [formData, setFormData] = useState({
     username: "",

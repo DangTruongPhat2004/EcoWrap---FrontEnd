@@ -16,9 +16,10 @@ import {
 } from "lucide-react";
 import { getMySellerInfo, updateSeller } from "../../services/sellerApi";
 import { changePassword } from "../../services/userApi";
-import { message } from "antd";
+import { App } from "antd";
 
 const VendorProfile = () => {
+  const { message } = App.useApp();
   const [formData, setFormData] = useState({
     companyName: "",
     address: "",

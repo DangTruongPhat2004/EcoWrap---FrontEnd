@@ -24,11 +24,12 @@ import {
   Building,
   AlertTriangle,
 } from "lucide-react";
-import { message } from "antd";
+import { App } from "antd";
 import warehouseApi from "../../services/warehouseApi";
 import { getUserById } from "../../services/userApi";
 
 const WarehouseManagement = () => {
+  const { message } = App.useApp();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isConfirmOpen,

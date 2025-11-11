@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { message, Modal } from "antd";
+import { App, Modal } from "antd";
 import {
   Star,
   Trash2,
@@ -13,6 +13,7 @@ import {
 import { getAllFeedback, deleteFeedback } from "../../services/adminApi";
 
 const FeedbackManagement = () => {
+  const { message } = App.useApp();
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

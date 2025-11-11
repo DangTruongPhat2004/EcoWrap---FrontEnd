@@ -17,7 +17,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import { getOrderById } from "../../services/orderApi";
-import { message } from "antd";
+import { App } from "antd";
 import dayjs from "dayjs";
 
 // --------- helpers ----------
@@ -357,6 +357,7 @@ const SupportPolicyCard = () => {
 
 // --------- Trang chính ----------
 export default function OrderSuccessPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get("orderId");
