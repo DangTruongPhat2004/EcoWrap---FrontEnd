@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import { getAllProducts } from "../services/productApi";
 import { addCartItem } from "../services/cartApi";
 import {
@@ -11,6 +11,7 @@ import {
 } from "../services/productService";
 
 const Products = () => {
+  const { message } = App.useApp(); // Use the hook from App context
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
