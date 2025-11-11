@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Plus, Pencil, Trash2, Tag, X, Save } from "lucide-react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import {
   getAllCategories,
   createCategory,
@@ -31,7 +32,7 @@ const CategoryManagement = () => {
       const data = await getAllCategories();
       setCategories(data);
     } catch {
-      message.error("Không thể tải danh sách danh mục");
+      messageHelper.error(message, "Không thể tải danh sách danh mục");
     } finally {
       setLoading(false);
     }
@@ -67,7 +68,7 @@ const CategoryManagement = () => {
   // Handle form submit
   const handleSubmit = async () => {
     if (!formData.categoryId || !formData.categoryName) {
-      message.error("Vui lòng điền đầy đủ thông tin");
+      messageHelper.error(message, "Vui lòng điền đầy đủ thông tin");
       return;
     }
 
@@ -86,14 +87,16 @@ const CategoryManagement = () => {
     );
 
     if (duplicateId) {
-      message.error(
+      messageHelper.error(
+        message,
         `ID ${formData.categoryId} đã tồn tại. Vui lòng chọn ID khác.`
       );
       return;
     }
 
     if (duplicateName) {
-      message.error(
+      messageHelper.error(
+        message,
         `Tên danh mục "${formData.categoryName}" đã tồn tại. Vui lòng chọn tên khác.`
       );
       return;
@@ -104,17 +107,17 @@ const CategoryManagement = () => {
       if (selectedCategory) {
         // Update
         await updateCategory(formData);
-        message.success("Cập nhật danh mục thành công");
+        messageHelper.success(message, "Cập nhật danh mục thành công");
       } else {
         // Create
         await createCategory(formData);
-        message.success("Thêm danh mục thành công");
+        messageHelper.success(message, "Thêm danh mục thành công");
       }
       fetchCategories();
       setIsModalOpen(false);
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Có lỗi xảy ra";
-      message.error(errorMessage);
+      messageHelper.error(message, errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -125,13 +128,13 @@ const CategoryManagement = () => {
     try {
       setIsSaving(true);
       await deleteCategory(selectedCategory.categoryId);
-      message.success("Xóa danh mục thành công");
+      messageHelper.success(message, "Xóa danh mục thành công");
       fetchCategories();
       setIsDeleteModalOpen(false);
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Không thể xóa danh mục";
-      message.error(errorMessage);
+      messageHelper.error(message, errorMessage);
     } finally {
       setIsSaving(false);
     }

@@ -8,6 +8,7 @@ import {
   changePassword,
 } from "../../services/userApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 
 const VendorUserProfile = () => {
   const { message } = App.useApp();
@@ -113,7 +114,7 @@ const VendorUserProfile = () => {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        message.error("Không thể tải thông tin người dùng");
+        messageHelper.error(message, "Không thể tải thông tin người dùng");
       } finally {
         setLoading(false);
       }
@@ -142,7 +143,7 @@ const VendorUserProfile = () => {
       }
 
       if (!userId) {
-        message.error("Không thể xác định người dùng");
+        messageHelper.error(message, "Không thể xác định người dùng");
         return;
       }
 
@@ -154,7 +155,7 @@ const VendorUserProfile = () => {
       };
 
       await updateUser(userId, updateData);
-      message.success("Cập nhật thông tin thành công!");
+      messageHelper.success(message, "Cập nhật thông tin thành công!");
       setOriginalData(formData);
       setIsEditing(false);
 
@@ -177,7 +178,8 @@ const VendorUserProfile = () => {
       }
     } catch (error) {
       console.error("Error updating user:", error);
-      message.error(
+      messageHelper.error(
+        message,
         error?.response?.data?.message || "Không thể cập nhật thông tin"
       );
     } finally {
@@ -196,15 +198,15 @@ const VendorUserProfile = () => {
       !passwordData.newPassword ||
       !passwordData.confirmPassword
     ) {
-      message.error("Vui lòng điền đầy đủ thông tin");
+      messageHelper.error(message, "Vui lòng điền đầy đủ thông tin");
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      message.error("Mật khẩu mới không khớp");
+      messageHelper.error(message, "Mật khẩu mới không khớp");
       return;
     }
     if (passwordData.newPassword.length < 6) {
-      message.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      messageHelper.error(message, "Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
 
@@ -215,7 +217,7 @@ const VendorUserProfile = () => {
         passwordData.newPassword
       );
       if (res?.success || res?.Success) {
-        message.success("Đổi mật khẩu thành công");
+        messageHelper.success(message, "Đổi mật khẩu thành công");
         setShowPasswordModal(false);
         setPasswordData({
           oldPassword: "",
@@ -223,10 +225,16 @@ const VendorUserProfile = () => {
           confirmPassword: "",
         });
       } else {
-        message.error(res?.message || res?.Message || "Không thể đổi mật khẩu");
+        messageHelper.error(
+          message,
+          res?.message || res?.Message || "Không thể đổi mật khẩu"
+        );
       }
     } catch (e) {
-      message.error(e?.response?.data?.message || "Có lỗi khi đổi mật khẩu");
+      messageHelper.error(
+        message,
+        e?.response?.data?.message || "Có lỗi khi đổi mật khẩu"
+      );
       console.error(e);
     } finally {
       setIsChangingPassword(false);

@@ -7,6 +7,7 @@ import {
   Checkbox,
 } from "@nextui-org/react";
 import { App } from "antd";
+import { messageHelper } from "../utils/messageHelper";
 import CartItemRow from "../components/cart/CartItemRow";
 import ImpactCard from "../components/cart/ImpactCard";
 import SummaryCard from "../components/cart/SummaryCard";
@@ -81,7 +82,8 @@ export default function CartPage() {
       const errorMsg =
         err?.response?.data?.message || "Không thể cập nhật số lượng";
       const statusCode = err?.response?.status;
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     }
@@ -99,12 +101,13 @@ export default function CartPage() {
         next.delete(id);
         return next;
       });
-      message.success("Đã xóa sản phẩm khỏi giỏ hàng");
+      messageHelper.success(message, "Đã xóa sản phẩm khỏi giỏ hàng");
     } catch (err) {
       console.error("Error removing item:", err);
       const errorMsg = err?.response?.data?.message || "Không thể xóa sản phẩm";
       const statusCode = err?.response?.status;
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     }
@@ -270,7 +273,8 @@ export default function CartPage() {
                 onPlaceOrder={() => {
                   // Validate at least one item is selected
                   if (selectedItems.size === 0) {
-                    message.warning(
+                    messageHelper.warning(
+                      message,
                       "Vui lòng chọn ít nhất một sản phẩm để thanh toán"
                     );
                     return;

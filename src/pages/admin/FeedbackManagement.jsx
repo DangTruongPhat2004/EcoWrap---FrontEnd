@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { App, Modal } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import {
   Star,
   Trash2,
@@ -49,14 +50,15 @@ const FeedbackManagement = () => {
         try {
           await deleteFeedback(id);
           setFeedbacks(feedbacks.filter((f) => f.feedbackId !== id));
-          message.success("Đã xóa đánh giá thành công");
+          messageHelper.success(message, "Đã xóa đánh giá thành công");
         } catch (err) {
           console.error("Error deleting feedback:", err);
           const errorMessage =
             err.response?.data?.message || "Không thể xóa đánh giá";
           const statusCode = err.response?.status;
 
-          message.error(
+          messageHelper.error(
+            message,
             `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
           );
         } finally {

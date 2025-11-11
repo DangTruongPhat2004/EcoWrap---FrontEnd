@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import ChatService from "../../services/chatService";
 import { getProductById } from "../../services/productApi";
 import { getUserById } from "../../services/userApi";
@@ -60,7 +61,7 @@ const MessagesPage = () => {
   // Initialize chat service
   useEffect(() => {
     if (!authToken || !currentUserId) {
-      message.warning("Vui lòng đăng nhập để xem tin nhắn");
+      messageHelper.warning(message, "Vui lòng đăng nhập để xem tin nhắn");
       navigate("/login");
       return;
     }
@@ -464,7 +465,8 @@ const MessagesPage = () => {
         error?.response?.data?.message ||
         "Không thể gửi tin nhắn. Vui lòng thử lại.";
       const statusCode = error?.response?.status;
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {

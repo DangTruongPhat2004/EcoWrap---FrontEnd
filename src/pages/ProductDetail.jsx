@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../utils/messageHelper";
 import {
   getProductById,
   getAllProducts,
@@ -171,7 +172,10 @@ const ProductDetail = () => {
 
       window.dispatchEvent(new CustomEvent("cart:updated"));
 
-      message.success(`Đã thêm ${quantity} ${product.name} vào giỏ hàng!`);
+      messageHelper.success(
+        message,
+        `Đã thêm ${quantity} ${product.name} vào giỏ hàng!`
+      );
     } catch (error) {
       console.error("Error adding to cart:", error);
       const errorMsg =
@@ -179,7 +183,8 @@ const ProductDetail = () => {
         error.response?.data?.message ||
         "Không thể thêm vào giỏ hàng";
       const statusCode = error?.response?.status;
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -915,7 +920,8 @@ const ProductDetail = () => {
             {(!currentUserId || !authToken) && (
               <button
                 onClick={() => {
-                  message.warning(
+                  messageHelper.warning(
+                    message,
                     "Vui lòng đăng nhập để liên hệ với người bán"
                   );
                   navigate("/login");

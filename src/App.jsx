@@ -5,6 +5,7 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
+import { App as AntApp } from "antd";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import RoleBasedLayout from "./components/layout/RoleBasedLayout";

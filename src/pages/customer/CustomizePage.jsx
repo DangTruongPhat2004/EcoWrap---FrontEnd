@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@nextui-org/react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import {
   ArrowLeft,
   RotateCcw,
@@ -122,12 +123,12 @@ const CustomizePage = () => {
             "CustomizePage: Failed to parse design data:",
             parseError
           );
-          message.error("Dữ liệu thiết kế không hợp lệ");
+          messageHelper.error(message, "Dữ liệu thiết kế không hợp lệ");
         }
       }
     } catch (error) {
       console.error("Failed to load design:", error);
-      message.error("Không thể tải thiết kế");
+      messageHelper.error(message, "Không thể tải thiết kế");
       navigate("/thiet-ke");
     } finally {
       setIsLoading(false);
@@ -173,7 +174,7 @@ const CustomizePage = () => {
 
       setEtag(newEtag);
       setHasUnsavedChanges(false);
-      message.success("Đã tự động lưu");
+      messageHelper.success(message, "Đã tự động lưu");
     } catch (error) {
       console.error("Auto-save failed:", error);
     }
@@ -211,13 +212,14 @@ const CustomizePage = () => {
           dielineSvgUrl = dielineResult.url;
 
           if (dielineResult.success) {
-            message.success("Đã tạo file dieline");
+            messageHelper.success(message, "Đã tạo file dieline");
           } else if (dielineResult.fallback) {
-            message.info("Đang tạo file dieline tạm thời...");
+            messageHelper.info(message, "Đang tạo file dieline tạm thời...");
           }
         } catch (dielineError) {
           console.error("Dieline generation failed:", dielineError);
-          message.warning(
+          messageHelper.warning(
+            message,
             "Không thể tạo file dieline, nhưng thiết kế vẫn được lưu"
           );
         } finally {
@@ -247,7 +249,7 @@ const CustomizePage = () => {
         );
         setDesign(data);
         setEtag(newEtag);
-        message.success("Đã lưu thiết kế");
+        messageHelper.success(message, "Đã lưu thiết kế");
       } else {
         // Create new
         console.log(
@@ -261,7 +263,7 @@ const CustomizePage = () => {
         setDesign(data);
         setEtag(newEtag);
         navigate(`/thiet-ke/${data.id}`, { replace: true });
-        message.success("Đã tạo thiết kế mới");
+        messageHelper.success(message, "Đã tạo thiết kế mới");
       }
 
       setHasUnsavedChanges(false);
@@ -274,18 +276,21 @@ const CustomizePage = () => {
       });
 
       if (error.response?.status === 409) {
-        message.error(
+        messageHelper.error(
+          message,
           "Thiết kế đã được chỉnh sửa bởi người khác. Vui lòng tải lại."
         );
       } else if (error.response?.status === 401) {
-        message.error("Bạn cần đăng nhập để lưu thiết kế");
+        messageHelper.error(message, "Bạn cần đăng nhập để lưu thiết kế");
       } else if (error.response?.status === 400) {
-        message.error(
+        messageHelper.error(
+          message,
           "Dữ liệu thiết kế không hợp lệ: " +
             (error.response?.data?.message || "")
         );
       } else {
-        message.error(
+        messageHelper.error(
+          message,
           "Không thể lưu thiết kế: " + (error.message || "Lỗi không xác định")
         );
       }
@@ -318,12 +323,12 @@ const CustomizePage = () => {
 
   const handleApply = async () => {
     await handleSave();
-    message.success("Đã áp dụng thiết kế");
+    messageHelper.success(message, "Đã áp dụng thiết kế");
   };
 
   const handleAddToCart = async () => {
     await handleSave();
-    message.success("Đã thêm vào giỏ hàng");
+    messageHelper.success(message, "Đã thêm vào giỏ hàng");
     navigate("/cart");
   };
 
@@ -423,7 +428,10 @@ const CustomizePage = () => {
             isIconOnly
             variant="light"
             onClick={() => {
-              message.info("Tính năng mẫu ngẫu nhiên đang được phát triển");
+              messageHelper.info(
+                message,
+                "Tính năng mẫu ngẫu nhiên đang được phát triển"
+              );
             }}
             title="Áp dụng mẫu ngẫu nhiên (sắp có)"
           >

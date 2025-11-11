@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { getOrderById } from "../../services/orderApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import dayjs from "dayjs";
 
 // --------- helpers ----------
@@ -411,7 +412,10 @@ export default function OrderSuccessPage() {
     // Since backend GetOrderByIdAsync is not implemented yet,
     // we'll stay on this page or refresh to show latest data
     if (order?.orderId) {
-      message.info("Chức năng theo dõi chi tiết đơn hàng đang được phát triển");
+      messageHelper.info(
+        message,
+        "Chức năng theo dõi chi tiết đơn hàng đang được phát triển"
+      );
       // Could refresh the current order data here if needed
     }
   };

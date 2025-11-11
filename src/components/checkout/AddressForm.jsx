@@ -82,6 +82,7 @@ export default function AddressForm({
     fullName: !v.fullName?.trim() ? "Vui lòng nhập họ tên" : "",
     phone: !/^0\d{9}$/.test(v.phone || "") ? "SĐT 10 số, bắt đầu bằng 0" : "",
     address: !v.address?.trim() ? "Vui lòng nhập địa chỉ" : "",
+    hamlet: !v.hamlet?.trim() ? "Vui lòng nhập ấp/thôn" : "",
     ward: !v.wardCode && !v.ward?.trim() ? "Vui lòng chọn phường/xã" : "",
     district:
       !v.districtCode && !v.district?.trim() ? "Vui lòng chọn quận/huyện" : "",
@@ -207,13 +208,20 @@ export default function AddressForm({
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">Ấp/Thôn</label>
+            <label className="text-sm font-medium text-gray-700">
+              Ấp/Thôn <span className="text-red-500">*</span>
+            </label>
             <Input
               placeholder="Nhập ấp/thôn"
               value={v.hamlet || ""}
               onValueChange={(val) => setWithAddressUpdate("hamlet", val)}
+              onBlur={() => markTouched("hamlet")}
+              isInvalid={!!showErr("hamlet")}
               variant="bordered"
             />
+            {showErr("hamlet") && (
+              <span className="text-sm text-red-600">{showErr("hamlet")}</span>
+            )}
           </div>
 
           {/* Display Complete Address */}

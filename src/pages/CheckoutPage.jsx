@@ -3,6 +3,7 @@ import React from "react";
 import { Card, CardBody, Button } from "@nextui-org/react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../utils/messageHelper";
 import useShippingFee from "../components/checkout/hooks/useShippingFee";
 import usePaymentFee from "../components/checkout/hooks/usePaymentFee";
 import PaymentMethodSelector from "../components/checkout/PaymentMethodSelector";
@@ -46,7 +47,7 @@ export default function CheckoutPage() {
   // Redirect if no items selected
   React.useEffect(() => {
     if (!loading && items.length === 0 && selectedItemIds.length === 0) {
-      message.warning("Vui lòng chọn sản phẩm từ giỏ hàng");
+      messageHelper.warning(message, "Vui lòng chọn sản phẩm từ giỏ hàng");
       navigate("/cart");
     }
   }, [loading, items.length, selectedItemIds.length, message, navigate]);
@@ -84,7 +85,7 @@ export default function CheckoutPage() {
       }
     } catch (err) {
       console.error("Error fetching cart:", err);
-      message.error("Không thể tải giỏ hàng");
+      messageHelper.error(message, "Không thể tải giỏ hàng");
     } finally {
       setLoading(false);
     }
@@ -120,7 +121,7 @@ export default function CheckoutPage() {
 
   const handleApplyCoupon = (code) => {
     console.log("Apply coupon:", code);
-    message.info("Tính năng mã giảm giá đang phát triển");
+    messageHelper.info(message, "Tính năng mã giảm giá đang phát triển");
   };
 
   const handlePlaceOrder = async () => {
@@ -135,7 +136,8 @@ export default function CheckoutPage() {
       !address.hamlet?.trim()
     ) {
       console.error("❌ [CheckoutPage] Address validation failed:", address);
-      message.error(
+      messageHelper.error(
+        message,
         "Vui lòng điền đầy đủ thông tin địa chỉ giao hàng (Address, Province, District, Ward, Hamlet)"
       );
       return;
@@ -144,13 +146,13 @@ export default function CheckoutPage() {
     // Validate user info (not sent to backend but good UX)
     if (!address.fullName?.trim() || !address.phone?.trim()) {
       console.error("❌ [CheckoutPage] User info validation failed");
-      message.error("Vui lòng điền họ tên và số điện thoại");
+      messageHelper.error(message, "Vui lòng điền họ tên và số điện thoại");
       return;
     }
 
     if (items.length === 0) {
       console.error("❌ [CheckoutPage] Cart is empty");
-      message.error("Giỏ hàng trống");
+      messageHelper.error(message, "Giỏ hàng trống");
       return;
     }
 
@@ -181,7 +183,10 @@ export default function CheckoutPage() {
           "❌ [CheckoutPage] Order creation failed:",
           orderResponse
         );
-        message.error(orderResponse.message || "Không thể tạo đơn hàng");
+        messageHelper.error(
+          message,
+          orderResponse.message || "Không thể tạo đơn hàng"
+        );
         return;
       }
 
@@ -190,7 +195,7 @@ export default function CheckoutPage() {
         "✅ [CheckoutPage] Order created successfully. Order ID:",
         orderId
       );
-      message.success("Đơn hàng đã được tạo!");
+      messageHelper.success(message, "Đơn hàng đã được tạo!");
 
       // Step 2: Create payment link with PayOS
       try {
@@ -212,7 +217,7 @@ export default function CheckoutPage() {
           );
 
           // Redirect to PayOS checkout page
-          message.success("Đang chuyển đến trang thanh toán...");
+          messageHelper.success(message, "Đang chuyển đến trang thanh toán...");
           window.location.href = paymentResponse.checkoutUrl;
         } else {
           console.error(
@@ -220,7 +225,10 @@ export default function CheckoutPage() {
             paymentResponse
           );
           // Payment link creation failed - cancel the order
-          message.error("Không thể tạo link thanh toán. Đang hủy đơn hàng...");
+          messageHelper.error(
+            message,
+            "Không thể tạo link thanh toán. Đang hủy đơn hàng..."
+          );
 
           try {
             await declineOrder(orderId);
@@ -233,7 +241,7 @@ export default function CheckoutPage() {
           }
 
           // Stay on checkout page so user can try again
-          message.error("Vui lòng thử lại hoặc liên hệ hỗ trợ.");
+          messageHelper.error(message, "Vui lòng thử lại hoặc liên hệ hỗ trợ.");
         }
       } catch (paymentErr) {
         console.error(
@@ -242,7 +250,10 @@ export default function CheckoutPage() {
         );
 
         // Payment link API call failed - cancel the order
-        message.error("Lỗi khi tạo link thanh toán. Đang hủy đơn hàng...");
+        messageHelper.error(
+          message,
+          "Lỗi khi tạo link thanh toán. Đang hủy đơn hàng..."
+        );
 
         try {
           await declineOrder(orderId);
@@ -252,13 +263,13 @@ export default function CheckoutPage() {
         }
 
         // Stay on checkout page so user can try again
-        message.error("Vui lòng thử lại hoặc liên hệ hỗ trợ.");
+        messageHelper.error(message, "Vui lòng thử lại hoặc liên hệ hỗ trợ.");
       }
     } catch (err) {
       console.error("❌ [CheckoutPage] Error in order placement flow:", err);
       const errorMessage =
         err?.response?.data?.message || "Đã xảy ra lỗi khi đặt hàng";
-      message.error(errorMessage);
+      messageHelper.error(message, errorMessage);
     } finally {
       setPlacing(false);
       console.log("🏁 [CheckoutPage] Order placement flow completed");

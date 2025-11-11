@@ -13,7 +13,6 @@ import {
 } from "@heroui/react";
 import { Plus, Search, AlertTriangle } from "lucide-react";
 import { getMyProducts } from "../../services/productApi";
-import { getAllCategories } from "../../services/categoryApi";
 
 const ProductManagement = () => {
   const navigate = useNavigate();
@@ -21,21 +20,16 @@ const ProductManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [dataError, setDataError] = useState(null);
 
-  // Fetch products and categories from API
+  // Fetch products from API
   const fetchProducts = async () => {
     setIsDataLoading(true);
     setDataError(null);
     try {
-      const [productsResponse, categoriesResponse] = await Promise.all([
-        getMyProducts(),
-        getAllCategories(),
-      ]);
+      const productsResponse = await getMyProducts();
       setProducts(productsResponse);
-      setCategories(categoriesResponse);
     } catch (error) {
       console.error("Error fetching data:", error);
       setDataError("Không thể tải danh sách sản phẩm. Vui lòng thử lại.");
@@ -49,12 +43,6 @@ const ProductManagement = () => {
     fetchProducts();
   }, []);
 
-  // Get category name by ID
-  const getCategoryName = (categoryId) => {
-    const category = categories.find((cat) => cat.categoryId === categoryId);
-    return category?.categoryName || "Chưa phân loại";
-  };
-
   // Filter products based on search term
   const filteredProducts = products.filter((product) => {
     const searchLower = searchTerm.toLowerCase();
@@ -63,7 +51,7 @@ const ProductManagement = () => {
       product.name ||
       ""
     ).toLowerCase();
-    const categoryName = getCategoryName(product.categoryId).toLowerCase();
+    const categoryName = (product.categoryName || "").toLowerCase();
     const materialType = (
       product.materialType ||
       product.material ||
@@ -220,7 +208,7 @@ const ProductManagement = () => {
                 </TableCell>
                 <TableCell>
                   <span className="text-sm text-gray-700">
-                    {getCategoryName(product.categoryId)}
+                    {product.categoryName || "Chưa phân loại"}
                   </span>
                 </TableCell>
                 <TableCell>

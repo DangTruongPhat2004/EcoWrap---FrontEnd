@@ -17,6 +17,7 @@ import {
 import { getMySellerInfo, updateSeller } from "../../services/sellerApi";
 import { changePassword } from "../../services/userApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 
 const VendorProfile = () => {
   const { message } = App.useApp();
@@ -171,7 +172,7 @@ const VendorProfile = () => {
       const response = await updateSeller(formDataToSend);
       console.log("Update seller response:", response);
 
-      message.success("Cập nhật thông tin thành công!");
+      messageHelper.success(message, "Cập nhật thông tin thành công!");
       setIsEditing(false);
       fetchSellerInfo(); // Refresh data
     } catch (err) {
@@ -181,7 +182,10 @@ const VendorProfile = () => {
         err.response?.data?.message ||
         err.message ||
         "Lỗi không xác định";
-      message.error("Không thể cập nhật thông tin: " + errorMessage);
+      messageHelper.error(
+        message,
+        "Không thể cập nhật thông tin: " + errorMessage
+      );
     } finally {
       setLoading(false);
     }
@@ -206,15 +210,15 @@ const VendorProfile = () => {
       !passwordForm.newPassword ||
       !passwordForm.confirmPassword
     ) {
-      message.error("Vui lòng điền đầy đủ thông tin");
+      messageHelper.error(message, "Vui lòng điền đầy đủ thông tin");
       return;
     }
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      message.error("Mật khẩu mới không khớp");
+      messageHelper.error(message, "Mật khẩu mới không khớp");
       return;
     }
     if (passwordForm.newPassword.length < 6) {
-      message.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      messageHelper.error(message, "Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
     try {
@@ -224,7 +228,7 @@ const VendorProfile = () => {
         passwordForm.newPassword
       );
       if (res?.success) {
-        message.success("Đổi mật khẩu thành công");
+        messageHelper.success(message, "Đổi mật khẩu thành công");
         setShowPasswordModal(false);
         setPasswordForm({
           oldPassword: "",
@@ -232,10 +236,10 @@ const VendorProfile = () => {
           confirmPassword: "",
         });
       } else {
-        message.error(res?.message || "Không thể đổi mật khẩu");
+        messageHelper.error(message, res?.message || "Không thể đổi mật khẩu");
       }
     } catch (e) {
-      message.error("Có lỗi khi đổi mật khẩu");
+      messageHelper.error(message, "Có lỗi khi đổi mật khẩu");
       console.error(e);
     } finally {
       setIsChangingPassword(false);

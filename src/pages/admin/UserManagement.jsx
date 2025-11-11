@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { getAllUsers, updateUser, deleteUser } from "../../services/userApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 
 const UserManagement = () => {
   const { message } = App.useApp();
@@ -46,7 +47,7 @@ const UserManagement = () => {
       setUsers(normalized);
     } catch (error) {
       console.error("Error fetching users:", error);
-      message.error("Không thể tải danh sách người dùng");
+      messageHelper.error(message, "Không thể tải danh sách người dùng");
     } finally {
       setLoading(false);
     }
@@ -93,7 +94,7 @@ const UserManagement = () => {
   // Handle form submit
   const handleSubmit = async () => {
     if (!formData.userName || !formData.email) {
-      message.error("Vui lòng điền đầy đủ thông tin bắt buộc");
+      messageHelper.error(message, "Vui lòng điền đầy đủ thông tin bắt buộc");
       return;
     }
 
@@ -102,15 +103,18 @@ const UserManagement = () => {
       const response = await updateUser(selectedUser.userId, formData);
 
       if (response.success) {
-        message.success("Cập nhật người dùng thành công");
+        messageHelper.success(message, "Cập nhật người dùng thành công");
         fetchUsers();
         setIsEditModalOpen(false);
       } else {
-        message.error(response.message || "Không thể cập nhật người dùng");
+        messageHelper.error(
+          message,
+          response.message || "Không thể cập nhật người dùng"
+        );
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Có lỗi xảy ra";
-      message.error(errorMessage);
+      messageHelper.error(message, errorMessage);
     } finally {
       setIsSaving(false);
     }
@@ -123,16 +127,19 @@ const UserManagement = () => {
       const response = await deleteUser(selectedUser.userId);
 
       if (response.success) {
-        message.success("Xóa người dùng thành công");
+        messageHelper.success(message, "Xóa người dùng thành công");
         fetchUsers();
         setIsDeleteModalOpen(false);
       } else {
-        message.error(response.message || "Không thể xóa người dùng");
+        messageHelper.error(
+          message,
+          response.message || "Không thể xóa người dùng"
+        );
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message || "Không thể xóa người dùng";
-      message.error(errorMessage);
+      messageHelper.error(message, errorMessage);
     } finally {
       setIsSaving(false);
     }

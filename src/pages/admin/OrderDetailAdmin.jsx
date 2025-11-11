@@ -27,6 +27,7 @@ import {
   getOrderStatusColor,
 } from "../../services/orderApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 
 const OrderDetailAdmin = () => {
   const { message } = App.useApp();
@@ -80,16 +81,20 @@ const OrderDetailAdmin = () => {
       const response = await confirmPackaging(orderId);
 
       if (response.success) {
-        message.success(
+        messageHelper.success(
+          message,
           "Đã xác nhận và chuyển đơn hàng sang trạng thái đóng gói!"
         );
         fetchOrderDetail(); // Reload order
       } else {
-        message.error(response.message || "Không thể xác nhận đơn hàng");
+        messageHelper.error(
+          message,
+          response.message || "Không thể xác nhận đơn hàng"
+        );
       }
     } catch (err) {
       console.error("Error confirming packaging:", err);
-      message.error("Đã xảy ra lỗi khi xác nhận đơn hàng");
+      messageHelper.error(message, "Đã xảy ra lỗi khi xác nhận đơn hàng");
     } finally {
       setActionLoading(false);
     }
@@ -107,16 +112,20 @@ const OrderDetailAdmin = () => {
       const response = await confirmShipment(orderId);
 
       if (response.success) {
-        message.success(
+        messageHelper.success(
+          message,
           "Đã tạo vận đơn GHTK và chuyển đơn hàng sang trạng thái giao hàng!"
         );
         fetchOrderDetail(); // Reload order
       } else {
-        message.error(response.message || "Không thể tạo vận đơn");
+        messageHelper.error(
+          message,
+          response.message || "Không thể tạo vận đơn"
+        );
       }
     } catch (err) {
       console.error("Error confirming shipment:", err);
-      message.error("Đã xảy ra lỗi khi xác nhận giao hàng");
+      messageHelper.error(message, "Đã xảy ra lỗi khi xác nhận giao hàng");
     } finally {
       setActionLoading(false);
     }
@@ -128,7 +137,7 @@ const OrderDetailAdmin = () => {
     );
 
     if (!reason || reason.trim() === "") {
-      message.error("Vui lòng nhập lý do từ chối");
+      messageHelper.error(message, "Vui lòng nhập lý do từ chối");
       return;
     }
 
@@ -137,16 +146,20 @@ const OrderDetailAdmin = () => {
       const response = await declineOrder(orderId);
 
       if (response.success) {
-        message.success(
+        messageHelper.success(
+          message,
           "Đã từ chối đơn hàng. Email thông báo sẽ được gửi cho khách hàng."
         );
         fetchOrderDetail(); // Reload order
       } else {
-        message.error(response.message || "Không thể từ chối đơn hàng");
+        messageHelper.error(
+          message,
+          response.message || "Không thể từ chối đơn hàng"
+        );
       }
     } catch (err) {
       console.error("Error declining order:", err);
-      message.error("Đã xảy ra lỗi khi từ chối đơn hàng");
+      messageHelper.error(message, "Đã xảy ra lỗi khi từ chối đơn hàng");
     } finally {
       setActionLoading(false);
     }
@@ -616,9 +629,10 @@ function groupItemsBySeller(items) {
 
 // Bank Info Modal Component
 function BankInfoModal({ seller, onClose }) {
+  const { message } = App.useApp();
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    message.success("Đã sao chép!");
+    messageHelper.success(message, "Đã sao chép!");
   };
 
   return (

@@ -30,7 +30,13 @@ createRoot(document.getElementById("root")).render(
           },
         }}
       >
-        <AntApp>
+        <AntApp
+          message={{
+            maxCount: 3,
+            duration: 4,
+            top: 24,
+          }}
+        >
           <NextUIProvider>
             <App />
           </NextUIProvider>

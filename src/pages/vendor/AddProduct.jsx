@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import { createProduct } from "../../services/productApi";
 import { getAllCategories } from "../../services/categoryApi";
 import {
@@ -134,19 +135,8 @@ const AddProduct = () => {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       const errorMessages = Object.values(validationErrors);
-      message.error({
-        content: (
-          <div>
-            <div className="font-semibold mb-2">Vui lòng sửa các lỗi sau:</div>
-            <ul className="text-sm list-disc ml-4 space-y-1">
-              {errorMessages.map((msg, idx) => (
-                <li key={idx}>{msg}</li>
-              ))}
-            </ul>
-          </div>
-        ),
-        duration: 5,
-      });
+      const errorText = "Vui lòng sửa các lỗi: " + errorMessages.join(", ");
+      messageHelper.error(message, errorText, 5);
       return;
     }
     onConfirmOpen();
@@ -179,7 +169,7 @@ const AddProduct = () => {
 
     try {
       await createProduct(createFormData);
-      message.success("Thêm sản phẩm mới thành công!");
+      messageHelper.success(message, "Thêm sản phẩm mới thành công!");
       navigate("/vendor/products");
     } catch (err) {
       console.error("Failed to create product:", err);
@@ -190,7 +180,8 @@ const AddProduct = () => {
         "Thêm sản phẩm thất bại";
       const statusCode = err.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {

@@ -25,6 +25,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import warehouseApi from "../../services/warehouseApi";
 import { getUserById } from "../../services/userApi";
 
@@ -437,7 +438,7 @@ const WarehouseManagement = () => {
       resetForm();
 
       // Show success message
-      message.success("Tạo kho hàng thành công!");
+      messageHelper.success(message, "Tạo kho hàng thành công!");
     } catch (error) {
       console.error("Error creating warehouse:", error);
       const errorMessage =
@@ -446,7 +447,8 @@ const WarehouseManagement = () => {
         "Có lỗi xảy ra khi tạo kho hàng. Vui lòng thử lại.";
       const statusCode = error.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -480,7 +482,7 @@ const WarehouseManagement = () => {
       resetForm();
 
       // Show success message
-      message.success("Cập nhật kho hàng thành công!");
+      messageHelper.success(message, "Cập nhật kho hàng thành công!");
     } catch (error) {
       console.error("Error updating warehouse:", error);
       const errorMessage =
@@ -489,7 +491,8 @@ const WarehouseManagement = () => {
         "Có lỗi xảy ra khi cập nhật kho hàng. Vui lòng thử lại.";
       const statusCode = error.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -517,7 +520,7 @@ const WarehouseManagement = () => {
       resetForm();
 
       // Show success message
-      message.success("Xóa kho hàng thành công!");
+      messageHelper.success(message, "Xóa kho hàng thành công!");
     } catch (error) {
       console.error("Error deleting warehouse:", error);
       const errorMessage =
@@ -526,7 +529,8 @@ const WarehouseManagement = () => {
         "Có lỗi xảy ra khi xóa kho hàng. Kho hàng có thể đang được sử dụng.";
       const statusCode = error.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {

@@ -151,10 +151,19 @@ export default function LocationSelector({
           isDisabled={isDisabled || loading.provinces}
           variant={variant}
           classNames={{
-            trigger: "min-h-[40px]",
+            trigger: "min-h-[40px] bg-white",
+            listboxWrapper: "max-h-[400px]",
+            popoverContent: "bg-white",
+          }}
+          listboxProps={{
+            itemClasses: {
+              base: "bg-white hover:bg-gray-100 data-[hover=true]:bg-gray-100 data-[selected=true]:bg-emerald-50",
+            },
           }}
           popoverProps={{
-            style: { zIndex: 10000 },
+            classNames: {
+              content: "bg-white p-0",
+            },
           }}
         >
           {provinces.map((province) => (
@@ -186,10 +195,19 @@ export default function LocationSelector({
           isDisabled={isDisabled || !value.provinceCode || loading.districts}
           variant={variant}
           classNames={{
-            trigger: "min-h-[40px]",
+            trigger: "min-h-[40px] bg-white",
+            listboxWrapper: "max-h-[400px]",
+            popoverContent: "bg-white",
+          }}
+          listboxProps={{
+            itemClasses: {
+              base: "bg-white hover:bg-gray-100 data-[hover=true]:bg-gray-100 data-[selected=true]:bg-emerald-50",
+            },
           }}
           popoverProps={{
-            style: { zIndex: 10000 },
+            classNames: {
+              content: "bg-white p-0",
+            },
           }}
         >
           {districts.map((district) => (
@@ -221,10 +239,19 @@ export default function LocationSelector({
           isDisabled={isDisabled || !value.districtCode || loading.wards}
           variant={variant}
           classNames={{
-            trigger: "min-h-[40px]",
+            trigger: "min-h-[40px] bg-white",
+            listboxWrapper: "max-h-[400px]",
+            popoverContent: "bg-white",
+          }}
+          listboxProps={{
+            itemClasses: {
+              base: "bg-white hover:bg-gray-100 data-[hover=true]:bg-gray-100 data-[selected=true]:bg-emerald-50",
+            },
           }}
           popoverProps={{
-            style: { zIndex: 10000 },
+            classNames: {
+              content: "bg-white p-0",
+            },
           }}
         >
           {wards.map((ward) => (

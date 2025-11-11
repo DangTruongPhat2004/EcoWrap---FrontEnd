@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardBody, Divider, Input, Button } from "@nextui-org/react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import { ArrowRight } from "lucide-react";
 import { fmtVND } from "../../utils/money";
 
@@ -27,10 +28,10 @@ export default function SummaryCard({
   const applyCoupon = () => {
     if (coupon.trim().toUpperCase() === "ECO10") {
       setDiscount(Math.round(subtotal * 0.1));
-      message.success("Đã áp dụng mã giảm giá ECO10");
+      messageHelper.success(message, "Đã áp dụng mã giảm giá ECO10");
     } else {
       setDiscount(0);
-      message.warning("Mã không hợp lệ. Dùng thử ECO10");
+      messageHelper.warning(message, "Mã không hợp lệ. Dùng thử ECO10");
     }
   };
 

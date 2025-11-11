@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import inventoryApi from "../../services/inventoryApi";
 import { getAllCategories } from "../../services/categoryApi";
 import { getMyProducts } from "../../services/productApi";
@@ -175,7 +176,7 @@ const InventoryDetail = () => {
 
       setItem(itemWithProduct);
       onConfirmModalOpenChange(); // Close confirmation modal
-      message.success("Cập nhật số lượng thành công!");
+      messageHelper.success(message, "Cập nhật số lượng thành công!");
     } catch (err) {
       onConfirmModalOpenChange(); // Close confirmation modal on error too
       const errorMessage =
@@ -184,7 +185,8 @@ const InventoryDetail = () => {
         "Cập nhật thất bại.";
       const statusCode = err.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -196,7 +198,7 @@ const InventoryDetail = () => {
     setIsDeleting(true);
     try {
       await inventoryApi.deleteInventory(id);
-      message.success("Xóa mục tồn kho thành công!");
+      messageHelper.success(message, "Xóa mục tồn kho thành công!");
       navigate("/vendor/inventory");
     } catch (err) {
       const errorMessage =
@@ -206,7 +208,8 @@ const InventoryDetail = () => {
         "Xóa thất bại";
       const statusCode = err.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
       console.error("Failed to delete inventory:", err);

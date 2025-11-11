@@ -6,6 +6,7 @@ import { getSellerById } from "../services/sellerApi";
 import { getProductsBySeller } from "../services/productApi";
 import { fmtVND } from "../utils/money";
 import { App } from "antd";
+import { messageHelper } from "../utils/messageHelper";
 import ChatButton from "../components/chat/ChatButton";
 
 export default function StorePage() {
@@ -64,7 +65,7 @@ export default function StorePage() {
       }
     } catch (error) {
       console.error("Error fetching store data:", error);
-      message.error("Không thể tải thông tin cửa hàng");
+      messageHelper.error(message, "Không thể tải thông tin cửa hàng");
     } finally {
       setLoading(false);
     }

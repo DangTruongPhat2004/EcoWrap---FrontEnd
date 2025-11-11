@@ -21,6 +21,7 @@ import {
 import { createPaymentLink } from "../../services/paymentApi";
 import { fmtVND } from "../../utils/money";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import dayjs from "dayjs";
 
 // Helper function to group items by seller
@@ -62,11 +63,14 @@ export default function OrderDetailPage() {
       if (response.success && response.data) {
         setOrder(response.data);
       } else {
-        message.error(response.message || "Không thể tải chi tiết đơn hàng");
+        messageHelper.error(
+          message,
+          response.message || "Không thể tải chi tiết đơn hàng"
+        );
       }
     } catch (err) {
       console.error("Error fetching order detail:", err);
-      message.error("Đã xảy ra lỗi khi tải đơn hàng");
+      messageHelper.error(message, "Đã xảy ra lỗi khi tải đơn hàng");
     } finally {
       setLoading(false);
     }
@@ -82,14 +86,17 @@ export default function OrderDetailPage() {
       const response = await confirmDelivery(orderId);
 
       if (response.success) {
-        message.success("Đã xác nhận nhận hàng thành công!");
+        messageHelper.success(message, "Đã xác nhận nhận hàng thành công!");
         fetchOrderDetail(); // Reload order data
       } else {
-        message.error(response.message || "Không thể xác nhận nhận hàng");
+        messageHelper.error(
+          message,
+          response.message || "Không thể xác nhận nhận hàng"
+        );
       }
     } catch (err) {
       console.error("Error confirming delivery:", err);
-      message.error("Đã xảy ra lỗi khi xác nhận nhận hàng");
+      messageHelper.error(message, "Đã xảy ra lỗi khi xác nhận nhận hàng");
     } finally {
       setConfirming(false);
     }
@@ -102,15 +109,18 @@ export default function OrderDetailPage() {
 
       if (response.success && response.checkoutUrl) {
         hide();
-        message.success("Chuyển đến trang thanh toán");
+        messageHelper.success(message, "Chuyển đến trang thanh toán");
         window.location.href = response.checkoutUrl;
       } else {
         hide();
-        message.error(response.message || "Không thể tạo link thanh toán");
+        messageHelper.error(
+          message,
+          response.message || "Không thể tạo link thanh toán"
+        );
       }
     } catch (error) {
       console.error("Payment error:", error);
-      message.error("Đã xảy ra lỗi khi tạo link thanh toán");
+      messageHelper.error(message, "Đã xảy ra lỗi khi tạo link thanh toán");
     }
   };
 

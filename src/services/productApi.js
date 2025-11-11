@@ -1,5 +1,35 @@
 // src/services/productApi.js
 import apiClient from "./apiClient";
+import { getAllCategories } from "./categoryApi";
+
+// Category cache to avoid repeated API calls
+let categoryCache = null;
+let categoryMapById = {};
+
+/**
+ * Get category name by ID with caching
+ * @param {number} categoryId - The category ID
+ * @returns {Promise<string>} Category name
+ */
+const getCategoryName = async (categoryId) => {
+  if (!categoryId) return "Chưa phân loại";
+
+  // Initialize cache if not already done
+  if (!categoryCache) {
+    try {
+      categoryCache = await getAllCategories();
+      categoryMapById = categoryCache.reduce((map, cat) => {
+        map[cat.categoryId] = cat.categoryName;
+        return map;
+      }, {});
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      categoryCache = [];
+    }
+  }
+
+  return categoryMapById[categoryId] || "Chưa phân loại";
+};
 
 /**
  * Transform backend product data to frontend-friendly format
@@ -20,8 +50,11 @@ const transformProduct = (product) => {
     material: product.materialType,
     images: product.imageFile ? [product.imageFile] : [],
     inStock: product.productStatus === "In stock",
-    // Keep the full category object, don't overwrite it
-    categoryName: product.category?.categoryName || "Chưa phân loại",
+    // Use category object if available, otherwise use sync lookup from cache
+    categoryName:
+      product.category?.categoryName ||
+      categoryMapById[product.categoryId] ||
+      "Chưa phân loại",
     // Add seller information
     seller: product.seller
       ? {
@@ -111,6 +144,9 @@ export const calculateSellerStats = (sellerId, allProducts) => {
  */
 export const getAllProducts = async () => {
   try {
+    // Ensure categories are loaded first
+    await getCategoryName(1); // This will initialize the cache
+
     const response = await apiClient.get("/api/Product");
     const products = response.data;
     // Transform each product
@@ -142,6 +178,9 @@ export const getProductById = async (productId) => {
  */
 export const getMyProducts = async () => {
   try {
+    // Ensure categories are loaded first
+    await getCategoryName(1); // This will initialize the cache
+
     const response = await apiClient.get("/api/Product/my-products");
     const products = response.data;
     return Array.isArray(products) ? products.map(transformProduct) : [];
@@ -158,6 +197,9 @@ export const getMyProducts = async () => {
  */
 export const getProductsBySeller = async (sellerId) => {
   try {
+    // Ensure categories are loaded first
+    await getCategoryName(1); // This will initialize the cache
+
     // Get all products and filter by seller
     const response = await apiClient.get("/api/Product");
     const allProducts = response.data;

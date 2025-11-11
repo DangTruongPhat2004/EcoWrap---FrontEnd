@@ -7,6 +7,7 @@ import RegisterForm from "../components/auth/RegisterForm";
 import OtpModal from "../components/auth/OtpModal";
 import { useNavigate } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../utils/messageHelper";
 
 export default function RegisterPage() {
   const { message } = App.useApp();
@@ -35,7 +36,8 @@ export default function RegisterPage() {
       if (!email) throw new Error("Không lấy được email từ server.");
 
       // 🔔 Thông báo thành công
-      message.success(
+      messageHelper.success(
+        message,
         "Đăng ký thành công! Vui lòng kiểm tra email để lấy mã OTP."
       );
 
@@ -45,7 +47,10 @@ export default function RegisterPage() {
       });
     } catch (e) {
       console.error("[register/init] error:", e);
-      message.error(e?.message || "Đăng ký thất bại. Vui lòng thử lại.");
+      messageHelper.error(
+        message,
+        e?.message || "Đăng ký thất bại. Vui lòng thử lại."
+      );
     }
   };
 

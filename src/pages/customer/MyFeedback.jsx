@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { App, Modal } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import {
   Star,
   Edit,
@@ -52,17 +53,17 @@ const MyFeedback = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.comment.trim()) {
-      message.warning("Vui lòng nhập nhận xét");
+      messageHelper.warning(message, "Vui lòng nhập nhận xét");
       return;
     }
     setSubmitting(true);
     try {
       if (feedback) {
         await updateMyFeedback(feedback.feedbackId, formData);
-        message.success("Đã cập nhật đánh giá");
+        messageHelper.success(message, "Đã cập nhật đánh giá");
       } else {
         await createFeedback(formData);
-        message.success("Đã tạo đánh giá mới");
+        messageHelper.success(message, "Đã tạo đánh giá mới");
       }
       setEditing(false);
       fetchFeedback();
@@ -70,7 +71,8 @@ const MyFeedback = () => {
       console.error("Error saving feedback:", err);
       const errorMsg = err?.response?.data?.message || "Không thể lưu đánh giá";
       const statusCode = err?.response?.status;
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -90,13 +92,14 @@ const MyFeedback = () => {
           await deleteMyFeedback(feedback.feedbackId);
           setFeedback(null);
           setFormData({ comment: "", rating: 5 });
-          message.success("Đã xóa đánh giá");
+          messageHelper.success(message, "Đã xóa đánh giá");
         } catch (err) {
           console.error("Error deleting feedback:", err);
           const errorMsg =
             err?.response?.data?.message || "Không thể xóa đánh giá";
           const statusCode = err?.response?.status;
-          message.error(
+          messageHelper.error(
+            message,
             `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
           );
         }

@@ -24,6 +24,7 @@ import {
   Warehouse,
 } from "lucide-react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import { getMyProducts } from "../../services/productApi";
 import warehouseApi from "../../services/warehouseApi";
 import inventoryApi from "../../services/inventoryApi";
@@ -96,7 +97,7 @@ const AddInventory = () => {
         stockQuantity: parseInt(quantity, 10),
       };
       await inventoryApi.addInventory(inventoryData);
-      message.success("Nhập kho thành công!");
+      messageHelper.success(message, "Nhập kho thành công!");
       navigate("/vendor/inventory");
     } catch (err) {
       console.error("Failed to add inventory:", err);
@@ -107,7 +108,8 @@ const AddInventory = () => {
         "Nhập kho thất bại";
       const statusCode = err.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -178,11 +180,17 @@ const AddInventory = () => {
                     onClick={() => setSelectedProduct(item)}
                     className={`cursor-pointer transition-colors ${
                       selectedProduct?.productId === item.productId
-                        ? "bg-blue-300 hover:bg-blue-400 font-semibold text-blue-900"
+                        ? "bg-blue-100 hover:bg-blue-200"
                         : "hover:bg-gray-100"
                     }`}
                   >
-                    <TableCell className="text-sm font-mono">
+                    <TableCell
+                      className={`text-sm font-mono ${
+                        selectedProduct?.productId === item.productId
+                          ? "font-bold"
+                          : ""
+                      }`}
+                    >
                       {item.productId}
                     </TableCell>
                     <TableCell>
@@ -194,15 +202,49 @@ const AddInventory = () => {
                         className="object-cover rounded-md"
                       />
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell
+                      className={
+                        selectedProduct?.productId === item.productId
+                          ? "font-bold"
+                          : "font-medium"
+                      }
+                    >
                       {item.productName}
                     </TableCell>
-                    <TableCell>
-                      {item.category?.categoryName || item.categoryId}
+                    <TableCell
+                      className={
+                        selectedProduct?.productId === item.productId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
+                      {item.categoryName || "Chưa phân loại"}
                     </TableCell>
-                    <TableCell>{item.size || "N/A"}</TableCell>
-                    <TableCell>{item.materialType || "N/A"}</TableCell>
-                    <TableCell>
+                    <TableCell
+                      className={
+                        selectedProduct?.productId === item.productId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
+                      {item.size || "N/A"}
+                    </TableCell>
+                    <TableCell
+                      className={
+                        selectedProduct?.productId === item.productId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
+                      {item.materialType || "N/A"}
+                    </TableCell>
+                    <TableCell
+                      className={
+                        selectedProduct?.productId === item.productId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
                       {item.weightGram ? `${item.weightGram}g` : "N/A"}
                     </TableCell>
                   </TableRow>
@@ -232,13 +274,35 @@ const AddInventory = () => {
                     onClick={() => setSelectedWarehouse(item)}
                     className={`cursor-pointer transition-colors ${
                       selectedWarehouse?.warehouseId === item.warehouseId
-                        ? "bg-green-300 hover:bg-green-400 font-semibold text-green-900"
+                        ? "bg-green-100 hover:bg-green-200"
                         : "hover:bg-gray-100"
                     }`}
                   >
-                    <TableCell>{item.warehouseId}</TableCell>
-                    <TableCell>{item.warehouseName}</TableCell>
-                    <TableCell>
+                    <TableCell
+                      className={
+                        selectedWarehouse?.warehouseId === item.warehouseId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
+                      {item.warehouseId}
+                    </TableCell>
+                    <TableCell
+                      className={
+                        selectedWarehouse?.warehouseId === item.warehouseId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
+                      {item.warehouseName}
+                    </TableCell>
+                    <TableCell
+                      className={
+                        selectedWarehouse?.warehouseId === item.warehouseId
+                          ? "font-bold"
+                          : ""
+                      }
+                    >
                       {`${item.address}, ${item.wardId}, ${item.districtId}, ${item.provinceId}`}
                     </TableCell>
                   </TableRow>

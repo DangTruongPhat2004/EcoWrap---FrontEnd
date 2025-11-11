@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../utils/messageHelper";
 import { getAllProducts } from "../services/productApi";
 import { addCartItem } from "../services/cartApi";
 import {
@@ -139,7 +140,10 @@ const Products = () => {
       const token = localStorage.getItem("token");
       if (!token) {
         console.log("No token, showing warning");
-        message.warning("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng");
+        messageHelper.warning(
+          message,
+          "Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng"
+        );
         return;
       }
 
@@ -151,7 +155,7 @@ const Products = () => {
       });
 
       console.log("Success! Showing message");
-      message.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
+      messageHelper.success(message, `Đã thêm "${product.name}" vào giỏ hàng!`);
     } catch (error) {
       console.error("Error adding to cart:", error);
       const errorMsg =
@@ -160,7 +164,8 @@ const Products = () => {
         "Không thể thêm sản phẩm vào giỏ hàng";
       const statusCode = error?.response?.status;
       console.log("Showing error message");
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     }

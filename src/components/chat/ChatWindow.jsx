@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import ChatService from "../../services/chatService";
 
 const ChatWindow = ({
@@ -92,7 +93,8 @@ const ChatWindow = ({
         error?.response?.data?.message ||
         "Không thể gửi tin nhắn. Vui lòng thử lại.";
       const statusCode = error?.response?.status;
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {

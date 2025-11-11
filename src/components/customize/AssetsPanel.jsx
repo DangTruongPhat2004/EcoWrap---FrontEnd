@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button, Card, Spinner } from "@nextui-org/react";
 import { Upload, X, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import * as fabric from "fabric";
 
 const ASSETS_STORAGE_KEY = "ecowrap_user_assets";
@@ -36,7 +37,7 @@ const AssetsPanel = ({ canvasRef }) => {
       }
     } catch (error) {
       console.error("AssetsPanel: Failed to load assets:", error);
-      message.error("Không thể tải tài nguyên của bạn");
+      messageHelper.error(message, "Không thể tải tài nguyên của bạn");
       setAssets([]);
     } finally {
       setIsLoadingAssets(false);
@@ -54,7 +55,7 @@ const AssetsPanel = ({ canvasRef }) => {
       );
     } catch (error) {
       console.error("AssetsPanel: Failed to save assets:", error);
-      message.error("Không thể lưu tài nguyên");
+      messageHelper.error(message, "Không thể lưu tài nguyên");
     }
   };
 
@@ -104,7 +105,7 @@ const AssetsPanel = ({ canvasRef }) => {
     const imageFiles = files.filter((file) => file.type.startsWith("image/"));
 
     if (imageFiles.length === 0) {
-      message.error("Vui lòng chọn file hình ảnh");
+      messageHelper.error(message, "Vui lòng chọn file hình ảnh");
       return;
     }
 
@@ -113,7 +114,10 @@ const AssetsPanel = ({ canvasRef }) => {
       (file) => file.size > 5 * 1024 * 1024
     );
     if (oversizedFiles.length > 0) {
-      message.error(`File quá lớn: ${oversizedFiles[0].name} (tối đa 5MB)`);
+      messageHelper.error(
+        message,
+        `File quá lớn: ${oversizedFiles[0].name} (tối đa 5MB)`
+      );
       return;
     }
 
@@ -131,18 +135,22 @@ const AssetsPanel = ({ canvasRef }) => {
         const newAssets = successfulUploads.map((r) => r.asset);
         const updatedAssets = [...assets, ...newAssets];
         saveAssetsToStorage(updatedAssets);
-        message.success(
+        messageHelper.success(
+          message,
           `Đã tải lên ${successfulUploads.length} file thành công`
         );
       }
 
       const failedUploads = results.filter((r) => !r.success);
       if (failedUploads.length > 0) {
-        message.error(`${failedUploads.length} file tải lên thất bại`);
+        messageHelper.error(
+          message,
+          `${failedUploads.length} file tải lên thất bại`
+        );
       }
     } catch (error) {
       console.error("AssetsPanel: Upload error:", error);
-      message.error("Có lỗi xảy ra khi tải file lên");
+      messageHelper.error(message, "Có lỗi xảy ra khi tải file lên");
     } finally {
       setIsUploading(false);
     }
@@ -242,14 +250,14 @@ const AssetsPanel = ({ canvasRef }) => {
   const handleAssetClick = (asset) => {
     if (!canvasRef?.current) {
       console.warn("AssetsPanel: Canvas not ready");
-      message.error("Canvas chưa sẵn sàng");
+      messageHelper.error(message, "Canvas chưa sẵn sàng");
       return;
     }
 
     const canvas = canvasRef.current.getCanvas();
     if (!canvas) {
       console.warn("AssetsPanel: Fabric canvas not ready");
-      message.error("Canvas chưa sẵn sàng");
+      messageHelper.error(message, "Canvas chưa sẵn sàng");
       return;
     }
 
@@ -286,13 +294,13 @@ const AssetsPanel = ({ canvasRef }) => {
         canvas.renderAll();
 
         hide();
-        message.success("Đã thêm hình ảnh vào thiết kế");
+        messageHelper.success(message, "Đã thêm hình ảnh vào thiết kế");
         console.log("AssetsPanel: Added image to canvas:", asset.name);
       })
       .catch((error) => {
         console.error("AssetsPanel: Failed to add image:", error);
         hide();
-        message.error("Không thể thêm hình ảnh");
+        messageHelper.error(message, "Không thể thêm hình ảnh");
       });
   };
 
@@ -301,11 +309,11 @@ const AssetsPanel = ({ canvasRef }) => {
       // Remove from localStorage
       const updatedAssets = assets.filter((a) => a.id !== assetId);
       saveAssetsToStorage(updatedAssets);
-      message.success("Đã xóa tài nguyên");
+      messageHelper.success(message, "Đã xóa tài nguyên");
       console.log("AssetsPanel: Deleted asset from localStorage:", assetId);
     } catch (error) {
       console.error("AssetsPanel: Failed to delete asset:", error);
-      message.error("Không thể xóa tài nguyên");
+      messageHelper.error(message, "Không thể xóa tài nguyên");
     }
   };
 

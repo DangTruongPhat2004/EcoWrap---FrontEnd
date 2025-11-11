@@ -13,6 +13,7 @@ import {
 import { getMyOrders, getOrderStatusLabel } from "../../services/orderApi";
 import { createPaymentLink } from "../../services/paymentApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 
 export default function OrdersPage() {
   const { message } = App.useApp();
@@ -61,15 +62,18 @@ export default function OrdersPage() {
 
       if (response.success && response.checkoutUrl) {
         hide();
-        message.success("Chuyển đến trang thanh toán");
+        messageHelper.success(message, "Chuyển đến trang thanh toán");
         window.location.href = response.checkoutUrl;
       } else {
         hide();
-        message.error(response.message || "Không thể tạo link thanh toán");
+        messageHelper.error(
+          message,
+          response.message || "Không thể tạo link thanh toán"
+        );
       }
     } catch (error) {
       console.error("Payment error:", error);
-      message.error("Đã xảy ra lỗi khi tạo link thanh toán");
+      messageHelper.error(message, "Đã xảy ra lỗi khi tạo link thanh toán");
     }
   };
 

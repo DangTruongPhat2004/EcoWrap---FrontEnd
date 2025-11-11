@@ -24,6 +24,7 @@ import {
   changePassword,
 } from "../../services/userApi";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 
 const Profile = () => {
   const { message } = App.useApp();
@@ -146,7 +147,7 @@ const Profile = () => {
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        message.error("Không thể tải thông tin người dùng");
+        messageHelper.error(message, "Không thể tải thông tin người dùng");
       } finally {
         setLoading(false);
       }
@@ -181,7 +182,7 @@ const Profile = () => {
     }
 
     if (!userId) {
-      message.error("Không tìm thấy thông tin người dùng");
+      messageHelper.error(message, "Không tìm thấy thông tin người dùng");
       return;
     }
 
@@ -205,7 +206,8 @@ const Profile = () => {
 
       // Response structure: { success: true, data: {...}, message: "..." }
       if (response?.success !== false && response?.Success !== false) {
-        message.success(
+        messageHelper.success(
+          message,
           response?.message ||
             response?.Message ||
             "Cập nhật thông tin thành công!"
@@ -233,7 +235,8 @@ const Profile = () => {
           console.error("Failed to update localStorage:", e);
         }
       } else {
-        message.error(
+        messageHelper.error(
+          message,
           response?.message ||
             response?.Message ||
             "Không thể cập nhật thông tin"
@@ -245,7 +248,7 @@ const Profile = () => {
         error?.response?.data?.message ||
         error?.message ||
         "Đã xảy ra lỗi khi cập nhật thông tin";
-      message.error(errMsg);
+      messageHelper.error(message, errMsg);
     } finally {
       setIsSaving(false);
     }
@@ -271,17 +274,17 @@ const Profile = () => {
       !resetPasswordData.newPassword ||
       !resetPasswordData.confirmPassword
     ) {
-      message.error("Vui lòng điền đầy đủ thông tin");
+      messageHelper.error(message, "Vui lòng điền đầy đủ thông tin");
       return;
     }
 
     if (resetPasswordData.newPassword !== resetPasswordData.confirmPassword) {
-      message.error("Mật khẩu mới không khớp!");
+      messageHelper.error(message, "Mật khẩu mới không khớp!");
       return;
     }
 
     if (resetPasswordData.newPassword.length < 6) {
-      message.error("Mật khẩu mới phải có ít nhất 6 ký tự");
+      messageHelper.error(message, "Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
 
@@ -295,7 +298,7 @@ const Profile = () => {
 
       // Check for success in the response
       if (response?.Success !== false) {
-        message.success("Đổi mật khẩu thành công!");
+        messageHelper.success(message, "Đổi mật khẩu thành công!");
         setShowForgotPasswordModal(false);
         setResetPasswordData({
           oldPassword: "",
@@ -303,7 +306,8 @@ const Profile = () => {
           confirmPassword: "",
         });
       } else {
-        message.error(
+        messageHelper.error(
+          message,
           response.Message || response.message || "Không thể đổi mật khẩu"
         );
       }
@@ -314,7 +318,7 @@ const Profile = () => {
         error?.response?.data?.message ||
         error?.message ||
         "Đã xảy ra lỗi khi đổi mật khẩu";
-      message.error(errMsg);
+      messageHelper.error(message, errMsg);
     } finally {
       setIsChangingPassword(false);
     }

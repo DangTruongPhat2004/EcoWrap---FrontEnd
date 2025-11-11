@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { App } from "antd";
+import { messageHelper } from "../../utils/messageHelper";
 import {
   getProductById,
   updateProduct,
@@ -200,9 +201,6 @@ const VendorProductDetail = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.productId?.trim()) {
-      newErrors.productId = "ID sản phẩm là bắt buộc";
-    }
     if (!formData.categoryId?.toString().trim()) {
       newErrors.categoryId = "Loại sản phẩm (ID) là bắt buộc";
     }
@@ -241,19 +239,8 @@ const VendorProductDetail = () => {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       const errorMessages = Object.values(validationErrors);
-      message.error({
-        content: (
-          <div>
-            <div className="font-semibold mb-2">Vui lòng sửa các lỗi sau:</div>
-            <ul className="text-sm list-disc ml-4 space-y-1">
-              {errorMessages.map((msg, idx) => (
-                <li key={idx}>{msg}</li>
-              ))}
-            </ul>
-          </div>
-        ),
-        duration: 5,
-      });
+      const errorText = "Vui lòng sửa các lỗi: " + errorMessages.join(", ");
+      messageHelper.error(message, errorText, 5);
       return;
     }
     onUpdateConfirmOpenChange(); // Mở modal xác nhận
@@ -294,7 +281,7 @@ const VendorProductDetail = () => {
       setProduct(refreshedProduct); // Cập nhật state với dữ liệu mới
       setIsEditing(false);
       setErrors({});
-      message.success("Cập nhật sản phẩm thành công!");
+      messageHelper.success(message, "Cập nhật sản phẩm thành công!");
     } catch (err) {
       console.error("Failed to update product:", err);
       const errorMessage =
@@ -304,7 +291,8 @@ const VendorProductDetail = () => {
         "Cập nhật thất bại";
       const statusCode = err.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -316,7 +304,7 @@ const VendorProductDetail = () => {
     setIsDeleting(true);
     try {
       await deleteProduct(id);
-      message.success("Xóa sản phẩm thành công!");
+      messageHelper.success(message, "Xóa sản phẩm thành công!");
       navigate("/vendor/products");
     } catch (err) {
       console.error("Failed to delete product:", err);
@@ -327,7 +315,8 @@ const VendorProductDetail = () => {
         "Xóa sản phẩm thất bại";
       const statusCode = err.response?.status;
 
-      message.error(
+      messageHelper.error(
+        message,
         `${errorMessage}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
     } finally {
@@ -543,19 +532,6 @@ const VendorProductDetail = () => {
           <div className="px-6 divide-y divide-gray-200">
             {isEditing ? (
               <>
-                <DetailItem label="ID sản phẩm">
-                  <Input
-                    name="productId"
-                    value={formData.productId}
-                    onChange={handleInputChange}
-                    variant="bordered"
-                    isInvalid={!!errors.productId}
-                    errorMessage={errors.productId}
-                    classNames={{
-                      inputWrapper: "border border-gray-200",
-                    }}
-                  />
-                </DetailItem>
                 <DetailItem label="Tên sản phẩm">
                   <Input
                     name="productName"
@@ -745,7 +721,8 @@ const VendorProductDetail = () => {
                   onValueChange={async (value) => {
                     // Check if trying to enable selling when out of stock
                     if (value && product.productStatus !== "In stock") {
-                      message.error(
+                      messageHelper.error(
+                        message,
                         "Không thể mở bán sản phẩm hết hàng. Vui lòng nhập kho trước!"
                       );
                       return;
@@ -755,10 +732,10 @@ const VendorProductDetail = () => {
                       // Call activate/deactivate API immediately
                       if (value) {
                         await activateProduct(id);
-                        message.success("Đã mở bán sản phẩm");
+                        messageHelper.success(message, "Đã mở bán sản phẩm");
                       } else {
                         await deactivateProduct(id);
-                        message.success("Đã đóng bán sản phẩm");
+                        messageHelper.success(message, "Đã đóng bán sản phẩm");
                       }
 
                       // Refresh product data to get latest state
@@ -774,7 +751,10 @@ const VendorProductDetail = () => {
                         "Error toggling product active status:",
                         error
                       );
-                      message.error("Không thể thay đổi trạng thái bán hàng");
+                      messageHelper.error(
+                        message,
+                        "Không thể thay đổi trạng thái bán hàng"
+                      );
                     }
                   }}
                   color="success"
@@ -805,7 +785,7 @@ const VendorProductDetail = () => {
                 <DetailItem label="Chất liệu" value={product.materialType} />
                 <DetailItem
                   label="Loại sản phẩm"
-                  value={product.category?.categoryName || "Chưa phân loại"}
+                  value={product.categoryName || "Chưa phân loại"}
                 />
                 <DetailItem
                   label="Cân nặng (gram)"
