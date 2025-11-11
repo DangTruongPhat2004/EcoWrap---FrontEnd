@@ -85,7 +85,7 @@ export default function ShippingMethodSelector({
   const options = [
     {
       key: "ghtk",
-      fee: region === "HCM" ? 25000 : 45000,
+      fee: 0,
       eta: "2–4 ngày",
       node: (
         <MethodRow
@@ -94,9 +94,7 @@ export default function ShippingMethodSelector({
           desc="Giao hàng toàn quốc - Đơn vị vận chuyển chính thức"
           right={
             <div className="text-sm">
-              <div className="font-semibold text-gray-900">
-                {region === "HCM" ? "25.000đ" : "45.000đ"}
-              </div>
+              <div className="font-semibold text-gray-900">COD</div>
               <div className="text-xs text-gray-500">
                 {"ETA " + (region === "HCM" ? "2–3" : "3–5") + " ngày"}
               </div>

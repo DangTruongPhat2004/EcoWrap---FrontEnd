@@ -90,14 +90,14 @@ export default function CheckoutPage() {
 
   const extraFees = React.useMemo(() => {
     const arr = [];
-    if (shipFee) arr.push({ label: `Phí vận chuyển`, amount: shipFee });
+    // Don't add shipping fee to total - show as COD text instead
     if (payFee)
       arr.push({
         label: payLabel + (payNote ? ` (${payNote})` : ""),
         amount: payFee,
       });
     return arr;
-  }, [shipFee, payFee, payLabel, payNote]);
+  }, [payFee, payLabel, payNote]);
 
   const handleApplyCoupon = (code) => {
     console.log("Apply coupon:", code);
@@ -318,9 +318,7 @@ export default function CheckoutPage() {
             <div className="space-y-3">
               <SummaryCard
                 items={items}
-                shippingText={
-                  shipFee ? fmtVND(shipFee) : "Tính khi nhập địa chỉ"
-                }
+                shippingText="Thanh toán khi nhận hàng"
                 extraFees={extraFees}
                 onPlaceOrder={handlePlaceOrder}
                 placing={placing}

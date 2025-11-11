@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Card, CardBody, Divider, Link as NextUILink } from "@nextui-org/react";
+import {
+  Card,
+  CardBody,
+  Divider,
+  Link as NextUILink,
+  Checkbox,
+} from "@nextui-org/react";
 import { App } from "antd";
 import CartItemRow from "../components/cart/CartItemRow";
 import ImpactCard from "../components/cart/ImpactCard";
@@ -16,6 +22,7 @@ export default function CartPage() {
   const { message } = App.useApp();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -47,8 +54,11 @@ export default function CartPage() {
           designFile: item.designFile,
         }));
         setItems(transformedItems);
+        // Select all items by default
+        setSelectedItems(new Set(transformedItems.map((item) => item.id)));
       } else {
         setItems([]);
+        setSelectedItems(new Set());
       }
     } catch (err) {
       console.error("Error fetching cart:", err);
@@ -84,6 +94,11 @@ export default function CartPage() {
 
       // Remove from local state
       setItems((arr) => arr.filter((it) => it.id !== id));
+      setSelectedItems((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
       message.success("Đã xóa sản phẩm khỏi giỏ hàng");
     } catch (err) {
       console.error("Error removing item:", err);
@@ -95,9 +110,44 @@ export default function CartPage() {
     }
   };
 
+  const toggleItemSelection = (id) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedItems.size === items.length) {
+      setSelectedItems(new Set());
+    } else {
+      setSelectedItems(new Set(items.map((item) => item.id)));
+    }
+  };
+
+  // Get only selected items for summary
+  const selectedCartItems = items.filter((item) => selectedItems.has(item.id));
+
   const cols = (
     <div className="hidden md:grid grid-cols-12 text-sm text-gray-500 pb-2 border-b">
-      <div className="col-span-6">Sản phẩm</div>
+      <div className="col-span-1 flex items-center">
+        <Checkbox
+          isSelected={items.length > 0 && selectedItems.size === items.length}
+          isIndeterminate={
+            selectedItems.size > 0 && selectedItems.size < items.length
+          }
+          onValueChange={toggleSelectAll}
+          classNames={{
+            wrapper: "after:bg-emerald-600 after:border-emerald-600",
+          }}
+        />
+      </div>
+      <div className="col-span-5">Sản phẩm</div>
       <div className="col-span-2">Đơn giá</div>
       <div className="col-span-2">Số lượng</div>
       <div className="col-span-2">Thành tiền</div>
@@ -144,8 +194,10 @@ export default function CartPage() {
           Giỏ hàng của bạn
         </h1>
         <p className="text-sm text-gray-600 mt-1">
-          Bạn đang có {items.reduce((s, it) => s + it.qty, 0)} sản phẩm trong
-          giỏ hàng
+          Bạn đang có {items.length} sản phẩm trong giỏ hàng
+          {selectedItems.size > 0 &&
+            selectedItems.size < items.length &&
+            ` (đã chọn ${selectedItems.size})`}
         </p>
 
         {items.length === 0 ? (
@@ -187,6 +239,8 @@ export default function CartPage() {
                       <React.Fragment key={it.id}>
                         <CartItemRow
                           item={it}
+                          isSelected={selectedItems.has(it.id)}
+                          onToggleSelect={() => toggleItemSelection(it.id)}
                           onQty={updateQty}
                           onRemove={removeItem}
                         />
@@ -209,7 +263,7 @@ export default function CartPage() {
             <div className="space-y-4">
               <ImpactCard />
               <SummaryCard
-                items={items}
+                items={selectedCartItems}
                 shippingText="Tính khi nhập địa chỉ"
                 showCoupon={false} // ẩn mã giảm giá ở cart
                 ctaLabel="Tiến hành thanh toán" // đổi chữ nút
