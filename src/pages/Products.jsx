@@ -132,19 +132,24 @@ const Products = () => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
 
+    console.log("handleAddToCart called for:", product.name);
+
     try {
       const token = localStorage.getItem("token");
       if (!token) {
+        console.log("No token, showing warning");
         message.warning("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng");
         return;
       }
 
+      console.log("Adding to cart...");
       // Always add 1 quantity per click
       await addCartItem({
         productId: product.productId,
         quantity: 1,
       });
 
+      console.log("Success! Showing message");
       message.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -153,6 +158,7 @@ const Products = () => {
         error?.response?.data ||
         "Không thể thêm sản phẩm vào giỏ hàng";
       const statusCode = error?.response?.status;
+      console.log("Showing error message");
       message.error(
         `${errorMsg}${statusCode ? ` (Mã lỗi: ${statusCode})` : ""}`
       );
