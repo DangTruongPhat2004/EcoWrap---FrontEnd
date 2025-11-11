@@ -4,10 +4,18 @@ import App from "./App.jsx";
 
 import "./styles/index.css";
 import "./styles/eco-animations.css";
-import "antd/dist/reset.css"; // Ant Design styles
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
+import { ConfigProvider, message } from "antd";
 import { NextUIProvider } from "@nextui-org/react";
+
+// Configure message globally
+message.config({
+  top: 100,
+  duration: 3,
+  maxCount: 3,
+  rtl: false,
+  prefixCls: "ant-message",
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,9 +32,11 @@ const queryClient = new QueryClient({
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <NextUIProvider>
-        <App />
-      </NextUIProvider>
+      <ConfigProvider>
+        <NextUIProvider>
+          <App />
+        </NextUIProvider>
+      </ConfigProvider>
     </QueryClientProvider>
   </StrictMode>
 );
