@@ -1,7 +1,7 @@
 // src/pages/CheckoutPage.jsx
 import React from "react";
 import { Card, CardBody, Button } from "@nextui-org/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { App } from "antd";
 import useShippingFee from "../components/checkout/hooks/useShippingFee";
 import usePaymentFee from "../components/checkout/hooks/usePaymentFee";
@@ -19,6 +19,8 @@ import { createPaymentLink } from "../services/paymentApi";
 export default function CheckoutPage() {
   const { message } = App.useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const selectedItemIds = location.state?.selectedItemIds || [];
 
   const [items, setItems] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
@@ -41,6 +43,14 @@ export default function CheckoutPage() {
     fetchCartData();
   }, []);
 
+  // Redirect if no items selected
+  React.useEffect(() => {
+    if (!loading && items.length === 0 && selectedItemIds.length === 0) {
+      message.warning("Vui lòng chọn sản phẩm từ giỏ hàng");
+      navigate("/cart");
+    }
+  }, [loading, items.length, selectedItemIds.length, message, navigate]);
+
   const fetchCartData = async () => {
     try {
       setLoading(true);
@@ -59,7 +69,16 @@ export default function CheckoutPage() {
           image: item.imageFile || item.product?.productImages?.[0] || null,
           designFile: item.designFile,
         }));
-        setItems(transformedItems);
+
+        // Filter items based on selected IDs from cart
+        const filteredItems =
+          selectedItemIds.length > 0
+            ? transformedItems.filter((item) =>
+                selectedItemIds.includes(item.id)
+              )
+            : transformedItems;
+
+        setItems(filteredItems);
       } else {
         setItems([]);
       }

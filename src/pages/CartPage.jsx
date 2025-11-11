@@ -267,7 +267,20 @@ export default function CartPage() {
                 shippingText="Tính khi nhập địa chỉ"
                 showCoupon={false} // ẩn mã giảm giá ở cart
                 ctaLabel="Tiến hành thanh toán" // đổi chữ nút
-                onPlaceOrder={() => navigate("/checkout")} // ⟵ sang Checkout
+                onPlaceOrder={() => {
+                  // Validate at least one item is selected
+                  if (selectedItems.size === 0) {
+                    message.warning(
+                      "Vui lòng chọn ít nhất một sản phẩm để thanh toán"
+                    );
+                    return;
+                  }
+                  // Pass selected item IDs to checkout
+                  const selectedIds = Array.from(selectedItems);
+                  navigate("/checkout", {
+                    state: { selectedItemIds: selectedIds },
+                  });
+                }}
               />
             </div>
             <div className="lg:col-span-3 bg-white p-6 rounded-lg shadow mt-6">
