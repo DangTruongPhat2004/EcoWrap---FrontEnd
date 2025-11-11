@@ -3,20 +3,19 @@ import { Link } from "react-router-dom";
 import { App } from "antd";
 import { messageHelper } from "../utils/messageHelper";
 import { getAllProducts } from "../services/productApi";
+import { getAllCategories } from "../services/categoryApi";
 import { addCartItem } from "../services/cartApi";
-import {
-  categories,
-  priceRanges,
-  materials,
-  tags,
-} from "../services/productService";
+import { priceRanges, materials, tags } from "../services/productService";
 
 const Products = () => {
   const { message } = App.useApp(); // Use the hook from App context
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([
+    { categoryId: "all", categoryName: "Tất cả" },
+  ]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    category: "all",
+    category: "Tất cả",
     priceRange: "all",
     material: "all",
     tags: [],
@@ -27,6 +26,23 @@ const Products = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
 
   const productsPerPage = 8;
+
+  // Fetch categories on mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await getAllCategories();
+        setCategories([
+          { categoryId: "all", categoryName: "Tất cả" },
+          ...categoriesData,
+        ]);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   // Fetch products when filters change
   useEffect(() => {
@@ -40,9 +56,9 @@ const Products = () => {
         let filteredResult = result;
 
         // Filter by category
-        if (filters.category !== "all") {
+        if (filters.category !== "Tất cả" && filters.category !== "all") {
           filteredResult = filteredResult.filter(
-            (product) => product.category === filters.category
+            (product) => product.categoryName === filters.category
           );
         }
 
@@ -237,22 +253,21 @@ const Products = () => {
               </div>
               {categories.map((category) => (
                 <label
-                  key={category.id}
+                  key={category.categoryId}
                   className="flex items-center cursor-pointer"
                 >
                   <input
                     type="radio"
                     name="category"
-                    value={category.id}
-                    checked={filters.category === category.id}
+                    value={category.categoryName}
+                    checked={filters.category === category.categoryName}
                     onChange={(e) =>
                       handleFilterChange("category", e.target.value)
                     }
                     className="mr-2 text-green-600"
                   />
-                  <span className="text-sm text-gray-700">{category.name}</span>
-                  <span className="ml-auto text-xs text-gray-500">
-                    ({category.count})
+                  <span className="text-sm text-gray-700">
+                    {category.categoryName}
                   </span>
                 </label>
               ))}
@@ -439,11 +454,14 @@ const Products = () => {
           {/* Active Filter Tags */}
           <div className="flex flex-wrap gap-2 mb-6">
             {/* Category filter pill */}
-            {filters.category !== "all" && (
+            {filters.category !== "all" && filters.category !== "Tất cả" && (
               <span className="!bg-green-100 !text-green-700 px-3 py-1 rounded-full text-sm flex items-center border-0">
-                {categories.find((c) => c.id === filters.category)?.name}
+                {
+                  categories.find((c) => c.categoryName === filters.category)
+                    ?.categoryName
+                }
                 <button
-                  onClick={() => handleFilterChange("category", "all")}
+                  onClick={() => handleFilterChange("category", "Tất cả")}
                   className="ml-2 !text-green-600 hover:!text-green-800 !bg-transparent !border-0 !p-0 !rounded-none text-lg leading-none"
                 >
                   ×
@@ -549,7 +567,7 @@ const Products = () => {
                           </defs>
                         </svg>
                         <span className="text-xs text-green-600 font-medium">
-                          {product.category || "Túi giấy"}
+                          {product.categoryName || "Chưa phân loại"}
                         </span>
                       </div>
 
