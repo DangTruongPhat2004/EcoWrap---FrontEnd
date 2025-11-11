@@ -10,6 +10,7 @@ import { priceRanges, materials, tags } from "../services/productService";
 const Products = () => {
   const { message } = App.useApp(); // Use the hook from App context
   const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]); // Store all products for counting
   const [categories, setCategories] = useState([
     { categoryId: "all", categoryName: "Tất cả" },
   ]);
@@ -52,6 +53,9 @@ const Products = () => {
         // Fetch all products from backend API
         const result = await getAllProducts();
 
+        // Store all products for counting
+        setAllProducts(result);
+
         // Apply filters
         let filteredResult = result;
 
@@ -64,21 +68,46 @@ const Products = () => {
 
         // Filter by material
         if (filters.material !== "all") {
-          filteredResult = filteredResult.filter(
-            (product) => product.material === filters.material
-          );
+          filteredResult = filteredResult.filter((product) => {
+            const productMaterial =
+              product.material?.toLowerCase() ||
+              product.materialType?.toLowerCase() ||
+              "";
+            const filterMaterial = filters.material.toLowerCase();
+
+            // Map English filter IDs to actual Vietnamese material names from backend
+            const materialMap = {
+              kraft: ["kraft", "giấy kraft"],
+              "white-paper": ["white", "giấy trắng", "trắng", "giấy"],
+              bagasse: ["bagasse", "bã mía", "mía"],
+              bamboo: ["bamboo", "tre"],
+              recycled: ["recycled", "tái chế", "tai che", "giấy tái chế"],
+            };
+
+            // Check if product material matches any of the mapped values
+            if (materialMap[filterMaterial]) {
+              return materialMap[filterMaterial].some((mat) =>
+                productMaterial.includes(mat)
+              );
+            }
+
+            // Fallback to simple string matching
+            return productMaterial.includes(filterMaterial);
+          });
         }
 
         // Filter by price range
         if (filters.priceRange !== "all") {
-          const [min, max] = filters.priceRange.split("-").map(Number);
-          filteredResult = filteredResult.filter((product) => {
-            const price = product.price || 0;
-            if (max) {
-              return price >= min && price <= max;
-            }
-            return price >= min;
-          });
+          const range = priceRanges.find((r) => r.id === filters.priceRange);
+          if (range) {
+            filteredResult = filteredResult.filter((product) => {
+              const price = product.price || 0;
+              if (range.max === Infinity) {
+                return price >= range.min;
+              }
+              return price >= range.min && price <= range.max;
+            });
+          }
         }
 
         // Filter by tags
@@ -136,6 +165,62 @@ const Products = () => {
         ? prev.tags.filter((t) => t !== tag)
         : [...prev.tags, tag],
     }));
+  };
+
+  // Calculate product count per category
+  const getCategoryCount = (categoryName) => {
+    if (categoryName === "Tất cả") {
+      return allProducts.length;
+    }
+    return allProducts.filter((p) => p.categoryName === categoryName).length;
+  };
+
+  // Calculate product count per material
+  const getMaterialCount = (materialId) => {
+    if (materialId === "all") {
+      return allProducts.length;
+    }
+
+    // Map English filter IDs to actual Vietnamese material names from backend
+    const materialMap = {
+      kraft: ["kraft", "giấy kraft"],
+      "white-paper": ["white", "giấy trắng", "trắng", "giấy"],
+      bagasse: ["bagasse", "bã mía", "mía"],
+      bamboo: ["bamboo", "tre"],
+      recycled: ["recycled", "tái chế", "tai che", "giấy tái chế"],
+    };
+
+    return allProducts.filter((p) => {
+      const productMaterial =
+        p.material?.toLowerCase() || p.materialType?.toLowerCase() || "";
+      const filterMaterial = materialId.toLowerCase();
+
+      // Check if product material matches any of the mapped values
+      if (materialMap[filterMaterial]) {
+        return materialMap[filterMaterial].some((mat) =>
+          productMaterial.includes(mat)
+        );
+      }
+
+      // Fallback to simple string matching
+      return productMaterial.includes(filterMaterial);
+    }).length;
+  };
+
+  // Calculate product count per price range
+  const getPriceRangeCount = (rangeId) => {
+    if (rangeId === "all") {
+      return allProducts.length;
+    }
+    const range = priceRanges.find((r) => r.id === rangeId);
+    if (!range) return 0;
+    return allProducts.filter((p) => {
+      const price = p.price || 0;
+      if (range.max === Infinity) {
+        return price >= range.min;
+      }
+      return price >= range.min && price <= range.max;
+    }).length;
   };
 
   const toggleDropdown = (dropdownName) => {
@@ -254,20 +339,25 @@ const Products = () => {
               {categories.map((category) => (
                 <label
                   key={category.categoryId}
-                  className="flex items-center cursor-pointer"
+                  className="flex items-center cursor-pointer justify-between"
                 >
-                  <input
-                    type="radio"
-                    name="category"
-                    value={category.categoryName}
-                    checked={filters.category === category.categoryName}
-                    onChange={(e) =>
-                      handleFilterChange("category", e.target.value)
-                    }
-                    className="mr-2 text-green-600"
-                  />
-                  <span className="text-sm text-gray-700">
-                    {category.categoryName}
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      name="category"
+                      value={category.categoryName}
+                      checked={filters.category === category.categoryName}
+                      onChange={(e) =>
+                        handleFilterChange("category", e.target.value)
+                      }
+                      className="mr-2 text-green-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {category.categoryName}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    ({getCategoryCount(category.categoryName)})
                   </span>
                 </label>
               ))}
@@ -283,19 +373,24 @@ const Products = () => {
               {priceRanges.map((range) => (
                 <label
                   key={range.id}
-                  className="flex items-center cursor-pointer"
+                  className="flex items-center cursor-pointer justify-between"
                 >
-                  <input
-                    type="radio"
-                    name="priceRange"
-                    value={range.id}
-                    checked={filters.priceRange === range.id}
-                    onChange={(e) =>
-                      handleFilterChange("priceRange", e.target.value)
-                    }
-                    className="mr-2 text-green-600"
-                  />
-                  <span className="text-sm text-gray-700">{range.name}</span>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      name="priceRange"
+                      value={range.id}
+                      checked={filters.priceRange === range.id}
+                      onChange={(e) =>
+                        handleFilterChange("priceRange", e.target.value)
+                      }
+                      className="mr-2 text-green-600"
+                    />
+                    <span className="text-sm text-gray-700">{range.name}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    ({getPriceRangeCount(range.id)})
+                  </span>
                 </label>
               ))}
             </div>
@@ -310,19 +405,26 @@ const Products = () => {
               {materials.map((material) => (
                 <label
                   key={material.id}
-                  className="flex items-center cursor-pointer"
+                  className="flex items-center cursor-pointer justify-between"
                 >
-                  <input
-                    type="radio"
-                    name="material"
-                    value={material.id}
-                    checked={filters.material === material.id}
-                    onChange={(e) =>
-                      handleFilterChange("material", e.target.value)
-                    }
-                    className="mr-2 text-green-600"
-                  />
-                  <span className="text-sm text-gray-700">{material.name}</span>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      name="material"
+                      value={material.id}
+                      checked={filters.material === material.id}
+                      onChange={(e) =>
+                        handleFilterChange("material", e.target.value)
+                      }
+                      className="mr-2 text-green-600"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {material.name}
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    ({getMaterialCount(material.id)})
+                  </span>
                 </label>
               ))}
             </div>
