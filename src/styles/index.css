@@ -1,18 +1,27 @@
 @import "tailwindcss";
 
+/* Reset base text colors */
+body {
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
 /* Ant Design Message - Ensure visibility with high z-index */
 .ant-message {
   z-index: 999999 !important;
   position: fixed !important;
   top: 24px !important;
-  left: 0 !important;
-  right: 0 !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
   pointer-events: none !important;
 }
 
 .ant-message-notice {
   pointer-events: auto !important;
-  text-align: center !important;
 }
 
 .ant-message-notice-content {
