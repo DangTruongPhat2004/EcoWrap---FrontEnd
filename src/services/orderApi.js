@@ -199,7 +199,8 @@ export const getMyOrderDetail = async (orderId) => {
  */
 export const getOrderByIdAdmin = async (orderId) => {
   try {
-    const response = await apiClient.get(`/api/Order/${orderId}`);
+    // Correct endpoint for admin order detail with seller info
+    const response = await apiClient.get(`/api/Order/detail/${orderId}`);
 
     // Backend returns: { success, message, data: AdminOrderDetailResponse }
     if (response.data.success && response.data.data) {
