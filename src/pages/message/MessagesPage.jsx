@@ -16,7 +16,7 @@ const MessagesPage = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Auth state
+  // Auth state - FIXED: Properly extract user data
   const authToken = localStorage.getItem("token");
   const userString = localStorage.getItem("user");
   let currentUserId = null;
@@ -25,10 +25,19 @@ const MessagesPage = () => {
   if (userString) {
     try {
       const userResponse = JSON.parse(userString);
-      if (userResponse.data) {
-        currentUserId = userResponse.data.userId || userResponse.data.id;
-        currentUsername =
-          userResponse.data.username || userResponse.data.fullName;
+
+      // Handle nested structure: { data: { userId, fullName, ... } }
+      let userData = null;
+      if (userResponse.data && typeof userResponse.data === "object") {
+        userData = userResponse.data;
+      } else {
+        // Handle flat structure: { userId, fullName, ... }
+        userData = userResponse;
+      }
+
+      if (userData) {
+        currentUserId = userData.userId || userData.id;
+        currentUsername = userData.username || userData.fullName;
       }
     } catch (error) {
       console.error("Error parsing user:", error);
@@ -74,7 +83,7 @@ const MessagesPage = () => {
         clearInterval(conversationListPollingRef.current);
       }
     };
-  }, [authToken, currentUserId, navigate]);
+  }, [authToken, currentUserId, navigate, message]);
 
   // Fetch conversations on mount and poll for updates
   useEffect(() => {
@@ -111,7 +120,8 @@ const MessagesPage = () => {
   const fetchCustomerName = useCallback(async (userId) => {
     try {
       const response = await getUserById(userId);
-      const userData = response.data || response;
+      // Handle nested response structure
+      const userData = response.data?.data || response.data || response;
       const name = userData.fullName || userData.username;
       return name;
     } catch (error) {
@@ -544,13 +554,19 @@ const MessagesPage = () => {
           if (userString) {
             const userResponse = JSON.parse(userString);
 
-            if (userResponse.data) {
-              const storedUserId =
-                userResponse.data.userId || userResponse.data.id;
+            // Handle nested structure
+            let userData = null;
+            if (userResponse.data && typeof userResponse.data === "object") {
+              userData = userResponse.data;
+            } else {
+              userData = userResponse;
+            }
+
+            if (userData) {
+              const storedUserId = userData.userId || userData.id;
 
               if (storedUserId === otherParticipant.userId) {
-                const name =
-                  userResponse.data.fullName || userResponse.data.username;
+                const name = userData.fullName || userData.username;
                 return name || "Khách hàng";
               }
             }
