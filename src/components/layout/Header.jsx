@@ -155,9 +155,11 @@ function Header() {
         }
         const res = await apiClient.get(`/api/Users/${id}`);
         if (alive) {
-          setUser(res.data || null);
+          // Handle nested response structure: { data: { userId, fullName, ... } }
+          const userData = res.data?.data || res.data || null;
+          setUser(userData);
           try {
-            localStorage.setItem("user", JSON.stringify(res.data || null));
+            localStorage.setItem("user", JSON.stringify(userData));
           } catch {}
         }
       } catch (e) {

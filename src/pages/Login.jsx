@@ -12,6 +12,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import logoImg from "../assets/logo.png";
 import apiClient from "../services/apiClient";
+import { getUserById } from "../services/userApi";
 
 // helper: decode JWT để lấy id
 function b64urlDecode(str) {
@@ -123,22 +124,30 @@ const Login = () => {
       // 2) Lưu token (interceptor sẽ tự gắn Authorization ở mọi request tiếp theo)
       localStorage.setItem("token", token);
 
-      // 3) Lấy userId từ token -> fetch hồ sơ
+      // 3) Lấy userId từ token -> fetch hồ sơ bằng getUserById API
       const userId = getUserIdFromToken(token);
       if (!userId) throw new Error("Không tìm thấy ID trong token.");
 
-      const meRes = await apiClient.get(`/api/Users/${userId}`);
-      const me = meRes?.data || null;
+      // ✅ FIX: Use getUserById API and extract data correctly
+      const userResponse = await getUserById(userId);
+      const me = userResponse?.data || null; // Extract from response.data
+
+      console.log("[Login Debug] User data fetched:", me); // Debug log
+
+      if (!me) {
+        throw new Error("Không thể lấy thông tin người dùng.");
+      }
 
       // 3.1) Lưu user để các nơi khác có thể đọc ngay (và giữ sau refresh)
       localStorage.setItem("user", JSON.stringify(me));
 
       // 3.2) Phát sự kiện để Header (hoặc component khác) có thể cập nhật ngay lập tức
-      // Header có thể lắng nghe:
-      //   window.addEventListener("auth:updated", (e) => setUser(e.detail.user));
+      // ✅ FIX: Dispatch with complete user data
       window.dispatchEvent(
         new CustomEvent("auth:updated", { detail: { token, user: me } })
       );
+
+      console.log("[Login] Dispatched auth:updated with user:", me);
 
       setStatus({ type: "success", msg: "Đăng nhập thành công!" });
 

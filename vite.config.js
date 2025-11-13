@@ -7,12 +7,12 @@ export default defineConfig({
     proxy: {
       // Proxy all API routes to backend during development
       "/api": {
-        target: "http://14.225.205.215",
+        target: "https://14.225.205.215",
         changeOrigin: true,
         secure: false, // dev cert tự ký → để false
       },
       "/chats": {
-        target: "http://14.225.205.215",
+        target: "https://14.225.205.215",
         changeOrigin: true,
         secure: false,
       },
@@ -34,7 +34,7 @@ export default defineConfig({
         secure: false, // dev cert tự ký → để false
       },
       "/messages": {
-        target: "http://14.225.205.215", // đổi đúng port HTTPS backend của bạn
+        target: "https://14.225.205.215", // đổi đúng port HTTPS backend của bạn
         changeOrigin: true,
         secure: false, // dev cert tự ký → để false
       },
