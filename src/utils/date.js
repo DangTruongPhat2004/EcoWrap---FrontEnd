@@ -19,3 +19,5 @@ export const formatDateTime = (date, locale = "en-US") => {
   const dateObj = new Date(date);
   return dateObj.toLocaleString(locale);
 };
+
+/** deploy */
